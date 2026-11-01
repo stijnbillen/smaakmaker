@@ -8,4 +8,6 @@ export interface AppRoute {
 export const routes: AppRoute[] = [
   { name: 'overzicht', path: '/' },
   { name: 'nieuw recept', path: '/nieuw' },
+  { name: 'favorieten', path: '/favorieten' },
+  { name: 'profiel', path: '/profiel' },
 ];

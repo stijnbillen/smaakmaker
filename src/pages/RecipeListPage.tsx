@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useConnection } from '../components/ConnectionProvider';
+import { ListState } from '../components/ListState';
 import { t } from '../i18n/t';
 import { supabase } from '../lib/supabase';
 
@@ -15,6 +15,8 @@ export function RecipeListPage() {
   const { report, resolve } = useConnection();
   const [recipes, setRecipes] = useState<RecipeRow[] | null>(null);
   const [failed, setFailed] = useState(false);
+  // Any failed load (connection or other) stops the loading state; the banner or message takes over.
+  const [errored, setErrored] = useState(false);
 
   const active = useRef(true);
 
@@ -27,12 +29,14 @@ export function RecipeListPage() {
     // A late answer after leaving the page must not report, resolve or set state.
     if (!active.current) return;
     if (error) {
+      setErrored(true);
       // Connection errors get the banner; other errors show their own message.
       setFailed(!report(KEY, error, status, () => void load()));
       return;
     }
     resolve(KEY);
     setFailed(false);
+    setErrored(false);
     setRecipes(data);
   }, [report, resolve]);
 
@@ -48,17 +52,16 @@ export function RecipeListPage() {
   return (
     <main className="page">
       <h1>{t('overview.title')}</h1>
-      <Link to="/nieuw" className="button-link">
-        {t('overview.new')}
-      </Link>
       {failed && <p>{t('overview.error')}</p>}
-      {recipes && recipes.length === 0 && <p>{t('overview.empty')}</p>}
-      {recipes && (
-        <ul className="recipe-list">
-          {recipes.map((r) => (
-            <li key={r.id}>{r.title}</li>
-          ))}
-        </ul>
+      {/* Loading only while nothing is known yet and no error is shown. */}
+      {!errored && (
+        <ListState items={recipes} loadingText={t('overview.loading')} emptyText={t('overview.empty')}>
+          <ul className="recipe-list">
+            {recipes?.map((r) => (
+              <li key={r.id}>{r.title}</li>
+            ))}
+          </ul>
+        </ListState>
       )}
     </main>
   );

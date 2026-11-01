@@ -63,7 +63,7 @@ export function NewRecipePage() {
         {error && <p role="status">{t('form.error')}</p>}
         <button type="submit" disabled={saving}>{t('form.save')}</button>
       </form>
-      <Link to="/" className="button-link">
+      <Link to="/" className="button-link button-link--quiet">
         {t('form.back')}
       </Link>
     </main>

@@ -23,3 +23,25 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **Sessie in e2e-tests vóór R-002:** de test meldt zich via de API aan met een testgebruiker en zet de sessie in de browseropslag. De versie van `supabase-js` ligt vast in de lockfile.
 - **Retry-registratie volgt de levensduur van het scherm:** pagina's roepen bij unmount `resolve(KEY)` aan en negeren late antwoorden (vlag `active`/`mounted`), zodat "Opnieuw proberen" nooit een verlaten actie uitvoert. Het formulier negeert dubbel tikken zolang `save` loopt.
 - **Geen `overflow-x: hidden`:** overloop wordt niet verborgen maar door de lay-outtest gevangen; lange tekst wordt met `overflow-wrap: anywhere` opgevangen.
+
+## T-002 — Navigatie en visuele stijl (2026-11-01, analyse)
+
+- **Eén bron voor tokens:** `src/styles/tokens.css` (CSS custom properties in `:root`). Geen tweede bron in TypeScript.
+- **Naamgeving van kleurtokens:** `--color-bg-*` (achtergrond), `--color-text-*` (tekst), `--color-<naam>` met `--color-on-<naam>` (tekst/icoon erop), `--color-focus`, `--color-theme`. De contrasttest leunt op deze namen: elke `text-*` tegenover elke `bg-*`, elke `on-x` tegenover `x`, en de focuskleur ≥ 3 : 1 tegenover elke `bg-*`. Wordt de accentkleur als tekst gebruikt (links, actieve navigatie), dan gaat dat via `--color-text-accent` (verwijst naar `--color-accent`), zodat de test die combinatie ook controleert.
+- **Letterlijke kleur buiten tokens:** alleen `<meta name="theme-color">` in `index.html` en `theme_color`/`background_color` van het manifest, omdat die geen CSS-variabele kunnen zijn. Een test houdt ze gelijk aan `--color-theme` en `--color-bg`.
+- **Lettertypen zelf gehost** (`woff2`, `font-display: swap`), mee in de precache van de app-shell; geen extern CDN.
+- **Routes:** `/favorieten` en `/profiel`, Nederlands zoals `/nieuw`. Actieve ingang via `NavLink` (`aria-current="page"`).
+- **Lijsttoestanden:** één gedeelde component `ListState` (laden met `role="status"`, leeg met tekst uit `nl.json`). Elke latere lijst gebruikt die.
+- **Verminderde beweging:** duur-tokens op `0ms` plus een globale regel die `animation`/`transition` uitschakelt onder `prefers-reduced-motion: reduce`.
+- **Iconen in de navigatie:** inline SVG met `currentColor`, `aria-hidden`; het label staat altijd zichtbaar naast of onder het icoon.
+
+### T-002 — bouw
+- **Stijlrichting "warme keuken":** crèmekleurig papier (`--color-bg`), espressobruine tekst, tomaatrode accentkleur en een zachte serif (Fraunces) voor koppen met Figtree voor lopende tekst. Focuskleur is blauw (`--color-focus`) zodat de ring ook op de rode accenten opvalt.
+- **Lettertypen:** `@fontsource/fraunces` (600) en `@fontsource/figtree` (400, 600), alleen de Latijnse subset, geïmporteerd in `main.tsx`. Vite neemt ze mee in de build en `woff2` staat in de Workbox-`globPatterns`.
+- **Ruimte voor de navigatie:** `padding-bottom` staat op `body` (niet op een pagina) met token `--space-nav-clearance` (= `--nav-height` + `--space-4`), zodat de scanner `--space-*` blijft afdwingen en geen element onder de balk eindigt.
+- **Verminderde beweging:** duur-tokens op `0ms` plus een globale `animation: none`/`transition: none`-regel. De tegenproef blijft geldig omdat links, knoppen, invoervelden en de laadindicator wel overgangen/animaties hebben zonder de voorkeur.
+- **Lay-out per route:** `AppLayout` (banner, `Outlet`, `BottomNav`) is een layout-route, zodat T-003 het aanmeldscherm erbuiten kan zetten.
+- **Link "Nieuw recept" op het overzicht weggehaald:** "Nieuw" staat al in de navigatie. De terugknop op `/nieuw` is een rustige omlijnde variant.
+- **Favorieten:** gebruikt `ListState` met een lege lijst; T-017 geeft `null` door tijdens het laden.
+- **Iconen (PWA):** `scripts/make-icons.mjs` tekent tomaatrood met een crème ring; zelfde bestandsnamen en afmetingen.
+- **Laadtoestand stopt bij elke fout:** `RecipeListPage` houdt `errored` bij; bij een verbindingsfout verschijnt de banner en verdwijnt de laadindicator, zodat er geen eeuwige "laden…" naast de melding staat.

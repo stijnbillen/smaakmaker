@@ -21,6 +21,38 @@ function files(dir: string): string[] {
   });
 }
 
+describe('nl.json navigation and list states (R-016 crit. 1 and 6)', () => {
+  const expected: Record<string, string> = {
+    'nav.recipes': 'Recepten',
+    'nav.favorites': 'Favorieten',
+    'nav.new': 'Nieuw',
+    'nav.profile': 'Profiel',
+    'overview.empty': 'Nog geen recepten.',
+    'favorites.empty': 'Nog geen favorieten.',
+  };
+  for (const [key, text] of Object.entries(expected)) {
+    it(`${key} = ${text}`, () => expect(lookup(key)).toBe(text));
+  }
+
+  it('nav.label, titles and loading texts exist and are not empty', () => {
+    for (const key of ['nav.label', 'overview.loading', 'favorites.title', 'profile.title']) {
+      const v = lookup(key);
+      expect(typeof v, key).toBe('string');
+      expect((v as string).trim().length, key).toBeGreaterThan(0);
+    }
+  });
+
+  it('every *.loading and *.empty key is a non-empty string', () => {
+    const flat = nl as Record<string, unknown>;
+    const keys = Object.keys(flat).filter((k) => /\.(loading|empty)$/.test(k));
+    expect(keys.length).toBeGreaterThanOrEqual(3);
+    for (const k of keys) {
+      const v = flat[k];
+      expect(typeof v === 'string' && v.trim().length > 0, k).toBe(true);
+    }
+  });
+});
+
 describe('nl.json (R-001 crit. 6)', () => {
   it('has the exact connection texts', () => {
     expect(lookup('connection.error')).toBe('Geen verbinding. Probeer opnieuw.');

@@ -15,7 +15,7 @@ Nieuw project: er zijn geen requirements met status "Bestaand", dus er is geen f
 ## Fase 1 — Basis
 
 - [x] **T-001** — R-001: Web-app, gedeelde databank en mobiel gebruik
-- [ ] **T-002** — R-016: Navigatie en visuele stijl (afhankelijk van T-001)
+- [x] **T-002** — R-016: Navigatie en visuele stijl (afhankelijk van T-001)
 - [ ] **T-003** — R-002: Aanmelden met uitnodigingscode (afhankelijk van T-001, T-002)
 - [ ] **T-004** — R-017: Beheerder (afhankelijk van T-003)
 

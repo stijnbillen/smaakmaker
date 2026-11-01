@@ -1,4 +1,5 @@
-/* Structural basics only (layout, tap targets). Visual identity and tokens come with T-002. */
+@import './tokens.css';
+
 *,
 *::before,
 *::after {
@@ -11,24 +12,65 @@ body {
 }
 
 body {
-  font-family: system-ui, sans-serif;
-  line-height: 1.4;
+  background: var(--color-bg-page);
+  color: var(--color-text-body);
+  font-family: var(--font-body);
+  font-size: var(--font-size-md);
+  line-height: 1.45;
   overflow-wrap: anywhere;
+  /* Padding on body (not on a page) keeps the end of every page above the fixed navigation. */
+  padding-bottom: calc(var(--space-nav-clearance) + env(safe-area-inset-bottom));
+}
+
+h1,
+h2 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: var(--font-size-xl);
+  margin: 0 0 var(--space-4);
+}
+
+a {
+  color: var(--color-text-accent);
+}
+
+/* Visible keyboard focus on everything interactive. */
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
 }
 
 .page {
-  padding: 1rem;
+  padding: var(--space-5) var(--space-4);
   max-width: 100%;
-}
-
-input {
-  width: 100%;
-  min-height: 44px;
-  font: inherit;
 }
 
 label {
   display: block;
+  font-weight: 600;
+  color: var(--color-text-body);
+}
+
+input {
+  display: block;
+  width: 100%;
+  min-height: var(--tap-min);
+  margin-top: var(--space-1);
+  padding: 0 var(--space-3);
+  font: inherit;
+  color: var(--color-text-body);
+  background: var(--color-bg-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--duration-fast);
+}
+
+input:focus {
+  border-color: var(--color-focus);
 }
 
 /* Minimum tap target for every interactive element. */
@@ -38,8 +80,8 @@ a[href],
 input[type='checkbox'],
 input[type='radio'],
 [data-tap-target] {
-  min-height: 44px;
-  min-width: 44px;
+  min-height: var(--tap-min);
+  min-width: var(--tap-min);
 }
 
 button,
@@ -47,15 +89,143 @@ button,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 1rem;
+  padding: 0 var(--space-4);
+  margin: var(--space-2) 0;
   font: inherit;
-  margin: 0.5rem 0;
+  font-weight: 600;
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  border: 0;
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity var(--duration-fast);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.button-link--quiet {
+  color: var(--color-text-accent);
+  background: transparent;
+  border: 2px solid var(--color-accent);
 }
 
 .connection-banner {
-  padding: 0.5rem 1rem;
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-bg-sunken);
+  border-bottom: 2px solid var(--color-accent);
+}
+
+.connection-banner p {
+  margin: 0;
 }
 
 .recipe-list {
-  padding-left: 1.25rem;
+  list-style: none;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.recipe-list li {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+/* Bottom navigation: four equal entries, fixed to the bottom edge. */
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  background: var(--color-bg-surface);
+  border-top: 1px solid var(--color-border);
+  box-shadow: var(--shadow-nav);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-nav ul {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bottom-nav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  height: var(--nav-height);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--duration-fast), background-color var(--duration-fast);
+}
+
+.bottom-nav a[aria-current='page'] {
+  color: var(--color-text-accent);
+  background: var(--color-bg-sunken);
+}
+
+.bottom-nav a:focus-visible {
+  outline-offset: -4px;
+}
+
+.bottom-nav svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* List states */
+.list-state {
+  margin: var(--space-4) 0;
+  color: var(--color-text-muted);
+}
+
+.list-state--loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin var(--duration-slow) linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Reduced motion: nothing moves or fades, whatever a component asks for. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }

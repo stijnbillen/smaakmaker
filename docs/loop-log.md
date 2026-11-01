@@ -13,3 +13,16 @@
 - 2026-11-01 16:43 T-001 build: geslaagd
 - 2026-11-01 16:44 T-001 reviewer: GOEDGEKEURD
 - 2026-11-01 16:45 T-001 build: geslaagd
+- 2026-11-01 16:45 T-001 savepoint: gecommit
+- 2026-11-01 16:51 T-002 analist: KLAAR
+- 2026-11-01 16:54 T-002 tester: KLAAR
+- 2026-11-01 16:58 T-002 ontwikkelaar: BLOKKADE: test navigation.spec.ts en list-states.spec.ts importeren nl.json zonder `with { type: 'json' }`, waardoor Playwright ze niet kan laden
+- 2026-11-01 16:58 T-002 tester: KLAAR
+- 2026-11-01 17:01 T-002 ontwikkelaar: KLAAR
+- 2026-11-01 17:02 T-002 build: geslaagd
+- 2026-11-01 17:04 T-002 reviewer: BEVINDINGEN: 0/1
+- 2026-11-01 17:04 T-002 tester: KLAAR
+- 2026-11-01 17:06 T-002 ontwikkelaar: KLAAR
+- 2026-11-01 17:07 T-002 build: geslaagd
+- 2026-11-01 17:08 T-002 reviewer: GOEDGEKEURD
+- 2026-11-01 17:09 T-002 build: geslaagd

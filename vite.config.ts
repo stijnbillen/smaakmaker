@@ -15,8 +15,9 @@ export default defineConfig({
         display: 'standalone',
         start_url: '/',
         scope: '/',
-        background_color: '#ffffff',
-        theme_color: '#ffffff',
+        // Literal colours (no CSS variable possible); tests keep them equal to --color-bg and --color-theme.
+        background_color: '#fbf5ea',
+        theme_color: '#a8321a',
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
@@ -24,7 +25,7 @@ export default defineConfig({
       },
       workbox: {
         // App is online-only: precache the app shell, never cache database/auth responses.
-        globPatterns: ['**/*.{js,css,html,png,svg,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,png,svg,woff2,webmanifest}'],
         navigateFallbackDenylist: [/^\/rest\//, /^\/auth\//, /^\/storage\//],
         runtimeCaching: [],
       },
