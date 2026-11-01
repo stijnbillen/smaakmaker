@@ -29,3 +29,21 @@
 - 2026-11-01 17:09 T-002 savepoint: gecommit
 - 2026-11-01 17:10 T-003 analist: VRAAG: Moet aanmelden naast de inloglink ook een overtypbare code van 6 cijfers krijgen, zodat het werkt in de ge├»nstalleerde app op een iPhone?
 - 2026-11-01 17:10 T-003 stop: VRAAG: Moet aanmelden naast de inloglink ook een overtypbare code van 6 cijfers krijgen, zodat het werkt in de ge├»nstalleerde app op een iPhone?
+- 2026-11-01 17:10 - loop: geen taak meer
+- 2026-11-01 17:24 T-003 analist: KLAAR
+- 2026-11-01 17:28 T-003 tester: KLAAR
+- 2026-11-01 17:45 T-003 ontwikkelaar: BLOKKADE: test ÔÇö `pg.ts` `sql()` crasht op uitvoer zonder JSON ("UPDATE n") waardoor `backdateCodes` altijd faalt, en de e2e-test "a user without a name goes to /welkom" hangt af van testvolgorde omdat de gedeelde `unnamed`-gebruiker eerder een naam krijgt.
+- 2026-11-01 17:45 T-003 tester: KLAAR
+- 2026-11-01 17:48 T-003 ontwikkelaar: KLAAR
+- 2026-11-01 17:51 T-003 build: geslaagd
+- 2026-11-01 17:54 T-003 reviewer: BEVINDINGEN: 0/1
+- 2026-11-01 17:54 T-003 tester: KLAAR
+- 2026-11-01 18:00 T-003 ontwikkelaar: KLAAR
+- 2026-11-01 18:02 T-003 build: geslaagd
+- 2026-11-01 18:03 T-003 reviewer: BEVINDINGEN: 0/1
+- 2026-11-01 18:04 T-003 tester: KLAAR
+- 2026-11-01 18:05 T-003 ontwikkelaar: KLAAR
+- 2026-11-01 18:07 T-003 build: geslaagd
+- 2026-11-01 18:08 T-003 reviewer: GOEDGEKEURD
+- 2026-11-01 18:09 T-003 build: mislukt
+- 2026-11-01 18:09 T-003 stop: eindcontrole faalt

@@ -45,3 +45,37 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **Favorieten:** gebruikt `ListState` met een lege lijst; T-017 geeft `null` door tijdens het laden.
 - **Iconen (PWA):** `scripts/make-icons.mjs` tekent tomaatrood met een crème ring; zelfde bestandsnamen en afmetingen.
 - **Laadtoestand stopt bij elke fout:** `RecipeListPage` houdt `errored` bij; bij een verbindingsfout verschijnt de banner en verdwijnt de laadindicator, zodat er geen eeuwige "laden…" naast de melding staat.
+
+## T-003 — Aanmelden met uitnodigingscode (2026-11-01, analyse)
+
+- **Inloglink én code uit één mail** (keuze van de eigenaar, `VRAGEN.md`): Supabase Auth met `signInWithOtp` en `verifyOtp({ type: 'email' })`. De templates `confirmation` en `magic_link` bevatten allebei `{{ .ConfirmationURL }}` en `{{ .Token }}`. `otp_length = 6`.
+- **Impliciete flow, geen PKCE:** de inloglink moet ook werken in een andere browser dan waarin hij werd aangevraagd (Safari tegenover de geïnstalleerde app op iPhone).
+- **Uitnodiging afgedwongen met een trigger op `auth.users`:** bij `insert` moet `raw_user_meta_data.invite_code` geldig zijn, anders volgt een exception. De code wordt pas verbruikt als `email_confirmed_at` gezet wordt (atomische `update … where used_by is null`), zodat een tikfout in het e-mailadres de code niet verbrandt. Wie eerst bevestigt, wint. Een gebruiker die via de beheer-API meteen bevestigd wordt aangemaakt, verbruikt de code bij `insert`.
+- **Geldigheid:** `now() <= created_at + interval '7 days'` (grens inbegrepen). De grenslogica zit in een pure functie `invite_is_valid_at(code, at)`, zodat ze testbaar is zonder te wachten.
+- **Voorcontrole in de client:** `check_invite(code)` is een smalle `security definer`-functie die alleen een boolean teruggeeft, voor een nette melding vóór het versturen van de mail. Een algemene 500 van GoTrue ("Database error saving new user") wordt ook "Deze code is niet geldig.".
+- **`invites` dicht voor de client:** RLS staat aan zonder policies. De beheerderstaak voegt het lezen en aanmaken voor beheerders toe.
+- **Profielen:** `profiles` (1 op 1 met `auth.users`) wordt door de trigger aangemaakt met `display_name` null. De gebruiker kiest de naam pas na de eerste bevestiging, op `/welkom`. De naam wordt getrimd en telt 2 tot 40 tekens (`char_length`), afgedwongen met een check. Iedere aangemelde gebruiker leest alle profielen; alleen de eigen `display_name` mag gewijzigd worden (kolomrecht). Een naam hoeft niet uniek te zijn.
+- **Aanmeldscherm:** één scherm `/aanmelden` (zonder navigatiebalk) met een e-mailadres en een optioneel veld "Uitnodigingscode" achter "Ik heb een uitnodigingscode". Zonder code geldt `shouldCreateUser: false`; een onbekend adres geeft "Geen account met dit e-mailadres. Heb je een uitnodigingscode?". Het codeveld gebruikt `inputmode="numeric"` en `autocomplete="one-time-code"`.
+- **Routebewaking:** `RequireAuth` rond `AppLayout`. Zonder sessie gaat de gebruiker naar `/aanmelden`, zonder naam naar `/welkom`.
+- **Datumnotatie:** `Intl.DateTimeFormat('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })`, bv. "1 november 2026". De component `AuthorLine` toont naam en datum, en reviews en de detailpagina gebruiken die later ook.
+- **Mailteksten uit `nl.json`:** `scripts/make-email-templates.mjs` genereert `supabase/templates/*.html` uit de sleutels `email.*`. Een test bewaakt dat de templates gelijk lopen met `nl.json`. In het cloud-project moeten dezelfde templates bij uitrol gezet worden.
+- **Testhulp:**
+  - `createTestUser` maakt eerst een uitnodiging aan, geeft de code mee in `user_metadata` en zet een `display_name`.
+  - Mails komen uit de lokale Mailpit.
+  - Het terugzetten van een verzendtijdstip (verlopen code) gebeurt via een directe Postgres-verbinding op de lokale poort 54322, alleen in `tests/helpers/`.
+- **Lokale configuratie:**
+  - `additional_redirect_urls` bevat `http://127.0.0.1:4173` (preview) en `http://localhost:5173` (dev).
+  - `auth.rate_limit.email_sent` wordt lokaal verhoogd zodat tests niet vastlopen.
+
+### T-003 — bouw
+- **`enable_confirmations = true` (lokaal):** een nieuwe gebruiker krijgt zo de bevestigingsmail (link + code) en `email_confirmed_at` wordt pas bij `verifyOtp` of de link gezet. Daarop hangt het verbruik van de uitnodiging. Dit is ook de standaard in een cloud-project.
+- **"Gebruikt" = `used_at` gevuld, niet `used_by`:** verwijderen van een gebruiker zet `used_by` op null (`on delete set null`); de code mag daardoor niet opnieuw bruikbaar worden.
+- **Migratie op bestaande gegevens:** `20261101120000_auth_invites_profiles.sql` vult eerst profielen voor bestaande gebruikers aan en legt daarna pas `recipes.author_id → profiles(id)` vast; geen tabel wordt gewist. Het overzicht haalt de naam op met `author:profiles(display_name)`.
+- **Lokale mailinstellingen:** `max_frequency = "1ms"` (`"0s"` valt terug op de standaard van 60 s) en hoge limieten voor `email_sent`, `sign_in_sign_ups` en `token_verifications`, zodat tests hetzelfde adres snel na elkaar kunnen aanvragen. In de cloud blijven de strenge standaardwaarden staan.
+- **Mailsjablonen:** beide sjablonen zijn gelijk en komen uit `scripts/make-email-templates.mjs`. De kleuren staan er letterlijk in omdat mailprogramma's geen CSS-variabelen kennen (waarden uit `tokens.css`).
+- **Banner tijdens het laden van het profiel:** `RequireAuth` toont `ConnectionBanner` ook in de laadtoestand. Zonder dat zou een verbindingsfout bij het laden van het profiel geen "Opnieuw proberen" geven, want `AppLayout` bestaat dan nog niet.
+- **Veldfouten:** vaste ids (`email-error`, `invite-error`, `code-error`, `name-error`) met `aria-describedby` en `aria-invalid`; geen `useId`, zodat de ids bruikbaar zijn als CSS-selector.
+- **Datum in Brussel:** `formatDate` zet `timeZone: 'Europe/Brussels'` vast, zodat de dag niet van het toestel afhangt.
+- **T-003, onbevestigde gebruiker herbegint met nieuwe code:** gecontroleerd op de vastgelegde GoTrue: een herhaalde `signInWithOtp` voor een bestaand adres werkt `raw_user_meta_data` niet bij (alleen `confirmation_sent_at`), dus de nieuwe code bereikt de databank nooit. Daarom verwijdert `drop_stale_pending_users()` onbevestigde gebruikers waarvan de opgeslagen code niet meer geldig is; de volgende aanvraag maakt dan een verse gebruiker met de nieuwe code. Dit loopt bij elke wijziging van `invites` (trigger, dekt de verliezer van de race) en via `refresh_pending_invite` (de client roept ze aan vóór `signInWithOtp`, dekt verloop zonder gebeurtenis). Gekozen boven de opgeslagen code vervangen, wat niet kan, en bevestigde gebruikers blijven onaangeroerd.
+
+- `refresh_pending_invite(p_email, p_code)` ruimt alleen de onbevestigde gebruiker van dat adres op (migratie 20261101140000), niet alle adressen; de functie vervangt geen opgeslagen code, ze verwijdert een verouderde rij zodat de nieuwe aanvraag een verse gebruiker maakt.

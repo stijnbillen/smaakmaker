@@ -16,7 +16,7 @@ Nieuw project: er zijn geen requirements met status "Bestaand", dus er is geen f
 
 - [x] **T-001** — R-001: Web-app, gedeelde databank en mobiel gebruik
 - [x] **T-002** — R-016: Navigatie en visuele stijl (afhankelijk van T-001)
-- [!] **T-003** — R-002: Aanmelden met uitnodigingscode (afhankelijk van T-001, T-002) — reden: VRAAG: Moet aanmelden naast de inloglink ook een overtypbare code van 6 cijfers krijgen, zodat het werkt in de ge├»nstalleerde app op een iPhone?
+- [!] **T-003** — R-002: Aanmelden met uitnodigingscode (afhankelijk van T-001, T-002) — reden: eindcontrole faalt
 - [ ] **T-004** — R-017: Beheerder (afhankelijk van T-003)
 
 ## Fase 2 — Recepten
