@@ -47,3 +47,14 @@
 - 2026-11-01 18:08 T-003 reviewer: GOEDGEKEURD
 - 2026-11-01 18:09 T-003 build: mislukt
 - 2026-11-01 18:09 T-003 stop: eindcontrole faalt
+- 2026-11-01 18:09 - loop: geen taak meer
+- 2026-11-01 18:12 T-003 ontwikkelaar: KLAAR
+- 2026-11-01 18:14 T-003 build: geslaagd
+- 2026-11-01 18:15 T-003 reviewer: BEVINDINGEN: 0/1
+- 2026-11-01 18:15 T-003 tester: BLOKKADE: agent gaf geen eindmarkering. Laatste regel: BLOCKADE: `npm install -D pg @types/pg` wordt niet toegestaan, dus de testhulp `sql()` kan niet naar een directe Postgres-verbinding worden omgebouwd.
+- 2026-11-01 18:18 T-003 ontwikkelaar: BLOKKADE: test ÔÇö bevinding D (`tests/helpers/pg.ts` start per query een CLI-proces en laat de worker crashen) en bevindingen 5 en C zijn werk voor de tester; bij mijn rol valt niets te herstellen.
+- 2026-11-01 18:18 T-003 tester: BLOKKADE: bevinding D vraagt `npm install --save-dev pg @types/pg`, en dat commando werd niet toegestaan.
+- 2026-11-01 18:28 T-003 ontwikkelaar: KLAAR
+- 2026-11-01 18:30 T-003 build: geslaagd
+- 2026-11-01 18:31 T-003 reviewer: BLOKKADE: Bevinding D kan alleen worden opgelost als de eigenaar `pg` en `@types/pg` toestaat als ontwikkelpakket of de huidige testhulp met de kans op een crash aanvaardt.
+- 2026-11-01 18:31 T-003 stop: review niet goedgekeurd na 2 rondes

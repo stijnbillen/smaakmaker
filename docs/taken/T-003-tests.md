@@ -54,3 +54,14 @@
 - Negatieve controle (nieuwe test): dezelfde stroom zonder `refresh_pending_invite` geeft geen sessie en B blijft ongebruikt. Zo faalt de test als de aanroep of de functie wegvalt. Die controle leunt op het gedrag van GoTrue (metadata niet herschreven bij herhaalde aanvraag, zoals de migratie vermeldt).
 - Beide tests duren ~8 s (echte wachttijd, timeout 40 s). Niet gedraaid in deze sessie; `tsc --noEmit` is de controle.
 - Bevinding 5 (laag) en B (ontwikkelaar) niet opgepakt.
+
+## Review ronde 4, bevinding D (middel, tester)
+- Niet hersteld: `npm install -D pg @types/pg` werd niet toegestaan in deze sessie (geen toestemming). Zonder pakket kan `sql()` in `tests/helpers/pg.ts` niet naar een `pg`-client; package.json/lockfile met de hand wijzigen laat build en `tsc` breken.
+- Plan zodra `pg` er is: `sql()` async via `pg.Client` op `postgresql://postgres:postgres@127.0.0.1:54322/postgres` (localhost-controle), hulpen async, `await` in `auth-invites.test.ts` en `auth.spec.ts`.
+- Bevindingen 5 en C (laag): zie hieronder, nu wel hersteld.
+
+## Review ronde 4, bevindingen 5 en C (laag, tester)
+- **5:** `tests/unit/email-templates.test.ts` draait `scripts/make-email-templates.mjs` in een tijdelijke map met een kopie van `nl.json` en vergelijkt beide gegenereerde templates exact (regeleinden genormaliseerd) met de gecommitte bestanden. Het script blijft ongewijzigd (geen export nodig). De losse "elke tekst komt voor"-test blijft als snelle diagnose.
+- **C:** `tests/db/auth-invites.test.ts`: nieuwe test "refresh_pending_invite leaves an unconfirmed user on another address alone": twee onbevestigde adressen met bijna verlopen codes, beide verlopen, refresh voor het ene; `userExists(ander)` blijft `true`. Duurt ~8 s.
+- `tsc --noEmit` slaagt. Vitest en de DB-test zijn niet gedraaid in deze sessie (geen toestemming voor het commando).
+- **D blijft open:** `pg` ontbreekt in `node_modules`; installeren werd geweigerd. De eigenaar of de lus moet `npm install --save-dev pg @types/pg` draaien, daarna zet de tester `sql()` om.
