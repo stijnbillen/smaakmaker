@@ -26,3 +26,6 @@
 - 2026-11-01 17:07 T-002 build: geslaagd
 - 2026-11-01 17:08 T-002 reviewer: GOEDGEKEURD
 - 2026-11-01 17:09 T-002 build: geslaagd
+- 2026-11-01 17:09 T-002 savepoint: gecommit
+- 2026-11-01 17:10 T-003 analist: VRAAG: Moet aanmelden naast de inloglink ook een overtypbare code van 6 cijfers krijgen, zodat het werkt in de ge├»nstalleerde app op een iPhone?
+- 2026-11-01 17:10 T-003 stop: VRAAG: Moet aanmelden naast de inloglink ook een overtypbare code van 6 cijfers krijgen, zodat het werkt in de ge├»nstalleerde app op een iPhone?
