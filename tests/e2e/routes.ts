@@ -8,8 +8,9 @@ export interface AppRoute {
    * - 'full': signed in with a display name (default screens, with navigation bar)
    * - 'none': no session (sign-in screen, no navigation bar)
    * - 'unnamed': signed in but no display name yet (welcome screen, no navigation bar)
+   * - 'admin': signed in as administrator with a display name (T-004; navigation bar)
    */
-  auth: 'full' | 'none' | 'unnamed';
+  auth: 'full' | 'none' | 'unnamed' | 'admin';
 }
 
 export const routes: AppRoute[] = [
@@ -17,9 +18,10 @@ export const routes: AppRoute[] = [
   { name: 'nieuw recept', path: '/nieuw', auth: 'full' },
   { name: 'favorieten', path: '/favorieten', auth: 'full' },
   { name: 'profiel', path: '/profiel', auth: 'full' },
+  { name: 'uitnodigingen', path: '/uitnodigingen', auth: 'admin' },
   { name: 'aanmelden', path: '/aanmelden', auth: 'none' },
   { name: 'welkom', path: '/welkom', auth: 'unnamed' },
 ];
 
 /** Screens that show the navigation bar. */
-export const routesWithNav = routes.filter((r) => r.auth === 'full');
+export const routesWithNav = routes.filter((r) => r.auth === 'full' || r.auth === 'admin');

@@ -237,6 +237,57 @@ input[aria-invalid='true'] {
   stroke-linejoin: round;
 }
 
+/* Invites screen */
+.invite-list {
+  list-style: none;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.invite-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.invite-code {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.invite-status {
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  background: var(--color-bg-sunken);
+}
+
+.invite-status--open {
+  color: var(--color-text-accent);
+  border-color: var(--color-accent);
+}
+
+.invite-meta {
+  flex-basis: 100%;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.invite-copy {
+  margin-left: auto;
+}
+
 /* List states */
 .list-state {
   margin: var(--space-4) 0;

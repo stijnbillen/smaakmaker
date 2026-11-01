@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import nlJson from '../../src/i18n/nl.json' with { type: 'json' };
-import { signInViaStorage } from '../helpers/session';
-import { assertSupabaseUp, createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase-admin';
+import { signInForRoute, signInViaStorage } from '../helpers/session';
+import { assertSupabaseUp, createTestUser, deleteTestUser, makeAdmin, type TestUser } from '../helpers/supabase-admin';
 import { routesWithNav as routes } from './routes'; // sign-in and welcome screens have no navigation bar
 
 const nl = nlJson as Record<string, string>;
@@ -15,10 +15,13 @@ const ENTRIES = [
 ];
 
 let user: TestUser;
+let admin: TestUser;
 
 test.beforeAll(async () => {
   await assertSupabaseUp();
   user = await createTestUser('nav');
+  admin = await createTestUser('navadm');
+  await makeAdmin(admin.id);
   // Many recipes so the overview is long enough to scroll.
   const rows = Array.from({ length: 40 }, (_, i) => ({ title: `Navigatietest recept ${i + 1}` }));
   const ins = await user.client.from('recipes').insert(rows);
@@ -27,6 +30,7 @@ test.beforeAll(async () => {
 
 test.afterAll(async () => {
   if (user) await deleteTestUser(user);
+  if (admin) await deleteTestUser(admin);
 });
 
 test.beforeEach(async ({ page }) => {
@@ -39,6 +43,13 @@ function navOf(page: Page) {
 
 for (const route of routes) {
   test.describe(`navigatiebalk op ${route.name} (${route.path})`, () => {
+    test.beforeEach(async ({ page }) => {
+      // Runs after the default sign-in, so the admin session wins on admin-only screens (T-004).
+      if (route.auth === 'admin') {
+        await signInForRoute(page, 'admin', { full: user.session, unnamed: user.session, admin: admin.session });
+      }
+    });
+
     test('exactly one nav with the accessible name from nl.json, four links in order (crit. 1)', async ({ page }) => {
       await page.goto(route.path);
       await expect(page.getByRole('navigation')).toHaveCount(1);

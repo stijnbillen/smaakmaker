@@ -29,6 +29,8 @@
   --font-heading: 'Fraunces', Georgia, 'Times New Roman', serif;
   --font-body: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
+  --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
   --font-size-sm: 0.875rem;
   --font-size-md: 1rem;
   --font-size-lg: 1.25rem;

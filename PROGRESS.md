@@ -17,11 +17,11 @@ Nieuw project: er zijn geen requirements met status "Bestaand", dus er is geen f
 - [x] **T-001** — R-001: Web-app, gedeelde databank en mobiel gebruik
 - [x] **T-002** — R-016: Navigatie en visuele stijl (afhankelijk van T-001)
 - [x] **T-003** — R-002: Aanmelden met uitnodigingscode (afhankelijk van T-001, T-002)
-- [ ] **T-004** — R-017: Beheerder (afhankelijk van T-003)
+- [x] **T-004** — R-017: Beheerder (afhankelijk van T-003)
 
 ## Fase 2 — Recepten
 
-- [ ] **T-005** — R-003: Recept toevoegen en bewerken (afhankelijk van T-003)
+- [ ] **T-005** — R-003: Recept toevoegen en bewerken (afhankelijk van T-003). Ook: knop Verwijderen met bevestiging, ook voor de beheerder (R-017 crit. 3); gebruik `canDelete` en `is_admin()`; 0 rijen = mislukt.
 - [ ] **T-006** — R-007: Preptijd en totale doorlooptijd (afhankelijk van T-005)
 - [ ] **T-007** — R-013: Porties en omrekenen (afhankelijk van T-005)
 - [ ] **T-008** — R-015: Bron en opmerking (afhankelijk van T-005)

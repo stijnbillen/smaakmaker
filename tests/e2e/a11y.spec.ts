@@ -1,15 +1,18 @@
 import { expect, test, type Page } from '@playwright/test';
 import { signInForRoute, signInViaStorage, supabaseRoutePattern } from '../helpers/session';
-import { assertSupabaseUp, createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase-admin';
+import { assertSupabaseUp, createTestUser, deleteTestUser, makeAdmin, type TestUser } from '../helpers/supabase-admin';
 import { routes } from './routes';
 
 let user: TestUser;
 let unnamed: TestUser;
+let admin: TestUser;
 
 test.beforeAll(async () => {
   await assertSupabaseUp();
   user = await createTestUser('a11y');
   unnamed = await createTestUser('a11ynn', { displayName: null });
+  admin = await createTestUser('a11yadm');
+  await makeAdmin(admin.id);
   const ins = await user.client.from('recipes').insert({ title: 'A11y testrecept' });
   if (ins.error) throw ins.error;
 });
@@ -17,6 +20,7 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   if (user) await deleteTestUser(user);
   if (unnamed) await deleteTestUser(unnamed);
+  if (admin) await deleteTestUser(admin);
 });
 
 const INTERACTIVE =
@@ -144,7 +148,7 @@ test('label check detects an input without visible label (R-016 crit. 4, negativ
 for (const route of routes) {
   test.describe(`toegankelijkheid op ${route.name} (${route.path})`, () => {
     test.beforeEach(async ({ page }) => {
-      await signInForRoute(page, route.auth, { full: user.session, unnamed: unnamed.session });
+      await signInForRoute(page, route.auth, { full: user.session, unnamed: unnamed.session, admin: admin.session });
     });
 
     test('every input has a visible label (R-016 crit. 4)', async ({ page }) => {

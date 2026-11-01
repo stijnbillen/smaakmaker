@@ -86,14 +86,31 @@ export function randomInviteCode(length = 12): string {
   return out;
 }
 
-/** Creates an unused invite through the service client (invites is closed for the public roles). */
-export async function createInvite(opts: { createdAt?: Date } = {}): Promise<string> {
+/**
+ * Creates an invite through the service client (invites is closed for the public roles).
+ * `createdAt` back-dates it (expiry runs 7 days from there); `usedBy` marks it as spent by that user.
+ * The update for `usedBy` fires the invite sweep trigger, so only pass confirmed users.
+ */
+export async function createInvite(opts: { createdAt?: Date; usedBy?: string } = {}): Promise<string> {
   const code = randomInviteCode();
   const row: Record<string, unknown> = { code };
   if (opts.createdAt) row.created_at = opts.createdAt.toISOString();
   const ins = await adminClient().from('invites').insert(row);
   if (ins.error) throw ins.error;
+  if (opts.usedBy) {
+    const upd = await adminClient()
+      .from('invites')
+      .update({ used_by: opts.usedBy, used_at: new Date().toISOString() })
+      .eq('code', code);
+    if (upd.error) throw upd.error;
+  }
   return code;
+}
+
+/** Makes a user administrator the way the app never can: a direct insert with the service client. */
+export async function makeAdmin(userId: string): Promise<void> {
+  const ins = await adminClient().from('admins').upsert({ user_id: userId });
+  if (ins.error) throw ins.error;
 }
 
 export interface TestUser {

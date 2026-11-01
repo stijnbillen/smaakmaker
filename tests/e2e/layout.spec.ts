@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { signInForRoute, signInViaStorage, supabaseRoutePattern } from '../helpers/session';
-import { assertSupabaseUp, createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase-admin';
+import { assertSupabaseUp, createTestUser, deleteTestUser, makeAdmin, type TestUser } from '../helpers/supabase-admin';
 import { routes } from './routes';
 
 // Long unbroken title: would overflow 360 px without overflow-wrap.
@@ -8,11 +8,14 @@ const LONG_TITLE = 'Superlangeaaneengeschrevenrecepttitelzonderspaties'.repeat(3
 
 let user: TestUser;
 let unnamed: TestUser;
+let admin: TestUser;
 
 test.beforeAll(async () => {
   await assertSupabaseUp();
   user = await createTestUser('layout');
   unnamed = await createTestUser('layoutnn', { displayName: null });
+  admin = await createTestUser('layoutadm');
+  await makeAdmin(admin.id);
   const ins = await user.client.from('recipes').insert({ title: LONG_TITLE });
   if (ins.error) throw ins.error;
 });
@@ -20,6 +23,7 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   if (user) await deleteTestUser(user);
   if (unnamed) await deleteTestUser(unnamed);
+  if (admin) await deleteTestUser(admin);
 });
 
 const VIEWPORT_WIDTH = 360;
@@ -80,7 +84,7 @@ test('overflow check detects a 500 px wide element (R-001 crit. 4, negative cont
 for (const route of routes) {
   test.describe(`scherm ${route.name} (${route.path})`, () => {
     test.beforeEach(async ({ page }) => {
-      await signInForRoute(page, route.auth, { full: user.session, unnamed: unnamed.session });
+      await signInForRoute(page, route.auth, { full: user.session, unnamed: unnamed.session, admin: admin.session });
     });
 
     test('no horizontal scroll at 360 px (R-001 crit. 4)', async ({ page }) => {

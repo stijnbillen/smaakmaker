@@ -38,7 +38,8 @@ function failure(field: AuthField, cause: unknown, status: number | undefined, m
  * With an invite code a new account may be created; without one only existing users get a mail.
  */
 export async function requestCode(email: string, opts: { inviteCode?: string } = {}): Promise<AuthResult> {
-  const inviteCode = opts.inviteCode?.trim();
+  // Codes are upper case; on a phone they are easily typed in lower case.
+  const inviteCode = opts.inviteCode?.trim().toUpperCase();
   if (inviteCode) {
     // Check first: GoTrue answers a refusal by the database trigger with a vague 500.
     const check = await supabase.rpc('check_invite', { code: inviteCode });

@@ -2,7 +2,9 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AppLayout } from './components/AppLayout';
 import { AuthProvider } from './components/AuthProvider';
 import { ConnectionProvider } from './components/ConnectionProvider';
+import { RequireAdmin } from './components/RequireAdmin';
 import { RequireAuth } from './components/RequireAuth';
+import { InvitesPage } from './pages/InvitesPage';
 import { FavoritesPage } from './pages/FavoritesPage';
 import { NewRecipePage } from './pages/NewRecipePage';
 import { ProfilePage } from './pages/ProfilePage';
@@ -25,6 +27,9 @@ export function App() {
                 <Route path="/favorieten" element={<FavoritesPage />} />
                 <Route path="/nieuw" element={<NewRecipePage />} />
                 <Route path="/profiel" element={<ProfilePage />} />
+                <Route element={<RequireAdmin />}>
+                  <Route path="/uitnodigingen" element={<InvitesPage />} />
+                </Route>
               </Route>
             </Route>
           </Routes>

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { t, type TextKey } from '../i18n/t';
 
 // Icons are decorative (aria-hidden); the visible label carries the meaning. currentColor follows the link colour.
@@ -23,18 +23,20 @@ const entries: { to: string; label: TextKey; icon: keyof typeof icons }[] = [
 ];
 
 export function BottomNav() {
+  const { pathname } = useLocation();
+  const isActive = (to: string) => pathname === to || (to === '/profiel' && pathname === '/uitnodigingen');
   return (
     <nav className="bottom-nav" aria-label={t('nav.label')}>
       <ul>
         {entries.map((e) => (
           <li key={e.to}>
-            {/* `end` on "/" so Recepten is not active on every route; NavLink sets aria-current="page". */}
-            <NavLink to={e.to} end={e.to === '/'}>
+            {/* Own active check (not NavLink): invites hang under Profiel, so the bar keeps four entries. */}
+            <Link to={e.to} aria-current={isActive(e.to) ? 'page' : undefined}>
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 {icons[e.icon]}
               </svg>
               <span>{t(e.label)}</span>
-            </NavLink>
+            </Link>
           </li>
         ))}
       </ul>

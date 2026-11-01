@@ -84,3 +84,23 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 
 ## pg als testafhankelijkheid (goedgekeurd door de eigenaar, 2026-11-02)
 `pg` en `@types/pg` staan als devDependency in package.json. Gebruik ze voor directe SQL in tests (tests/helpers/pg.ts) in plaats van de Supabase-CLI per query. Niet gebruiken in de app zelf (src/).
+
+## T-004 — Beheerder (2026-11-02, analyse)
+
+- **Beheerdersrol in een eigen tabel `admins`:** `user_id` verwijst naar `profiles`. RLS staat aan, zonder policies en zonder grants voor de client. Er komt geen kolom op `profiles`, zodat de rol nooit via het kolomrecht op `profiles` of een policy-fout te wijzigen is. `is_admin()` (`security definer`) is de enige toegang voor de client en elke latere regel (reviews, foto's) gebruikt die functie.
+- **Beheerder worden alleen met SQL:** `grant_admin(p_email)` is niet uitvoerbaar voor `anon` en `authenticated`. Je gebruikt het in de SQL-editor of met `psql`. Dat geldt voor de eerste en voor elke volgende beheerder; er komt geen scherm voor. De stappen staan in `docs/beheer.md`.
+- **Uitnodigingen alleen via functies:** `create_invite()` en `list_invites()` (`security definer`) geven `42501` voor wie geen beheerder is. `invites` krijgt geen grants of policies, zodat een beheerder ook geen eigen (zwakke) code kan invoegen.
+- **Codeformaat:** 10 tekens uit `ABCDEFGHJKMNPQRSTUVWXYZ23456789`, zonder 0/O en 1/I/L. Gemaakt met `extensions.gen_random_bytes` in `generate_invite_code()`. Bij een botsing op `unique` probeert `create_invite` opnieuw. De client zet een ingetypte code om naar hoofdletters.
+- **Status in de databank:** de pure functie `invite_status(created_at, used_at, at)` geeft `open`, `gebruikt` of `verlopen`. "Gebruikt" gaat voor "verlopen". De grens is dezelfde als in `invite_is_valid_at`. Een code die aan een onbevestigde gebruiker hangt, is "open" tot de bevestiging. Een gebruikte code waarvan de gebruiker niet meer bestaat, toont "Onbekende gebruiker".
+- **Vervaldatum met uur:** `formatDateTime` geeft "9 november 2026 om 14:05" (Europe/Brussels), want de grens ligt op de seconde.
+- **Scherm en navigatie:** route `/uitnodigingen`, met een link op Profiel die alleen beheerders zien. De navigatie houdt vier ingangen; "Profiel" blijft actief op `/uitnodigingen`. `RequireAdmin` stuurt een gewone gebruiker naar `/profiel`. `isAdmin` wordt in `AuthProvider` samen met het profiel geladen.
+- **Geen intrekken van codes:** een beheerder kan een open code niet verwijderen. Geen criterium vraagt erom.
+- **Verwijderen van recepten:** policy `recipes delete by author or admin` (`author_id = auth.uid() or is_admin()`), plus `grant delete` aan `authenticated`. Een beheerder krijgt geen `update`. RLS geeft bij een geweigerde `delete` 0 rijen en geen fout; de interface behandelt 0 rijen als mislukking. De knop met bevestiging komt op de detailpagina (R-003). `canDelete(item, viewer)` in `src/lib/permissions.ts` bepaalt of de knop zichtbaar is.
+- **Testsessie `'admin'`** in `tests/e2e/routes.ts`. `routesWithNav` neemt ook `'admin'` op.
+
+### T-004 — bouw
+- **Eigen actief-controle in `BottomNav`:** `NavLink` zet `aria-current` zelf en laat zich niet overschrijven, dus de balk gebruikt `Link` met een eigen controle. Zo blijft "Profiel" actief op `/uitnodigingen`.
+- **`is_admin` in dezelfde laadstap als het profiel:** `AuthProvider` wacht op beide, zodat `RequireAdmin` nooit tijdelijk doorverwijst, en een verbindingsfout loopt via dezelfde sleutel en dezelfde "Opnieuw proberen".
+- **Rejection sampling in `generate_invite_code()`:** bytes ≥ 248 worden overgeslagen, zodat elk van de 31 tekens even waarschijnlijk is (geen modulo-bias).
+- **Token `--font-mono`** voor de codes, zodat geen lettertype letterlijk in componenten staat.
+- **Eigen foutmelding op `InvitesPage`:** `report()` geeft `false` bij een fout die geen verbindingsfout is; dan toont de pagina `invites.error` (`role="alert"`) in plaats van stil niets. `README.md` en `.env.example` horen niet bij T-004 (opstarthulp); ze worden apart gecommit.

@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { supabase } from '../lib/supabase';
 import { useConnection } from './ConnectionProvider';
 
-type ProfileState = { status: 'loading' } | { status: 'error' } | { status: 'ready'; displayName: string | null };
+type ProfileState = { status: 'loading' } | { status: 'error' } | { status: 'ready'; displayName: string | null; isAdmin: boolean };
 
 interface AuthContextValue {
   session: Session | null;
@@ -12,6 +12,8 @@ interface AuthContextValue {
   /** True when the profile could not be loaded for another reason than the connection. */
   profileFailed: boolean;
   displayName: string | null;
+  /** Administrator, as the database says; screens use it for convenience only. */
+  isAdmin: boolean;
   /** Called after the name was saved, so screens react without a reload. */
   setDisplayName: (name: string) => void;
   /** Loads the profile again after a failure. */
@@ -57,8 +59,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(isConnection ? { status: 'loading' } : { status: 'error' });
         return;
       }
+      // Same key and retry as the profile: one banner, one retry for both answers.
+      const admin = await supabase.rpc('is_admin');
+      if (!active.current || userIdRef.current !== id) return;
+      if (admin.error) {
+        const isConnection = report(KEY, admin.error, admin.status, () => void loadProfile(id));
+        setProfile(isConnection ? { status: 'loading' } : { status: 'error' });
+        return;
+      }
       resolve(KEY);
-      setProfile({ status: 'ready', displayName: data.display_name as string | null });
+      setProfile({ status: 'ready', displayName: data.display_name as string | null, isAdmin: admin.data === true });
     },
     [report, resolve],
   );
@@ -74,7 +84,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void loadProfile(userId);
   }, [userId, loadProfile, resolve]);
 
-  const setDisplayName = useCallback((name: string) => setProfile({ status: 'ready', displayName: name }), []);
+  const setDisplayName = useCallback(
+    (name: string) =>
+      setProfile((prev) => ({ status: 'ready', displayName: name, isAdmin: prev.status === 'ready' && prev.isAdmin })),
+    [],
+  );
 
   const retryProfile = useCallback(() => {
     const id = userIdRef.current;
@@ -89,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading: !sessionKnown || (session !== null && profile.status === 'loading'),
       profileFailed: session !== null && profile.status === 'error',
       displayName: profile.status === 'ready' ? profile.displayName : null,
+      isAdmin: profile.status === 'ready' && profile.isAdmin,
       setDisplayName,
       retryProfile,
     }),
