@@ -261,6 +261,7 @@ Door de eigenaar gekozen (2026-11-01):
 - **Offline (R-001):** alleen online.
 - **Varianten (R-006):** alles kopiëren, inclusief foto's.
 - **Techniek:** React + TypeScript PWA met Supabase.
+- **Testomgeving:** lokale Supabase via Docker Desktop (2026-11-01); Docker moet op de bouw-pc geïnstalleerd zijn voor de loop start.
 - **Extra's in ronde 1:** porties + omrekenen (R-013), favorieten (R-014), bron/opmerking (R-015).
 - **Ontwerp (R-016):** `frontend-design`-skill gebruiken voor de UI.
 

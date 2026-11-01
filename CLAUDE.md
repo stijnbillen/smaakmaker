@@ -7,6 +7,7 @@ Zie `REQUIREMENTS.md` voor wat de app moet doen en `PROGRESS.md` voor de takenli
 ## Kernbeslissingen (wijzig alleen na overleg met de eigenaar)
 - Taal: interface Nederlands, code/identifiers/commentaar Engels.
 - Techniek: React + TypeScript (PWA), Supabase (Postgres, aanmelden met inloglink, bestandsopslag, rij-niveau-regels). Tests: Vitest (logica) en Playwright (interface, mobiele viewport).
+- Tests van de Supabase-kant (rechten, limiet, aanmelden, opslag) draaien tegen een lokale Supabase (Docker Desktop, `supabase start`), nooit tegen een cloud-project. Migraties staan in `supabase/migrations/`.
 - Platform: mobiel eerst (360 px breed), moderne mobiele browsers. Alleen online.
 - Een recept is hoogstens 2 MB (tekst + foto's), met maximaal 3 foto's. De limiet wordt in de databank afgedwongen.
 - Een recept wijzigt alleen de auteur; een beheerder kan alles verwijderen. Rechten staan in rij-niveau-regels, niet alleen in de interface.
