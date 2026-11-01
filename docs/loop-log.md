@@ -1,0 +1,9 @@
+- 2026-11-01 16:22 T-001 analist: KLAAR
+- 2026-11-01 16:24 T-001 tester: KLAAR
+- 2026-11-01 16:33 T-001 ontwikkelaar: KLAAR
+- 2026-11-01 16:34 T-001 build: geslaagd
+- 2026-11-01 16:36 T-001 reviewer: BEVINDINGEN: 0/3
+- 2026-11-01 16:37 T-001 tester: KLAAR
+- 2026-11-01 16:37 T-001 ontwikkelaar: KLAAR
+- 2026-11-01 16:39 T-001 build: mislukt
+- 2026-11-01 16:39 T-001 stop: review niet goedgekeurd na 2 rondes
