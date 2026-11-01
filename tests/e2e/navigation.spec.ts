@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import nlJson from '../../src/i18n/nl.json' with { type: 'json' };
 import { signInViaStorage } from '../helpers/session';
 import { assertSupabaseUp, createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase-admin';
-import { routes } from './routes';
+import { routesWithNav as routes } from './routes'; // sign-in and welcome screens have no navigation bar
 
 const nl = nlJson as Record<string, string>;
 

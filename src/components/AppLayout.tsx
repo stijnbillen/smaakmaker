@@ -2,7 +2,7 @@ import { Outlet } from 'react-router-dom';
 import { BottomNav } from './BottomNav';
 import { ConnectionBanner } from './ConnectionBanner';
 
-/** Shell around all routes. T-003 can hide the navigation on the sign-in screen by using a second layout. */
+/** Shell around the signed-in screens; sign-in and welcome sit outside it, so they have no navigation. */
 export function AppLayout() {
   return (
     <>

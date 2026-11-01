@@ -33,7 +33,7 @@ describe('no secrets in build (R-001 crit. 7)', () => {
   });
 
   it('contains no sb_secret_ keys', () => {
-    for (const { f, text } of contents) expect(text, f).not.toContain('sb_secret_');
+    for (const { f, text } of contents) expect(text, f).not.toMatch(/sb_secret_[A-Za-z0-9_-]{20,}/); // the bare prefix occurs in supabase-js itself
   });
 
   it('only contains JWTs with role anon', () => {

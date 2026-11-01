@@ -18,6 +18,16 @@ export async function signInViaStorage(page: Page, session: Session): Promise<vo
   );
 }
 
+/** Opens a screen with the session its route needs (see `AppRoute.auth`). */
+export async function signInForRoute(
+  page: Page,
+  auth: 'full' | 'none' | 'unnamed',
+  sessions: { full: Session; unnamed: Session },
+): Promise<void> {
+  if (auth === 'none') return;
+  await signInViaStorage(page, auth === 'full' ? sessions.full : sessions.unnamed);
+}
+
 /** Matches every request to the (local) Supabase backend, not the app's own origin. */
 export function supabaseRoutePattern(): string {
   return `${supabaseUrl()}/**`;

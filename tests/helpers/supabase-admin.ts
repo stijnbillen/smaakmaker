@@ -73,25 +73,77 @@ export function anonClient(): SupabaseClient {
   return createClient(url, key, noPersist);
 }
 
+export function uniqueEmail(label: string): string {
+  return `${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.test`;
+}
+
+// Invite code alphabet without look-alike characters (T-003 risk: codes must be long and random).
+const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+export function randomInviteCode(length = 12): string {
+  let out = '';
+  for (let i = 0; i < length; i++) out += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)];
+  return out;
+}
+
+/** Creates an unused invite through the service client (invites is closed for the public roles). */
+export async function createInvite(opts: { createdAt?: Date } = {}): Promise<string> {
+  const code = randomInviteCode();
+  const row: Record<string, unknown> = { code };
+  if (opts.createdAt) row.created_at = opts.createdAt.toISOString();
+  const ins = await adminClient().from('invites').insert(row);
+  if (ins.error) throw ins.error;
+  return code;
+}
+
 export interface TestUser {
   id: string;
   email: string;
   password: string;
+  /** The invite code that was spent on this user. */
+  inviteCode: string;
+  displayName: string | null;
   /** Client signed in as this user, using only the public key. */
   client: SupabaseClient;
   session: Session;
 }
 
-export async function createTestUser(label: string): Promise<TestUser> {
+/**
+ * Creates a confirmed user the way the invite trigger demands (valid invite in user_metadata).
+ * `displayName: null` gives a user who has not chosen a name yet (lands on /welkom).
+ */
+export async function createTestUser(
+  label: string,
+  opts: { displayName?: string | null } = {},
+): Promise<TestUser> {
   const admin = adminClient();
-  const email = `${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.test`;
+  const email = uniqueEmail(label);
   const password = `pw-${Math.random().toString(36).slice(2)}-Aa1!`;
-  const created = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+  const inviteCode = await createInvite();
+  const created = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { invite_code: inviteCode },
+  });
   if (created.error || !created.data.user) throw created.error ?? new Error('createUser failed');
+  const displayName = opts.displayName === undefined ? `Test ${label}` : opts.displayName;
+  if (displayName !== null) {
+    const upd = await admin.from('profiles').update({ display_name: displayName }).eq('id', created.data.user.id);
+    if (upd.error) throw upd.error;
+  }
   const client = anonClient();
   const signedIn = await client.auth.signInWithPassword({ email, password });
   if (signedIn.error || !signedIn.data.session) throw signedIn.error ?? new Error('sign-in failed');
-  return { id: created.data.user.id, email, password, client, session: signedIn.data.session };
+  return {
+    id: created.data.user.id,
+    email,
+    password,
+    inviteCode,
+    displayName,
+    client,
+    session: signedIn.data.session,
+  };
 }
 
 export async function deleteTestUser(user: TestUser): Promise<void> {
@@ -99,4 +151,5 @@ export async function deleteTestUser(user: TestUser): Promise<void> {
   // recipes.author_id references auth.users; remove rows first in case there is no cascade.
   await admin.from('recipes').delete().eq('author_id', user.id);
   await admin.auth.admin.deleteUser(user.id);
+  await admin.from('invites').delete().eq('code', user.inviteCode);
 }

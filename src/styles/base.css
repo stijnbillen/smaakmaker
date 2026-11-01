@@ -113,6 +113,51 @@ button:disabled {
   border: 2px solid var(--color-accent);
 }
 
+/* Form fields and their messages */
+.field {
+  margin-bottom: var(--space-4);
+}
+
+.field-error {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-accent);
+}
+
+input[aria-invalid='true'] {
+  border-color: var(--color-accent);
+}
+
+/* Sign-in and welcome: the first thing a user sees, so a little warmer than the rest. */
+.auth-page {
+  padding-top: var(--space-6);
+}
+
+.auth-brand {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-accent);
+}
+
+.profile-name {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+}
+
+.recipe-title {
+  display: block;
+  font-weight: 600;
+}
+
+.author-line {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
 .connection-banner {
   padding: var(--space-2) var(--space-4);
   background: var(--color-bg-sunken);

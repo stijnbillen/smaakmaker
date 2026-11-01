@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AuthorLine } from '../components/AuthorLine';
 import { useConnection } from '../components/ConnectionProvider';
 import { ListState } from '../components/ListState';
 import { t } from '../i18n/t';
@@ -7,6 +8,8 @@ import { supabase } from '../lib/supabase';
 interface RecipeRow {
   id: string;
   title: string;
+  created_at: string;
+  author: { display_name: string | null } | null;
 }
 
 const KEY = 'recipe-list';
@@ -24,7 +27,7 @@ export function RecipeListPage() {
   const load = useCallback(async () => {
     const { data, error, status } = await supabase
       .from('recipes')
-      .select('id,title')
+      .select('id,title,created_at,author:profiles(display_name)')
       .order('created_at', { ascending: false });
     // A late answer after leaving the page must not report, resolve or set state.
     if (!active.current) return;
@@ -37,7 +40,7 @@ export function RecipeListPage() {
     resolve(KEY);
     setFailed(false);
     setErrored(false);
-    setRecipes(data);
+    setRecipes(data as unknown as RecipeRow[]);
   }, [report, resolve]);
 
   useEffect(() => {
@@ -58,7 +61,10 @@ export function RecipeListPage() {
         <ListState items={recipes} loadingText={t('overview.loading')} emptyText={t('overview.empty')}>
           <ul className="recipe-list">
             {recipes?.map((r) => (
-              <li key={r.id}>{r.title}</li>
+              <li key={r.id}>
+                <span className="recipe-title">{r.title}</span>
+                <AuthorLine name={r.author?.display_name ?? null} date={r.created_at} />
+              </li>
             ))}
           </ul>
         </ListState>

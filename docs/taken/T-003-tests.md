@@ -65,3 +65,9 @@
 - **C:** `tests/db/auth-invites.test.ts`: nieuwe test "refresh_pending_invite leaves an unconfirmed user on another address alone": twee onbevestigde adressen met bijna verlopen codes, beide verlopen, refresh voor het ene; `userExists(ander)` blijft `true`. Duurt ~8 s.
 - `tsc --noEmit` slaagt. Vitest en de DB-test zijn niet gedraaid in deze sessie (geen toestemming voor het commando).
 - **D blijft open:** `pg` ontbreekt in `node_modules`; installeren werd geweigerd. De eigenaar of de lus moet `npm install --save-dev pg @types/pg` draaien, daarna zet de tester `sql()` om.
+
+## Review ronde 5, bevindingen D (middel) en F (laag), tester
+- **D hersteld:** `pg` en `@types/pg` staan nu in `package.json` en `node_modules`. `tests/helpers/pg.ts` `sql()` is een async `pg.Client` op `postgresql://postgres:postgres@127.0.0.1:54322/postgres` (override `SUPABASE_DB_URL`), met controle dat de host localhost/127.0.0.1 is. Geen CLI-proces per query meer. Alle hulpen (`userExists`, `userIdByEmail`, `backdateCodes`, `inviteValidAt`, `inviteValidAtUnknown`) zijn async; `await` toegevoegd in `auth-invites.test.ts` en `auth.spec.ts`. Gedrag van de tests ongewijzigd.
+- **F hersteld:** `tests/build/no-secrets.test.ts` zoekt nu `/sb_secret_[A-Za-z0-9_-]{20,}/` (een echte sleutel) in plaats van het kale voorvoegsel uit supabase-js.
+- `npx tsc --noEmit` slaagt. Tests zelf niet gedraaid (geen toestemming voor het commando in deze sessie).
+- Bevinding E (laag) is werk voor de ontwikkelaar (`docs/beslissingen.md`).
