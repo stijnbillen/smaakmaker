@@ -1,0 +1,13 @@
+{
+  "connection.error": "Geen verbinding. Probeer opnieuw.",
+  "connection.retry": "Opnieuw proberen",
+  "overview.title": "Recepten",
+  "overview.empty": "Nog geen recepten.",
+  "overview.new": "Nieuw recept",
+  "overview.error": "Recepten laden mislukt.",
+  "form.title": "Nieuw recept",
+  "form.titleLabel": "Titel",
+  "form.save": "Opslaan",
+  "form.back": "Terug naar overzicht",
+  "form.error": "Opslaan mislukt."
+}

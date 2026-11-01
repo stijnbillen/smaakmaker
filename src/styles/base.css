@@ -1,0 +1,61 @@
+/* Structural basics only (layout, tap targets). Visual identity and tokens come with T-002. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.page {
+  padding: 1rem;
+  max-width: 100%;
+}
+
+input {
+  width: 100%;
+  min-height: 44px;
+  font: inherit;
+}
+
+label {
+  display: block;
+}
+
+/* Minimum tap target for every interactive element. */
+button,
+a[href],
+[role='button'],
+input[type='checkbox'],
+input[type='radio'],
+[data-tap-target] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+button,
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+  font: inherit;
+  margin: 0.5rem 0;
+}
+
+.connection-banner {
+  padding: 0.5rem 1rem;
+}
+
+.recipe-list {
+  padding-left: 1.25rem;
+}

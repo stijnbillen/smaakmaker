@@ -7,3 +7,9 @@
 - 2026-11-01 16:37 T-001 ontwikkelaar: KLAAR
 - 2026-11-01 16:39 T-001 build: mislukt
 - 2026-11-01 16:39 T-001 stop: review niet goedgekeurd na 2 rondes
+- 2026-11-01 16:41 T-001 ontwikkelaar: BLOKKADE: test `tests/e2e/connection.spec.ts:43-64` heeft een race tussen `isVisible()` en `click()`. De banner verdwijnt zodra het overzicht na `unroute` goed laadt, en dan hangt de klik tot de timeout. Gebruik een klik met korte timeout die een verdwenen knop negeert, of wacht eerst tot het overzicht klaar is.
+- 2026-11-01 16:41 T-001 tester: KLAAR
+- 2026-11-01 16:42 T-001 ontwikkelaar: KLAAR
+- 2026-11-01 16:43 T-001 build: geslaagd
+- 2026-11-01 16:44 T-001 reviewer: GOEDGEKEURD
+- 2026-11-01 16:45 T-001 build: geslaagd
