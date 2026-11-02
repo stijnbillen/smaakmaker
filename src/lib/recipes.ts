@@ -1,8 +1,9 @@
 import { isConnectionError } from './connection';
-import { removePhotos, uploadPhoto } from './photos';
+import { copyPhoto, removePhotos, uploadPhoto } from './photos';
 import { toRow, type PhotoDraft, type RecipeDraft, type RecipeRecord, type StoredPhoto } from './recipe';
 import { supabase } from './supabase';
 import type { TagKind } from './tags';
+import type { FamilyMember } from './variant';
 
 // Database calls for recipes. Each returns the error and HTTP status so the caller can let
 // `report` decide between the connection banner and an own message.
@@ -15,7 +16,7 @@ export interface CallResult {
 /** SQLSTATE for an id that is not a uuid. */
 const INVALID_TEXT_REPRESENTATION = '22P02';
 
-const SELECT = 'id,title,ingredients,steps,prep_minutes,total_minutes,servings,source,note,equipment,dish_tags,trait_tags,photos,author_id,created_at,author:profiles(display_name)';
+const SELECT = 'id,title,ingredients,steps,prep_minutes,total_minutes,servings,source,note,equipment,dish_tags,trait_tags,photos,author_id,created_at,variant_of,family_id,author:profiles(display_name)';
 
 interface FetchedRow {
   id: string;
@@ -33,6 +34,8 @@ interface FetchedRow {
   photos: StoredPhoto[] | null;
   author_id: string;
   created_at: string;
+  variant_of: string | null;
+  family_id: string;
   author: { display_name: string | null } | null;
 }
 
@@ -47,6 +50,14 @@ export async function fetchRecipe(id: string): Promise<FetchResult> {
   }
   if (!data) return { recipe: null, notFound: true, error: null, status };
   const row = data as unknown as FetchedRow;
+  // The source's current title in a second query: an embed of recipes in recipes is ambiguous for PostgREST
+  // (one foreign key, two directions). A deleted source has variant_of null and needs no lookup.
+  let sourceTitle: string | null = null;
+  if (row.variant_of) {
+    const src = await supabase.from('recipes').select('title').eq('id', row.variant_of).maybeSingle();
+    if (src.error) return { recipe: null, notFound: false, error: src.error, status: src.status };
+    sourceTitle = (src.data as { title: string } | null)?.title ?? null;
+  }
   return {
     recipe: {
       id: row.id,
@@ -66,11 +77,25 @@ export async function fetchRecipe(id: string): Promise<FetchResult> {
       authorId: row.author_id,
       authorName: row.author?.display_name ?? null,
       createdAt: row.created_at,
+      variantOf: row.variant_of ?? null,
+      familyId: row.family_id ?? row.id,
+      sourceTitle,
     },
     notFound: false,
     error: null,
     status,
   };
+}
+
+/** All recipes of one family, oldest first: one query gives the direct variants and the whole family list. */
+export async function fetchFamily(familyId: string): Promise<CallResult & { members: FamilyMember[] }> {
+  const { data, error, status } = await supabase
+    .from('recipes')
+    .select('id,title,variant_of,created_at,author:profiles(display_name)')
+    .eq('family_id', familyId)
+    .order('created_at', { ascending: true })
+    .order('id', { ascending: true });
+  return { members: error ? [] : ((data ?? []) as unknown as FamilyMember[]), error, status };
 }
 
 /** Catalogue names that are in at least one recipe: the choices in the form and the filter. */
@@ -88,7 +113,14 @@ export async function fetchTags(kind: TagKind): Promise<CallResult & { names: st
 /** Set when the database refused the recipe as too large (R-004): which part is too large. */
 export type SizeProblem = 'photos' | 'text';
 
-export type SaveResult = CallResult & { id: string | null; sizeProblem?: SizeProblem };
+/** `sourceGone`: the source of a variant was deleted while the form was open (the foreign key refused the row). */
+export type SaveResult = CallResult & { id: string | null; sizeProblem?: SizeProblem; sourceGone?: boolean };
+
+/** 23503 on the foreign key of variant_of: the source no longer exists. */
+export function isSourceGone(error: unknown): boolean {
+  const e = error as { code?: string; message?: string } | null;
+  return e?.code === '23503' && (e.message ?? '').includes('recipes_variant_of_fkey');
+}
 
 /** The database answers a too large recipe with 23514, message `recipe_too_large` and the part in `details`. */
 export function sizeProblemOf(error: unknown): SizeProblem | undefined {
@@ -116,6 +148,13 @@ async function uploadNew(session: SaveSession, photos: PhotoDraft[]): Promise<Ph
   const fresh: string[] = [];
   for (const photo of photos) {
     let path = photo.path ?? session.uploaded.get(photo.key);
+    if (!path && photo.copyFrom) {
+      // A variant's photo: a real copy in the folder of the new recipe, so the variant owns its files.
+      const res = await copyPhoto(photo.copyFrom, session.recipeId);
+      if (res.error || !res.path) return { photos: [], fresh, error: res.error, status: res.status };
+      path = res.path;
+      session.uploaded.set(photo.key, path);
+    }
     if (!path) {
       if (!photo.blob) return { photos: [], fresh, error: new Error('photo without file'), status: 200 };
       const res = await uploadPhoto(session.recipeId, photo.blob);
@@ -129,12 +168,26 @@ async function uploadNew(session: SaveSession, photos: PhotoDraft[]): Promise<Ph
   return { photos: stored, fresh, error: null, status: 200 };
 }
 
-export async function createRecipe(draft: RecipeDraft, session: SaveSession = newSaveSession()): Promise<SaveResult> {
+/** True only when the read succeeds and finds no row: a failed read is not proof that the source is gone. */
+async function sourceMissing(id: string): Promise<boolean> {
+  const { data, error } = await supabase.from('recipes').select('id').eq('id', id).maybeSingle();
+  return !error && !data;
+}
+
+/** `variantOf`: the source recipe when this is a variant; the family is set by the database. */
+export async function createRecipe(draft: RecipeDraft, session: SaveSession = newSaveSession(), variantOf?: string): Promise<SaveResult> {
   const up = await uploadNew(session, draft.photos ?? []);
-  if (up.error) return { id: null, error: up.error, status: up.status };
+  if (up.error) {
+    // Copies already made would be orphans; clean them up unless the connection broke (a retry reuses them).
+    await discardAfterFailure(session, up.fresh, up.error, up.status);
+    // A server answer on a copy usually means the source (and its files) was deleted meanwhile.
+    const gone =
+      !!variantOf && !isConnectionError({ ...(up.error as object), status: up.status }) && (await sourceMissing(variantOf));
+    return { id: null, error: up.error, status: up.status, ...(gone ? { sourceGone: true } : {}) };
+  }
   const { data, error, status } = await supabase
     .from('recipes')
-    .insert({ ...toRow(draft), id: session.recipeId, photos: up.photos })
+    .insert({ ...toRow(draft), id: session.recipeId, photos: up.photos, ...(variantOf ? { variant_of: variantOf } : {}) })
     .select('id')
     .single();
   if (error?.code === '23505') {
@@ -143,7 +196,7 @@ export async function createRecipe(draft: RecipeDraft, session: SaveSession = ne
   }
   if (error || !data) {
     await discardAfterFailure(session, up.fresh, error, status);
-    return { id: null, error, status, sizeProblem: sizeProblemOf(error) };
+    return { id: null, error, status, sizeProblem: sizeProblemOf(error), ...(isSourceGone(error) ? { sourceGone: true } : {}) };
   }
   await removeUnused(session, up.photos);
   return { id: data.id, error: null, status };

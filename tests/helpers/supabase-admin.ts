@@ -235,6 +235,43 @@ export async function removeRecipeFiles(recipeId: string): Promise<void> {
   if (names.length > 0) await adminClient().storage.from(PHOTO_BUCKET).remove(names.map((n) => `${recipeId}/${n}`));
 }
 
+/**
+ * T-014: copies stored photos into the folder of `newRecipeId` through the Storage API with the given
+ * user's session (what the app does). Returns the new photos list, same order and main flag.
+ */
+export async function copyPhotos(
+  client: SupabaseClient,
+  photos: { path: string; main: boolean }[],
+  newRecipeId: string,
+): Promise<{ path: string; main: boolean }[]> {
+  const out: { path: string; main: boolean }[] = [];
+  for (const p of photos) {
+    const to = `${newRecipeId}/${randomUUID()}.jpg`;
+    const res = await client.storage.from(PHOTO_BUCKET).copy(p.path, to);
+    if (res.error) throw res.error;
+    out.push({ path: to, main: p.main });
+  }
+  return out;
+}
+
+/**
+ * T-014: inserts a variant of `sourceId` as the given client (PostgREST). Fields are valid defaults;
+ * `overrides` can replace anything, including `variant_of` and `author_id`.
+ */
+export async function insertVariant(
+  client: SupabaseClient,
+  sourceId: string,
+  overrides: Record<string, unknown> = {},
+): Promise<StoredRecipe & { variant_of: string | null; family_id: string }> {
+  const res = await client
+    .from('recipes')
+    .insert(validRecipe({ variant_of: sourceId, ...overrides }))
+    .select('id,title,author_id,created_at,variant_of,family_id')
+    .single();
+  if (res.error || !res.data) throw res.error ?? new Error('insertVariant failed');
+  return res.data as StoredRecipe & { variant_of: string | null; family_id: string };
+}
+
 /** T-013: see pg.ts. Re-exported so size tests import all storage helpers from one place. */
 export { setPhotoSize } from './pg';
 

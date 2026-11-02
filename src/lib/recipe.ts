@@ -39,6 +39,8 @@ export interface PhotoDraft {
   main: boolean;
   /** File size in bytes: the converted blob, or the stored file's size once looked up. Not part of "changed". */
   bytes?: number;
+  /** A variant's photo still to be copied: the source path. Becomes a file of its own only at "Opslaan". Not part of "changed". */
+  copyFrom?: string;
 }
 
 /** A photo as stored in recipes.photos. */
@@ -110,6 +112,12 @@ export interface RecipeRecord extends Omit<RecipeRow, 'prep_minutes' | 'total_mi
   authorId: string;
   authorName: string | null;
   createdAt: string;
+  /** The direct source of a variant; null when there is none or when it was deleted. */
+  variantOf: string | null;
+  /** The family, fixed at creation; equals `id` for a recipe that was not made as a variant. */
+  familyId: string;
+  /** Title of the source, as it is now; null without a (remaining) source. */
+  sourceTitle: string | null;
 }
 
 /** Counts code points after trimming, like the database does with its trim and char_length. */

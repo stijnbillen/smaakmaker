@@ -8,6 +8,7 @@ import { EditRecipePage } from './pages/EditRecipePage';
 import { InvitesPage } from './pages/InvitesPage';
 import { FavoritesPage } from './pages/FavoritesPage';
 import { NewRecipePage } from './pages/NewRecipePage';
+import { NewVariantPage } from './pages/NewVariantPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { RecipeDetailPage } from './pages/RecipeDetailPage';
 import { RecipeListPage } from './pages/RecipeListPage';
@@ -28,6 +29,7 @@ const router = createBrowserRouter(
           <Route path="/nieuw" element={<NewRecipePage />} />
           <Route path="/recept/:id" element={<RecipeDetailPage />} />
           <Route path="/recept/:id/bewerken" element={<EditRecipePage />} />
+          <Route path="/recept/:id/variant" element={<NewVariantPage />} />
           <Route path="/profiel" element={<ProfilePage />} />
           <Route element={<RequireAdmin />}>
             <Route path="/uitnodigingen" element={<InvitesPage />} />

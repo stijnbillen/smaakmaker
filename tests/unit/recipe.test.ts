@@ -650,3 +650,20 @@ describe('trait tags in the draft (T-011 / R-011 crit. 1)', () => {
     expect(isDirty({ ...(fresh as object), traitTags: ['snel'] } as never, fresh)).toBe(true);
   });
 });
+
+// T-014 / R-006 crit. 2: a copy-to-do photo (copyFrom) must not make an untouched variant form "changed".
+describe('isDirty ignores copyFrom (T-014 / R-006 crit. 2)', () => {
+  const photo = { key: 'k1', previewUrl: '', main: true, bytes: 10 };
+  const start = { ...emptyDraft(), photos: [photo] };
+
+  it('is false when only copyFrom or bytes differ', () => {
+    const other = { ...start, photos: [{ ...photo, copyFrom: 'x/y.jpg', bytes: 99 }] };
+    expect(isDirty(start, other)).toBe(false);
+  });
+
+  it('is true when the order or the number of copied photos differs', () => {
+    const two = { ...emptyDraft(), photos: [{ ...photo, copyFrom: 'a' }, { ...photo, key: 'k2', main: false, copyFrom: 'b' }] };
+    expect(isDirty(two, { ...two, photos: [...two.photos].reverse() })).toBe(true);
+    expect(isDirty(two, { ...two, photos: two.photos.slice(0, 1) })).toBe(true);
+  });
+});

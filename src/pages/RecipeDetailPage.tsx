@@ -11,10 +11,12 @@ import { canDelete, canEdit } from '../lib/permissions';
 import { formatDuration } from '../lib/format';
 import { ingredientLine, sourceLink } from '../lib/recipe';
 import { signedUrls } from '../lib/photos';
-import { deleteRecipe } from '../lib/recipes';
+import { deleteRecipe, fetchFamily } from '../lib/recipes';
 import { useRecipe } from '../lib/useRecipe';
+import { familyView, variantSourceLine, type FamilyMember } from '../lib/variant';
 
 const DELETE_KEY = 'recipe-delete';
+const FAMILY_KEY = 'recipe-family';
 
 export function RecipeDetailPage() {
   const { id = '' } = useParams();
@@ -44,6 +46,32 @@ export function RecipeDetailPage() {
       active = false;
     };
   }, [readyRecipe]);
+
+  // The whole family in one query per loaded recipe; the page itself does not wait for it.
+  const [family, setFamily] = useState<FamilyMember[] | null>(null);
+  const familyId = readyRecipe?.familyId;
+  const readyId = readyRecipe?.id;
+  useEffect(() => {
+    setFamily(null);
+    if (!familyId) return;
+    let active = true;
+    const load = async () => {
+      const res = await fetchFamily(familyId);
+      if (!active) return;
+      if (res.error) {
+        // Connection trouble: the banner with a retry; what is on the page stays.
+        report(FAMILY_KEY, res.error, res.status, () => void load());
+        return;
+      }
+      resolve(FAMILY_KEY);
+      setFamily(res.members);
+    };
+    void load();
+    return () => {
+      active = false;
+      resolve(FAMILY_KEY);
+    };
+  }, [familyId, readyId, report, resolve]);
 
   // A left page must not stay registered as a retry action: retrying would delete behind the user's back.
   useEffect(() => {
@@ -104,8 +132,17 @@ export function RecipeDetailPage() {
   const stored = recipe.servings;
   const desired = stored !== null && chosen?.id === recipe.id ? chosen.value : (stored ?? 1);
 
+  const sourceLine = variantSourceLine(recipe.variantOf, recipe.familyId, recipe.id, recipe.sourceTitle);
+  const view = family ? familyView(family, recipe.id) : null;
+
   return (
     <main className="page">
+      {sourceLine === 'bron' && recipe.variantOf && (
+        <p className="variant-source">
+          <span>{t('variant.of')}</span> <Link to={`/recept/${recipe.variantOf}`}>{recipe.sourceTitle}</Link>
+        </p>
+      )}
+      {sourceLine === 'verwijderd' && <p className="variant-source">{t('variant.ofDeleted')}</p>}
       <h1>{recipe.title}</h1>
       {recipe.photos.length > 0 && (
         // The strip scrolls sideways by itself; the page never does. Order is the one the author chose.
@@ -223,6 +260,37 @@ export function RecipeDetailPage() {
         </section>
       )}
 
+      {view && view.direct.length > 0 && (
+        <section className="recipe-section">
+          <h2>{t('variant.list')}</h2>
+          <ul className="variant-list">
+            {view.direct.map((m) => (
+              <li key={m.id}>
+                <Link to={`/recept/${m.id}`}>{m.title}</Link>
+                {m.author?.display_name && <span className="variant-author">{m.author.display_name}</span>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {view && view.n >= 2 && (
+        <details className="variant-family">
+          <summary>{t('variant.family').replace('{n}', String(view.n))}</summary>
+          <ul className="variant-list">
+            {view.all.map((m) => (
+              <li key={m.id}>
+                {m.id === recipe.id ? (
+                  <span>{m.title}</span>
+                ) : (
+                  <Link to={`/recept/${m.id}`}>{m.title}</Link>
+                )}
+                <span className="variant-author">{m.id === recipe.id ? t('variant.current') : (m.author?.display_name ?? '')}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+
       <ReviewSection recipeId={recipe.id} />
 
       {deleteFailed && (
@@ -230,8 +298,11 @@ export function RecipeDetailPage() {
           {t('recipe.deleteFailed')}
         </p>
       )}
-      {(mayEdit || mayDelete) && (
-        <div className="recipe-actions">
+      <div className="recipe-actions">
+          {/* Every signed-in user may make a variant, also of another's recipe. */}
+          <Link to={`/recept/${recipe.id}/variant`} className="button-link">
+            {t('variant.make')}
+          </Link>
           {mayEdit && (
             <Link to={`/recept/${recipe.id}/bewerken`} className="button-link">
               {t('recipe.edit')}
@@ -242,8 +313,7 @@ export function RecipeDetailPage() {
               {t('recipe.delete')}
             </button>
           )}
-        </div>
-      )}
+      </div>
       {confirming && (
         <ConfirmDialog
           question={t('recipe.deleteQuestion')}

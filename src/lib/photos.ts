@@ -22,6 +22,22 @@ export async function uploadPhoto(recipeId: string, blob: Blob): Promise<UploadR
   return { path, error: null, status: 200 };
 }
 
+/**
+ * Copies a stored photo into the folder of a new recipe (variants), through the Storage API with the
+ * user's own session: the copy is owned by the one who copies, as the photo rules demand.
+ */
+export async function copyPhoto(fromPath: string, recipeId: string): Promise<UploadResult> {
+  const path = `${recipeId}/${crypto.randomUUID()}.jpg`;
+  try {
+    const { error } = await supabase.storage.from(PHOTO_BUCKET).copy(fromPath, path);
+    if (error) return { path: null, error, status: (error as { status?: number }).status };
+    return { path, error: null, status: 200 };
+  } catch (error) {
+    // A lost connection throws; without a status `report` shows the connection banner.
+    return { path: null, error, status: undefined };
+  }
+}
+
 /** Best effort: a failure here is not shown to the user, because the recipe itself was saved or deleted. */
 export async function removePhotos(paths: string[]): Promise<void> {
   if (paths.length === 0) return;

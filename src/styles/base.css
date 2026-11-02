@@ -913,3 +913,63 @@ textarea[aria-invalid='true'] {
 [hidden] {
   display: none !important;
 }
+
+/* Variants: the source line above the title, the label in the overview, the lists of variants */
+.variant-source {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.variant-source a,
+.variant-list a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  color: var(--color-text-accent);
+  text-decoration: underline;
+}
+
+/* Same shape as the tags, but text only: the overview item around it is the tap target. */
+.variant-label {
+  display: inline-block;
+  margin-top: var(--space-1);
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-body);
+  background: var(--color-bg-sunken);
+  border-radius: var(--radius-sm);
+}
+
+.variant-list {
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.variant-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--space-3);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.variant-author {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.variant-family {
+  margin: var(--space-4) 0;
+}
+
+.variant-family summary {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  font-weight: 600;
+  cursor: pointer;
+}

@@ -86,6 +86,8 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo, photoSiz
   const [failed, setFailed] = useState(false);
   // Which part is too large, from the client check or from the database's refusal (R-004).
   const [sizeProblem, setSizeProblem] = useState<SizeProblem | null>(null);
+  // The source of a variant was deleted while this form was open.
+  const [sourceGone, setSourceGone] = useState(false);
   // A photo that is still being converted is not in the draft yet; saving now would lose it.
   const [photoBusy, setPhotoBusy] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -161,10 +163,16 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo, photoSiz
     setSaving(true);
     setFailed(false);
     setSizeProblem(null);
+    setSourceGone(false);
     const res = await submitRef.current(result.pruned);
     savingRef.current = false;
     if (!mounted.current) return;
     setSaving(false);
+    if (res.sourceGone) {
+      // An answer from the database: no banner, the form stays filled in.
+      setSourceGone(true);
+      return;
+    }
     if (res.sizeProblem) {
       // An answer from the database, not a connection problem: no banner, the form stays as it is.
       setSizeProblem(res.sizeProblem);
@@ -469,6 +477,11 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo, photoSiz
         {failed && (
           <p role="alert" className="field-error">
             {t('form.error')}
+          </p>
+        )}
+        {sourceGone && (
+          <p role="alert" className="field-error">
+            {t('variant.sourceGone')}
           </p>
         )}
         {sizeProblem && (

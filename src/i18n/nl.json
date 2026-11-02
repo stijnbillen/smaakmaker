@@ -191,5 +191,14 @@
   "size.used": "{used} van 2 MB",
   "size.loading": "…",
   "size.photosTooLarge": "Foto's zijn samen te groot.",
-  "size.textTooLarge": "De tekst van het recept is te groot."
+  "size.textTooLarge": "De tekst van het recept is te groot.",
+  "variant.make": "Maak een variant",
+  "variant.formTitle": "Variant maken",
+  "variant.of": "Variant van:",
+  "variant.ofDeleted": "Variant van een verwijderd recept",
+  "variant.list": "Varianten",
+  "variant.family": "Alle varianten ({n})",
+  "variant.current": "(dit recept)",
+  "variant.label": "Variant",
+  "variant.sourceGone": "Het bronrecept is intussen verwijderd. Je variant is niet bewaard."
 }

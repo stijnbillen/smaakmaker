@@ -47,7 +47,9 @@ export function PhotoPicker({ photos, onChange, onBusyChange }: PhotoPickerProps
   }, []);
 
   // Stored photos show through signed URLs (the bucket is private); one call for all of them.
-  const missing = photos.filter((p) => p.path && !p.previewUrl && !urls.has(p.path)).map((p) => p.path as string);
+  // A photo still to be copied (variant) shows the source file.
+  const shown = (p: PhotoDraft): string | undefined => p.path ?? p.copyFrom;
+  const missing = photos.filter((p) => shown(p) && !p.previewUrl && !urls.has(shown(p) as string)).map((p) => shown(p) as string);
   const missingKey = missing.join('|');
   useEffect(() => {
     if (missing.length === 0) return;
@@ -147,7 +149,8 @@ export function PhotoPicker({ photos, onChange, onBusyChange }: PhotoPickerProps
         <ul className="row-list photo-list">
           {photos.map((photo, i) => {
             const label = text('photos.item', { n: i + 1 });
-            const src = photo.previewUrl || (photo.path ? urls.get(photo.path) : undefined);
+            const shownPath = shown(photo);
+            const src = photo.previewUrl || (shownPath ? urls.get(shownPath) : undefined);
             return (
               <li key={photo.key} className="row photo-row">
                 <div className="photo-thumb">{src && <img src={src} alt={label} />}</div>

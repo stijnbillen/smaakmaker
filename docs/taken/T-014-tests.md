@@ -24,3 +24,12 @@ Bestanden: `tests/unit/variant.test.ts`, `tests/unit/recipe.test.ts` (uitbreidin
 - Familielijst: `getByText(title, {exact:true})`; lijstitem-filter case-sensitive regex, zodat "Kleinkind" niet matcht.
 - Tagcontrole in test 1 (crit. 1): knop-naam nu hoofdletterongevoelig (regex `^naam$`, `i`) binnen de tagroep, omdat de gedeelde catalogus ook "Vegetarisch" kan bevatten. Getoetst gedrag (tag gekopieerd en geselecteerd, `aria-pressed=true`) ongewijzigd; import `tagButton` → `tagGroup`.
 - Foto-test: `naturalWidth` vervangen door HTTP 200-check op de afbeeldings-URL (fixture niet decodeerbaar). Criterium (variant houdt eigen foto na verwijderen bron) blijft gedekt.
+
+## Herstel (testfout)
+- tests/e2e/variants.spec.ts: dish_tags was [soep, vegetarisch]; vegetarisch is een trait-tag en vervuilde de dish-groep (brak recipe-trait-tags.test.ts). Nu [soep, tapas] (dish-starttags). Gedrag dat getoetst wordt (kopie van tags in variantformulier) ongewijzigd.
+
+## Herstel (review bevinding 2)
+- Test "bron verdwijnt": controle op lege map nu onvoorwaardelijk (`expect.poll(() => newId).toBeDefined()`).
+- Nieuwe test: bron met 2 foto's verwijderd zoals de app (rij + `removeRecipeFiles`). Verwacht `variant.sourceGone`, ingevuld formulier, geen POST op recipes, en lege mappen voor elke bestemming van een onderschept `storage/object/copy`-verzoek (via `page.route`, niet via globale `fileCount()`, want parallelle workers). Deze test faalt tot de ontwikkelaar bevinding 1 herstelt.
+- Bevindingen 1 en 3 zijn ontwikkelaar-werk; niet aangeraakt.
+- Herhaling na BLOKKADE-melding: beide punten stonden al in het spec-bestand (geval met `removeRecipeFiles` en onvoorwaardelijke controle op regel 411-413). Bewust geen globale `fileCount()` vóór/na: parallelle workers maken die onbetrouwbaar; de per-map-controle is stabiel. `npx tsc --noEmit` slaagt zonder fouten.

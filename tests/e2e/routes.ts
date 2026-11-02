@@ -43,6 +43,14 @@ export const routes: AppRoute[] = [
     },
     auth: 'full',
   },
+  {
+    // T-014 / R-006: the variant form of the route recipe.
+    name: 'variant maken',
+    get path() {
+      return `/recept/${fixture.recipeId}/variant`;
+    },
+    auth: 'full',
+  },
   { name: 'favorieten', path: '/favorieten', auth: 'full' },
   { name: 'profiel', path: '/profiel', auth: 'full' },
   { name: 'uitnodigingen', path: '/uitnodigingen', auth: 'admin' },

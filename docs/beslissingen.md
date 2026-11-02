@@ -324,3 +324,7 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - `NewVariantPage` toont het formulier pas als bron én fotogroottes bekend zijn, zodat `initial` één keer klopt. Het kopiëren gebeurt in `uploadNew` via `copyPhoto` (Storage `copy` met de sessie van de gebruiker); de kopie komt in `session.uploaded`, dus "Opnieuw proberen" kopieert niet dubbel.
 - `SaveResult.sourceGone` komt uit een `23503` op `recipes_variant_of_fkey`; `RecipeForm` toont dan `variant.sourceGone` en laat alles ingevuld.
 - De knop "Maak een variant" staat voor elke aangemelde gebruiker in `recipe-actions`; de familie wordt met één `fetchFamily` per geladen recept opgehaald.
+
+### T-014 — review-herstel
+- `createRecipe` ruimt bij een mislukte foto-kopie de al gemaakte kopieën op (behalve bij een verbindingsfout) en controleert dan met een `select` of de bron nog bestaat, zodat `variant.sourceGone` verschijnt.
+- `retries: 1` uit `playwright.config.ts` gehaald: het hoorde niet bij R-006 en maskeert wankele tests.

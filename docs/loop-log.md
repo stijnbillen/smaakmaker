@@ -225,3 +225,17 @@
 - 2026-11-02 18:14 T-014 ontwikkelaar: KLAAR
 - 2026-11-02 18:21 T-014 build: mislukt
 - 2026-11-02 18:21 T-014 stop: build of tests falen na 3 pogingen
+- 2026-11-02 18:34 T-014 ontwikkelaar: KLAAR
+- 2026-11-02 18:35 T-014 build: mislukt
+- 2026-11-02 18:36 T-014 ontwikkelaar: BLOKKADE: test tests/e2e/variants.spec.ts zet 'vegetarisch' (een trait-tag) in dish_tags, waardoor de dish-groep vervuild raakt en tests/db/recipe-trait-tags.test.ts faalt.
+- 2026-11-02 18:36 T-014 tester: KLAAR
+- 2026-11-02 18:44 T-014 ontwikkelaar: KLAAR
+- 2026-11-02 18:51 T-014 build: geslaagd
+- 2026-11-02 18:53 T-014 reviewer: BEVINDINGEN: 0/3
+- 2026-11-02 18:53 T-014 tester: KLAAR
+- 2026-11-02 18:54 T-014 ontwikkelaar: BLOKKADE: test `tests/e2e/variants.spec.ts:407-411` verwijdert bij "bron verdwijnt" alleen de rij, niet de bestanden, en de controle op regel 411 staat achter `if (newId)`; de tester moet een geval met `removeRecipeFiles` toevoegen en die controle onvoorwaardelijk maken.
+- 2026-11-02 18:55 T-014 tester: KLAAR
+- 2026-11-02 19:02 T-014 ontwikkelaar: KLAAR
+- 2026-11-02 19:09 T-014 build: geslaagd
+- 2026-11-02 19:10 T-014 reviewer: GOEDGEKEURD
+- 2026-11-02 19:16 T-014 build: geslaagd

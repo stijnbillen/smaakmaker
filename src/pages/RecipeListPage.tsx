@@ -25,6 +25,7 @@ import {
 import { signedUrls } from '../lib/photos';
 import type { StoredPhoto } from '../lib/recipe';
 import { supabase } from '../lib/supabase';
+import { isVariant } from '../lib/variant';
 import { tagKey, toggleTag, type TagKind } from '../lib/tags';
 import {
   applyTagFilter,
@@ -47,6 +48,7 @@ interface RecipeRow {
   rating_avg: number | string | null;
   rating_count: number;
   photos: StoredPhoto[] | null;
+  family_id: string;
   author: { display_name: string | null } | null;
 }
 
@@ -81,7 +83,7 @@ export function RecipeListPage() {
     const mine = ++requestId.current;
     const base = supabase
       .from('recipes')
-      .select('id,title,created_at,prep_minutes,total_minutes,equipment,photos,rating_avg,rating_count,author:profiles(display_name)');
+      .select('id,title,created_at,prep_minutes,total_minutes,equipment,photos,rating_avg,rating_count,family_id,author:profiles(display_name)');
     // Rating sort: best average first, more reviews first on a tie, newest last; no reviews at the bottom.
     const ordered =
       sort === 'rating'
@@ -179,6 +181,12 @@ export function RecipeListPage() {
                     {src && <img src={src} alt="" loading="lazy" data-testid="recipe-main-photo" />}
                   </span>
                   <span className="recipe-title">{r.title}</span>
+                  {/* Text only, no tap target: the whole item is the link. */}
+                  {isVariant(r) && (
+                    <span className="variant-label" data-testid="variant-label">
+                      {t('variant.label')}
+                    </span>
+                  )}
                   <AuthorLine name={r.author?.display_name ?? null} date={r.created_at} />
                   {r.rating_avg !== null && r.rating_count > 0 && (
                     <span className="recipe-rating" data-testid="recipe-rating">
