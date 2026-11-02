@@ -332,3 +332,14 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 ### T-014 — review-herstel
 - `createRecipe` ruimt bij een mislukte foto-kopie de al gemaakte kopieën op (behalve bij een verbindingsfout) en controleert dan met een `select` of de bron nog bestaat, zodat `variant.sourceGone` verschijnt.
 - `retries: 1` uit `playwright.config.ts` gehaald: het hoorde niet bij R-006 en maskeert wankele tests.
+
+## T-017 — Favorieten (bouw)
+- Eigen tabel `favorites (user_id, recipe_id)` met RLS op `user_id = auth.uid()`; insert-recht alleen op `recipe_id` (gebruiker via default), geen update. Zo blijven de rechten en de 2 MB-limiet van `recipes` onaangeroerd.
+- `is_favorite(recipes)` is een berekend veld (`security invoker`), zodat PostgREST erop filtert (`eq('is_favorite', true)`) en alle bestaande `apply*Filter` ongewijzigd werken; geen lijst id's en geen extra aanroep. De lokale PostgREST ondersteunt dit, dus de terugvaloptie uit het plan was niet nodig.
+- `search_recipes` is opnieuw aangemaakt (drop + create) met kolom `is_favorite`; de rest van de functie en de grants zijn gelijk gebleven.
+- `RecipeBrowser` is de gedeelde lijst voor overzicht en favorieten (prop `favoritesOnly`, eigen `connectionKey`); het hartje staat naast de `Link` in het `<li>`, want een knop in een `<a>` is ongeldig.
+- `FavoriteButton` is optimistisch en houdt alleen de laatste wens bij (`wanted`/`confirmed`, één lopende aanroep): een late of dubbele tik kan nooit een oudere keuze terugzetten. `23505` bij toevoegen en 0 rijen bij verwijderen tellen als geslaagd.
+- Ontmarkeren op `/favorieten` laat de kaart staan tot de pagina opnieuw laadt; volgorde is die van het overzicht.
+- Nieuwe tokens: `--color-text-heart` (valt onder de contrasttest) en `--space-heart-clearance`.
+- `favorites` maakt van `recipes` ↔ `profiles` een tweede (veel-op-veel) relatie; PostgREST weigert dan `profiles(...)` als embed (PGRST201). Alle embeds van de auteur op `recipes` gebruiken nu `profiles!recipes_author_profile_fkey(display_name)`.
+- `FavoriteButton` houdt per recept één gedeelde toestand (`entries`, op moduleniveau) buiten de component: een tik op de detailpagina met meteen "terug" toont op het overzicht de nieuwe toestand, ook als de aanroep nog loopt.

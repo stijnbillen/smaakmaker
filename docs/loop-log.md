@@ -272,3 +272,14 @@
 - 2026-11-02 21:47 T-015 build: geslaagd
 - 2026-11-02 21:49 T-015 reviewer: GOEDGEKEURD
 - 2026-11-02 21:54 T-015 build: geslaagd
+- 2026-11-02 21:54 T-015 savepoint: gecommit
+- 2026-11-02 21:56 T-017 analist: KLAAR
+- 2026-11-02 21:58 T-017 tester: KLAAR
+- 2026-11-02 22:51 T-017 ontwikkelaar: BLOKKADE: test favorites.spec.ts rij 139, 267 en 297 hebben races (geen wachten op detailpagina of lijst; `expect.poll` op 0 rijen slaagt v├│├│r de insert en de reload doodt het verwijderverzoek), tester moet herstellen
+- 2026-11-02 22:51 T-017 tester: KLAAR
+- 2026-11-02 22:58 T-017 ontwikkelaar: KLAAR
+- 2026-11-02 23:00 T-017 build: worker-crash (geen testfout), opnieuw
+- 2026-11-02 23:02 T-017 build: mislukt
+- 2026-11-02 23:10 T-017 ontwikkelaar: KLAAR
+- 2026-11-02 23:12 T-017 build: mislukt
+- 2026-11-02 23:12 T-017 stop: build of tests falen na 3 pogingen
