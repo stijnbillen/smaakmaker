@@ -22,7 +22,7 @@ Nieuw project: er zijn geen requirements met status "Bestaand", dus er is geen f
 ## Fase 2 — Recepten
 
 - [x] **T-005** — R-003: Recept toevoegen en bewerken (afhankelijk van T-003). Ook: knop Verwijderen met bevestiging, ook voor de beheerder (R-017 crit. 3); gebruik `canDelete` en `is_admin()`; 0 rijen = mislukt.
-- [ ] **T-006** — R-007: Preptijd en totale doorlooptijd (afhankelijk van T-005)
+- [x] **T-006** — R-007: Preptijd en totale doorlooptijd (afhankelijk van T-005)
 - [ ] **T-007** — R-013: Porties en omrekenen (afhankelijk van T-005)
 - [ ] **T-008** — R-015: Bron en opmerking (afhankelijk van T-005)
 - [ ] **T-009** — R-008: Kookgerief (afhankelijk van T-005)

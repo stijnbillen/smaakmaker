@@ -12,13 +12,15 @@ export interface CallResult {
 /** SQLSTATE for an id that is not a uuid. */
 const INVALID_TEXT_REPRESENTATION = '22P02';
 
-const SELECT = 'id,title,ingredients,steps,author_id,created_at,author:profiles(display_name)';
+const SELECT = 'id,title,ingredients,steps,prep_minutes,total_minutes,author_id,created_at,author:profiles(display_name)';
 
 interface FetchedRow {
   id: string;
   title: string;
   ingredients: RecipeRecord['ingredients'];
   steps: string[];
+  prep_minutes: number | null;
+  total_minutes: number | null;
   author_id: string;
   created_at: string;
   author: { display_name: string | null } | null;
@@ -41,6 +43,8 @@ export async function fetchRecipe(id: string): Promise<FetchResult> {
       title: row.title,
       ingredients: row.ingredients,
       steps: row.steps,
+      prepMinutes: row.prep_minutes,
+      totalMinutes: row.total_minutes,
       authorId: row.author_id,
       authorName: row.author?.display_name ?? null,
       createdAt: row.created_at,

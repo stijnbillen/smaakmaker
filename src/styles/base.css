@@ -56,6 +56,7 @@ label {
 }
 
 input,
+select,
 textarea {
   display: block;
   width: 100%;
@@ -77,6 +78,7 @@ textarea {
 }
 
 input:focus,
+select:focus,
 textarea:focus {
   border-color: var(--color-focus);
 }
@@ -166,6 +168,45 @@ textarea[aria-invalid='true'] {
   margin: var(--space-1) 0 0;
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
+}
+
+/* Two fields side by side (times, filters); minmax(0) lets them shrink so 360 px never scrolls sideways. */
+.field-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: var(--space-3);
+}
+
+.time-filter {
+  margin-top: var(--space-3);
+}
+
+.recipe-times {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-body);
+  overflow-wrap: anywhere;
+}
+
+.recipe-times-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: var(--space-3) 0 0;
+}
+
+.recipe-times-list dt {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.recipe-times-list dd {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
 }
 
 .connection-banner {

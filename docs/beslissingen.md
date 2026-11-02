@@ -143,3 +143,28 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **Lege regels:** het formulier laat volledig lege regels weg vóór het valideren (`pruneDraft`) en zet de meldingen terug op de getoonde regels. Na de eerste mislukte poging wordt live opnieuw gevalideerd.
 - **Navigatie na opslaan:** `savedRef` gaat aan vóór `navigate`; `useBlocker` leest `dirty && !saved` op het moment van navigeren.
 - **Omhoog/omlaag** zijn uitgeschakeld op de eerste/laatste regel in plaats van een knop die niets doet.
+
+## T-006 — Preptijd en totale doorlooptijd (2026-11-02, analyse)
+
+- **Twee kolommen `integer` op `recipes`:** `prep_minutes` en `total_minutes`.
+  - Het type weigert tekst en halve minuten.
+  - Checks: verplicht (`is not null`), bereik 0–4320 en `total_minutes >= prep_minutes` (`recipes_total_ge_prep`).
+  - Alle checks staan `not valid`, net als bij de receptinhoud: oude proefrijen blijven bestaan zonder tijden, en nieuwe en gewijzigde rijen worden gecontroleerd. Daarom zijn de kolommen nullable in plaats van `not null`.
+- **Kolomrecht:** `grant update (prep_minutes, total_minutes)` aan `authenticated`. De update-policy voor de auteur blijft dezelfde.
+- **Invoer in minuten:** één tekstveld per tijd met `inputmode="numeric"`, en alleen cijfers na trimmen (`"045"` geldt als 45). Er zijn geen aparte velden voor uren en minuten. Het label vermeldt "(minuten)".
+- **Weergave:** `formatDuration` in `format.ts`: onder 60 "x min", daarboven "x u" of "x u y min", zonder dagen (4320 → "72 u"). De eenheden komen uit `nl.json`.
+- **Filter:**
+  - twee keuzelijsten ("Maximale preptijd", "Maximale totale tijd") met "Alle", 15, 30, 60 en 120;
+  - de keuze staat in de URL (`?prep=…&totaal=…`), andere waarden worden genegeerd;
+  - het filteren gebeurt in de databank (`lte`), zodat het later met "en" bij de andere filters past;
+  - `applyTimeFilter` en `TimeFilter` zijn herbruikbaar voor de favorietenlijst;
+  - een volgnummer per verzoek voorkomt dat een laat antwoord van een vorig filter de lijst overschrijft.
+- **Leeg resultaat met een actief filter:** "Niets gevonden.", hetzelfde als bij zoeken. Zonder filter blijft het "Nog geen recepten.".
+- **Detailpagina:** toont "Preptijd" en "Totale tijd" in een `<dl>`. Een rij zonder tijden toont niets.
+- **Testhulp:** `insertRecipe` krijgt als standaard 10/20 minuten.
+
+### T-006 — bouw
+
+- **Filterwijziging gebruikt `replace`:** de URL volgt de keuze, maar de terugknop loopt niet door elke tussenstap.
+- **De lijst blijft zichtbaar tijdens het herladen** na een filterwijziging, in plaats van terug te vallen op de laadtoestand.
+- **`draftFromRecord` leest beide vormen** (`prep_minutes` uit een rij, `prepMinutes` uit een record), zodat de bewerkpagina en de unit-test dezelfde functie gebruiken.

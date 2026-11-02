@@ -169,6 +169,9 @@ export function validRecipe(overrides: Record<string, unknown> = {}): Record<str
     title: `Testrecept ${Date.now()}`,
     ingredients: [{ name: 'Zout' }],
     steps: ['Meng alles.'],
+    // T-006 / R-007: both times are required; valid defaults keep older tests working.
+    prep_minutes: 10,
+    total_minutes: 20,
     ...overrides,
   };
 }

@@ -6,6 +6,7 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useConnection } from '../components/ConnectionProvider';
 import { t } from '../i18n/t';
 import { canDelete, canEdit } from '../lib/permissions';
+import { formatDuration } from '../lib/format';
 import { formatQuantity } from '../lib/recipe';
 import { deleteRecipe } from '../lib/recipes';
 import { useRecipe } from '../lib/useRecipe';
@@ -83,6 +84,18 @@ export function RecipeDetailPage() {
     <main className="page">
       <h1>{recipe.title}</h1>
       <AuthorLine name={recipe.authorName} date={recipe.createdAt} />
+      {recipe.prepMinutes !== null && recipe.totalMinutes !== null && (
+        <dl className="recipe-times-list">
+          <div>
+            <dt>{t('time.prep')}</dt>
+            <dd>{formatDuration(recipe.prepMinutes)}</dd>
+          </div>
+          <div>
+            <dt>{t('time.total')}</dt>
+            <dd>{formatDuration(recipe.totalMinutes)}</dd>
+          </div>
+        </dl>
+      )}
 
       {recipe.ingredients.length > 0 && (
         <section className="recipe-section">

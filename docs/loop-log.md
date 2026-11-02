@@ -85,3 +85,12 @@
 - 2026-11-02 01:12 T-005 build: geslaagd
 - 2026-11-02 01:14 T-005 reviewer: GOEDGEKEURD
 - 2026-11-02 01:17 T-005 build: geslaagd
+- 2026-11-02 01:17 T-005 savepoint: gecommit
+- 2026-11-02 10:00 T-006 analist: KLAAR
+- 2026-11-02 10:02 T-006 tester: KLAAR
+- 2026-11-02 10:10 T-006 ontwikkelaar: BLOKKADE: test `tests/e2e/recipe-times.spec.ts` regel 205ÔÇô208 en 243ÔÇô246 wachten niet op de geladen lijst of het zichtbare filter, dus de tester moet die wachtstappen toevoegen.
+- 2026-11-02 10:10 T-006 tester: KLAAR
+- 2026-11-02 10:13 T-006 ontwikkelaar: KLAAR
+- 2026-11-02 10:16 T-006 build: geslaagd
+- 2026-11-02 10:17 T-006 reviewer: GOEDGEKEURD
+- 2026-11-02 10:20 T-006 build: geslaagd

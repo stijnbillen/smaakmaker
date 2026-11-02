@@ -206,6 +206,36 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo }: Recipe
           {titleError && <FieldError id={ids('title-error')}>{t('form.titleInvalid')}</FieldError>}
         </div>
 
+        <div className="field-pair">
+          {(['prepMinutes', 'totalMinutes'] as const).map((name) => {
+            const error = errors?.[name];
+            const message =
+              error === 'minutesRequired'
+                ? t('form.minutesRequired')
+                : error === 'minutesInvalid'
+                  ? t('form.minutesInvalid')
+                  : error === 'totalBeforePrep'
+                    ? t('form.totalBeforePrep')
+                    : null;
+            return (
+              <div className="field" key={name}>
+                <label htmlFor={ids(name)}>{t(name === 'prepMinutes' ? 'form.prepMinutes' : 'form.totalMinutes')}</label>
+                <input
+                  id={ids(name)}
+                  type="text"
+                  inputMode="numeric"
+                  value={draft[name]}
+                  autoComplete="off"
+                  onChange={(e) => setDraft((d) => ({ ...d, [name]: e.target.value }))}
+                  aria-invalid={invalid(error)}
+                  aria-describedby={describedBy(error && ids(`${name}-error`))}
+                />
+                {message && <FieldError id={ids(`${name}-error`)}>{message}</FieldError>}
+              </div>
+            );
+          })}
+        </div>
+
         <fieldset className="form-group">
           <legend>{t('form.ingredients')}</legend>
           {ingredientsError && (

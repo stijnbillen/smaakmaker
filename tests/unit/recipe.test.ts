@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   formatQuantity,
   isDirty,
+  draftFromRecord,
   moveItem,
+  parseMinutes,
   parseQuantity,
+  pruneDraft,
   removeItem,
   toRow,
   validateRecipe,
@@ -20,11 +23,15 @@ interface Draft {
   title: string;
   ingredients: Array<{ name: string; quantity: string; unit: string }>;
   steps: string[];
+  prepMinutes: string;
+  totalMinutes: string;
 }
 
 function draft(overrides: Partial<Draft> = {}): Draft {
   return {
     title: 'Soep',
+    prepMinutes: '10',
+    totalMinutes: '20',
     ingredients: [{ name: 'Water', quantity: '', unit: '' }],
     steps: ['Kook het water.'],
     ...overrides,
@@ -209,6 +216,99 @@ describe('toRow (what is stored)', () => {
   });
 });
 
+// T-006 / R-007 crit. 1: the parse result shape is {ok, value} like parseQuantity; read tolerantly.
+function minutes(input: string): { ok: boolean; value: number | null } {
+  let res: unknown;
+  try {
+    res = parseMinutes(input);
+  } catch {
+    return { ok: false, value: null };
+  }
+  if (typeof res === 'number') return { ok: !Number.isNaN(res), value: res };
+  if (res === null || res === undefined) return { ok: false, value: null };
+  const r = res as Record<string, unknown>;
+  const failed = Boolean(r.error) || r.ok === false || r.valid === false;
+  return { ok: !failed, value: failed ? null : ((r.value ?? r.minutes ?? null) as number | null) };
+}
+
+describe('parseMinutes (R-007 crit. 1)', () => {
+  it.each([
+    ['0', 0],
+    ['45', 45],
+    ['4320', 4320],
+    [' 30 ', 30],
+    ['045', 45],
+  ])('"%s" gives %s', (input, value) => {
+    expect(minutes(input)).toEqual({ ok: true, value });
+  });
+
+  it.each(['', '   ', '4321', '-1', '1,5', '1.5', 'abc', '1e3', '+5', '99999999999'])('"%s" is an error', (input) => {
+    expect(minutes(input).ok).toBe(false);
+  });
+});
+
+describe('validateRecipe: times (R-007 crit. 1 and 2)', () => {
+  const t = (prepMinutes: string, totalMinutes: string) => draft({ prepMinutes, totalMinutes });
+
+  it.each([
+    ['empty prep', t('', '20'), 'prepMinutes'],
+    ['empty total', t('10', ''), 'totalMinutes'],
+    ['prep 4321', t('4321', '4321'), 'prepMinutes'],
+    ['total 4321', t('10', '4321'), 'totalMinutes'],
+    ['negative prep', t('-1', '20'), 'prepMinutes'],
+    ['non-numeric total', t('10', 'abc'), 'totalMinutes'],
+  ])('gives an error on the field for %s', (_n, d, field) => {
+    expect(hasErrorOn(d, field)).toBe(true);
+  });
+
+  it('accepts 0/0 and 4320/4320 without any error', () => {
+    expect(errorLeaves(t('0', '0'))).toEqual([]);
+    expect(errorLeaves(t('4320', '4320'))).toEqual([]);
+  });
+
+  it('crit. 2: total equal to prep is valid, one minute less is an error on totalMinutes', () => {
+    expect(errorLeaves(t('30', '30'))).toEqual([]);
+    expect(errorLeaves(t('30', '29'))).toEqual([['totalMinutes', 'totalBeforePrep']]);
+  });
+
+  it('crit. 2: the comparison is left out when one of the two is invalid, only per-field errors remain', () => {
+    const leavesOf = errorLeaves(t('abc', '5'));
+    expect(leavesOf.some(([, v]) => v === 'totalBeforePrep')).toBe(false);
+    expect(hasErrorOn(t('abc', '5'), 'prepMinutes')).toBe(true);
+    const other = errorLeaves(t('30', ''));
+    expect(other.some(([, v]) => v === 'totalBeforePrep')).toBe(false);
+    expect(hasErrorOn(t('30', ''), 'totalMinutes')).toBe(true);
+  });
+});
+
+describe('times in pruneDraft, toRow and draftFromRecord (R-007 risks)', () => {
+  it('pruneDraft keeps the times (else the form silently saves without them)', () => {
+    const pruned = pruneDraft(draft({ prepMinutes: '15', totalMinutes: '90' }) as never).draft as unknown as Draft;
+    expect(pruned.prepMinutes).toBe('15');
+    expect(pruned.totalMinutes).toBe('90');
+  });
+
+  it('toRow writes the times as numbers', () => {
+    const row = toRow(draft({ prepMinutes: ' 15 ', totalMinutes: '90' }) as never) as unknown as Record<string, unknown>;
+    expect(row.prep_minutes).toBe(15);
+    expect(row.total_minutes).toBe(90);
+  });
+
+  it('draftFromRecord gives the times back as text, so a fresh edit form is not dirty', () => {
+    const record = {
+      title: 'Soep',
+      ingredients: [{ name: 'Water' }],
+      steps: ['Kook.'],
+      prep_minutes: 30,
+      total_minutes: 60,
+    };
+    const d = draftFromRecord(record as never) as unknown as Draft;
+    expect(d.prepMinutes).toBe('30');
+    expect(d.totalMinutes).toBe('60');
+    expect(isDirty(d as never, draftFromRecord(record as never))).toBe(false);
+  });
+});
+
 describe('isDirty (R-003 crit. 8)', () => {
   it('is false for an identical draft', () => {
     expect(isDirty(draft(), draft())).toBe(false);
@@ -224,5 +324,10 @@ describe('isDirty (R-003 crit. 8)', () => {
     const typed = draft({ title: 'Soepje' });
     expect(isDirty(initial, typed)).toBe(true);
     expect(isDirty(initial, draft({ title: 'Soep' }))).toBe(false);
+  });
+
+  it('is true after a time changes (R-007)', () => {
+    expect(isDirty(draft(), draft({ prepMinutes: '11' }))).toBe(true);
+    expect(isDirty(draft(), draft({ totalMinutes: '21' }))).toBe(true);
   });
 });
