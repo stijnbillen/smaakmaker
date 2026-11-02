@@ -132,6 +132,8 @@ function Draai-Build($taak) {
     # testbestanden die wel liepen slaagden. Dan één keer opnieuw, maar alleen als er geen test faalde.
     if (-not $ok -and (Select-String -Path $bestand -Pattern 'Worker exited unexpectedly with exit code 3221226505' -Quiet) -and -not (Select-String -Path $bestand -Pattern '^\s*(FAIL|×)\s' -Quiet)) {
         Schrijf-Log $taak 'build' 'worker-crash (geen testfout), opnieuw'
+        # De crash kan een test midden in zijn opruimstap gestopt hebben; testresten in de gedeelde databank laten de herhaling falen.
+        npx supabase db reset --local *> $null
         Invoke-Expression $cfg.BouwCommando *> $bestand
         $ok = ($LASTEXITCODE -eq 0)
     }
