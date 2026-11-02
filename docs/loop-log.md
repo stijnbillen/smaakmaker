@@ -157,3 +157,14 @@
 - 2026-11-02 13:26 T-011 reviewer: GOEDGEKEURD
 - 2026-11-02 13:26 T-011 build: worker-crash (geen testfout), opnieuw
 - 2026-11-02 13:30 T-011 build: geslaagd
+- 2026-11-02 13:30 T-011 savepoint: gecommit
+- 2026-11-02 13:36 T-012 analist: KLAAR
+- 2026-11-02 13:41 T-012 tester: KLAAR
+- 2026-11-02 13:59 T-012 ontwikkelaar: KLAAR
+- 2026-11-02 14:03 T-012 build: geslaagd
+- 2026-11-02 14:05 T-012 reviewer: BEVINDINGEN: 0/2
+- 2026-11-02 14:06 T-012 tester: KLAAR
+- 2026-11-02 14:11 T-012 ontwikkelaar: KLAAR
+- 2026-11-02 14:15 T-012 build: geslaagd
+- 2026-11-02 14:16 T-012 reviewer: BLOKKADE: De eigenaar moet een echt HEIC-bestand aanleveren in `tests/fixtures/photos/photo.heic`, of uitdrukkelijk aanvaarden dat HEIC voorlopig zonder test van begin tot eind blijft.
+- 2026-11-02 14:16 T-012 stop: review niet goedgekeurd na 2 rondes

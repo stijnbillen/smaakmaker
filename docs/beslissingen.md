@@ -220,3 +220,42 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - Het maximum van 20 geldt per groep (volgt `resolve_tags`), dus samen kunnen er 40 zijn.
 - Identifiers: `trait`, `trait_tags`, URL-parameter `kenmerk`. Overzicht gebruikt `toggleTagIn(kind, name)` uit de ref met laatste URL-params; filters van beide groepen combineren met "en" via twee `overlaps`.
 - Vegetarisch-filter kijkt alleen naar de tag, niet naar ingrediënten.
+
+## T-012 — Foto's (2026-11-02, analyse)
+
+- **Opslag:** private bucket `recipe-photos`, aangemaakt in een migratie (`storage.buckets`, `public = false`, `file_size_limit = 512000`, `allowed_mime_types = {image/jpeg}`). Lokaal en in de cloud gelijk.
+- **Paden:** `<recipe_id>/<photo_uuid>.jpg`. Elk bestand hoort zo bij één recept en een variant moet echt kopiëren naar haar eigen map.
+- **Foto's als `jsonb` in de receptrij:** `photos` is een array van `{ path, main }`, in de volgorde van de gebruiker. Hoogstens 3, precies één `main` bij een niet-lege lijst (check `recipe_photos_valid`). Geen aparte tabel, zelfde reden als ingrediënten: één rij om op te slaan, te meten (groottetaak) en te kopiëren (varianten).
+- **Hoofdfoto als vlag, los van de volgorde:** "hoofdfoto wijzigen" verplaatst de foto niet. Zonder enige `main` maakt de trigger de eerste tot hoofdfoto; verwijdert de gebruiker de hoofdfoto, dan wordt de nieuwe eerste het.
+- **Verwijzingen gecontroleerd:** de trigger `recipes_check_photos` (`security definer`) eist dat elk pad bestaat in `storage.objects` van de bucket, met `owner_id` = de auteur van het recept.
+- **Storage-policies:**
+  - lezen: `authenticated`;
+  - uploaden: alleen geldige namen in de map van een eigen of nog niet bestaand recept;
+  - verwijderen: de eigenaar van het bestand of `is_admin()`;
+  - geen update-policy, dus geen overschrijven.
+- **Upload vóór de rij:** bij een nieuw recept maakt de client het id (`crypto.randomUUID()`). Eerst de bestanden, dan de rij (de trigger vindt ze dan). Mislukt de rij, dan ruimt de client de nieuwe bestanden op. Na een geslaagde update worden de weggehaalde bestanden verwijderd.
+- **Recept verwijderen:** de rij gaat eerst (0 rijen = mislukt), daarna `storage.remove` van de paden. Een trigger kan geen opslagbestanden wissen: Supabase verbiedt een directe `delete` op `storage.objects`.
+- **Typecontrole op inhoud:** `detectImageType` leest de magische bytes (JPEG, PNG, WebP, HEIC via `ftyp`-merken). Naam en `file.type` tellen niet.
+- **Omzetten op het toestel:** `createImageBitmap(…, { imageOrientation: 'from-image' })` → canvas → `toBlob('image/jpeg')`, met een ladder: eerst de kwaliteit omlaag, dan de maat ×0,85, met een maximum aantal pogingen. Langste zijde ≤ 1280, nooit vergroten. Transparantie krijgt de achtergrondkleur uit het token. EXIF verdwijnt (privacy).
+- **HEIC:** de bibliotheek `heic-to` (libheif/WebAssembly), alleen via een dynamische `import()` voor HEIC-bestanden, zodat de hoofdbundel klein blijft.
+- **Tonen:** getekende URL's (`createSignedUrls`, één aanroep per scherm, 1 uur geldig) met `loading="lazy"`. Er komen geen miniaturen, want die zouden meetellen in de 2 MB.
+- **Camera en galerij:** twee knoppen met elk een verborgen `input type="file"`. De camera gebruikt `capture="environment"`, de galerij `multiple` zonder `capture`.
+- **Meer dan 3 gekozen:** de eerste foto's tot 3 worden toegevoegd, de rest wordt geweigerd met "Maximaal 3 foto's.". Foto's worden één voor één verwerkt.
+- **Standaardafbeelding:** inline SVG met tokens/`currentColor`, geen bitmap.
+- **Testfixtures** in `tests/fixtures/photos/`. Waar het kan, worden ze met een script gemaakt; de HEIC-fixture wordt als bestand vastgelegd.
+
+### T-012 — bouw
+- Migratie `20261102190000_recipe_photos.sql`: bucket, storage-policies, kolom `photos`, check `recipe_photos_valid` en trigger `recipes_check_photos`. De trigger slaat een lijst met een verkeerde vorm over; de check weigert die dan met `23514`.
+- `heic-to` is 3,2 MB (niet 1 MB): de chunk staat via `globIgnores` buiten de precache van de service worker en laadt bij het eerste HEIC-bestand, online.
+- `PhotoPicker` is de enige schrijver van de fotolijst en houdt `photosRef` synchroon bij, met een teller `reserved` voor foto's die nog omgezet worden. Zo kunnen twee snel na elkaar gekozen bestanden het maximum van 3 niet overschrijden.
+- `SaveSession` (recept-id plus al geüploade bestanden) leeft per formulier. Mislukt de rij, dan worden de nieuwe bestanden verwijderd en begint "Opnieuw proberen" met een schone sessie; mislukt een upload halverwege, dan blijven de al geüploade bestanden bewaard.
+- `deleteRecipe` haalt de paden uit het resultaat van de `delete` zelf (`select('id,photos')`), zonder aparte leesaanroep.
+- `RowButtons` is uit `RecipeForm` naar een eigen bestand gehaald, zodat `PhotoPicker` dezelfde omhoog/omlaag/verwijder-knoppen gebruikt.
+- `[hidden] { display: none !important }` in `base.css`: de verborgen file-inputs achter de fotoknoppen moesten niet door componentstijlen zichtbaar worden.
+- `tests/fixtures/photos/photo.heic` ontbreekt (de tester kon het niet maken); de HEIC-interfacetest slaat zichzelf over.
+
+## T-012 — review-herstel
+- Opruimen van pas geüploade foto's gebeurt alleen als de server de schrijfactie weigerde; bij verbindingsverlies blijven bestanden en sessie staan, zodat "Opnieuw proberen" kan slagen. Een `23505` op het eigen recept-id bij `createRecipe` betekent "al bewaard" en loopt door als update.
+- Na een geslaagde schrijfactie worden ook eerder geüploade bestanden verwijderd die niet meer in de draft staan (geen wezen).
+- `README.md` en `.env.example` horen niet bij T-012-plan maar zijn kleine opstarthulp; ze blijven staan en zijn hier vermeld.
+- Open (niet door ontwikkelaar op te lossen): HEIC-fixture ontbreekt (tester); trigger-pad-controle (laag) en `aria-label` (laag, raakt testnaam) niet aangepast.
