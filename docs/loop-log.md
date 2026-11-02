@@ -215,3 +215,13 @@
 - 2026-11-02 17:00 T-013 build: geslaagd
 - 2026-11-02 17:01 T-013 reviewer: GOEDGEKEURD
 - 2026-11-02 17:06 T-013 build: geslaagd
+- 2026-11-02 17:06 T-013 savepoint: gecommit
+- 2026-11-02 17:11 T-014 analist: KLAAR
+- 2026-11-02 17:15 T-014 tester: KLAAR
+- 2026-11-02 17:53 T-014 ontwikkelaar: BLOKKADE: test `tests/e2e/variants.spec.ts` regels 84, 352 en 373 hebben fouten (tagnaam-hoofdletters `Soep` i.p.v. `soep`, niet-exacte `getByText('Kind ÔÇª')` die ook "Kleinkind" vindt, en een `naturalWidth`-controle op een niet-decodeerbare `fakeJpegBytes`-fixture)
+- 2026-11-02 17:54 T-014 tester: KLAAR
+- 2026-11-02 18:02 T-014 ontwikkelaar: BLOKKADE: test tests/e2e/variants.spec.ts:114 zoekt exact 'vegetarisch', maar de gedeelde tagcatalogus bevat 'Vegetarisch' (hoofdletter) uit andere runs; de app kopieert en selecteert de tag wel correct.
+- 2026-11-02 18:02 T-014 tester: KLAAR
+- 2026-11-02 18:14 T-014 ontwikkelaar: KLAAR
+- 2026-11-02 18:21 T-014 build: mislukt
+- 2026-11-02 18:21 T-014 stop: build of tests falen na 3 pogingen

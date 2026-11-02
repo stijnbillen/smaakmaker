@@ -303,3 +303,24 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - `RecipeForm` krijgt de opgeslagen fotogroottes als aparte prop `photoSizes` (en niet via `initial`): de formulierstate wordt maar één keer uit `initial` gevuld, dus een later geladen map zou anders genegeerd worden. `draftFromRecord(record, sizes?)` ondersteunt de map wel.
 - Een opgeslagen foto zonder bekende grootte (nog laden of mislukt) laat de teller "…" tonen en telt niet mee in de clientcontrole; de databank beslist dan.
 - `EditRecipePage` zoekt de groottes één keer per geladen recept op en meldt een verbindingsfout via `report` met een eigen sleutel, zodat de retry-knop alleen die opzoeking herhaalt.
+
+## T-014 — Varianten (2026-11-02, analyse)
+
+- **Twee kolommen op `recipes`:** `variant_of uuid references recipes(id) on delete set null` (de directe bron) en `family_id uuid not null` (de familie). Bestaande rijen krijgen `family_id = id`.
+- **Familie via een vaste `family_id`, niet via een recursieve zoektocht:** een `before insert`-trigger `recipes_set_family` zet `family_id` op die van de bron, of op het eigen id zonder bron. De waarde van de client telt nooit. Een familie splitst zo nooit, ook niet als een tussenschakel verwijderd wordt (R-006: "de familielijst blijft de overige leden tonen"). Eén query `family_id = …` geeft de hele familie. De directe varianten zijn daarvan het deel met `variant_of = id`.
+- **Geen kringen:** de bron moet bestaan bij de `insert` (foreign key) en is daarna niet meer te wijzigen. Er is geen kolomrecht `update` op `variant_of` of `family_id`, en de trigger `recipes_guard_variant` weigert elke wijziging behalve `variant_of` → `null`. Die overgang is nodig, want `on delete set null` is zelf een `update`. Check `recipes_not_own_source` (`variant_of <> id`).
+- **"Variant" = `family_id <> id`:** een recept blijft een variant als zijn bron verdwijnt. "Variant van een verwijderd recept" = variant met `variant_of is null`.
+- **Foto's echt kopiëren, pas bij "Opslaan":** `PhotoDraft.copyFrom` (bronpad) en `copyPhoto` via de Storage-API `copy` naar `<nieuw-id>/<uuid>.jpg`, met de sessie van de gebruiker. Een kopie telt als vers bestand (`fresh`, `session.uploaded`), zodat de bestaande opruiming na een weigering ook kopieën wegneemt. De eigenaar van de kopie moet de kopiërende gebruiker zijn (`recipes_check_photos`). Een databanktest bewijst dat; anders valt de client terug op downloaden en opnieuw uploaden.
+- **Route `/recept/:id/variant`** met een eigen pagina `NewVariantPage`. Die bouwt de draft één keer, nadat bron en fotogroottes geladen zijn. Na opslaan gaat de app met `replace` naar de nieuwe detailpagina.
+- **Bron verdwenen tijdens het opslaan:** `23503` op `recipes_variant_of_fkey` → `SaveResult.sourceGone`, met de melding "Het bronrecept is intussen verwijderd. Je variant is niet bewaard.".
+- **Detailpagina:** de bronregel staat boven de titel. "Varianten" toont de directe varianten (oudste eerst). "Alle varianten (n)" is een `<details>`, alleen bij n ≥ 2. n telt het getoonde recept mee, dat in de lijst als "(dit recept)" staat.
+- **Zoekfunctie (R-009):** komt `search_recipes` er, dan moet ze ook `family_id` teruggeven voor het label "Variant".
+
+## T-014 — bouw
+
+- Migratie `20261103110000_recipe_variants.sql`: `variant_of` (`on delete set null`), `family_id` (bestaande rijen = eigen id, daarna `not null`), check `recipes_not_own_source`, `before insert`-trigger `recipes_set_family` en `before update`-trigger `recipes_guard_variant`. Geen kolomrecht `update` op beide kolommen.
+- De titel van de bron komt uit een tweede query in `fetchRecipe`: een embed van `recipes` in `recipes` is voor PostgREST dubbelzinnig (één foreign key, twee richtingen).
+- `variantDraft` geeft elke foto de bronpad als `key` en als `copyFrom`: stabiel, dus twee drafts van hetzelfde recept zijn gelijk (`isDirty` is `false`). Een foto zonder bekende grootte telt als het bucketmaximum (512000), zoals in de databank.
+- `NewVariantPage` toont het formulier pas als bron én fotogroottes bekend zijn, zodat `initial` één keer klopt. Het kopiëren gebeurt in `uploadNew` via `copyPhoto` (Storage `copy` met de sessie van de gebruiker); de kopie komt in `session.uploaded`, dus "Opnieuw proberen" kopieert niet dubbel.
+- `SaveResult.sourceGone` komt uit een `23503` op `recipes_variant_of_fkey`; `RecipeForm` toont dan `variant.sourceGone` en laat alles ingevuld.
+- De knop "Maak een variant" staat voor elke aangemelde gebruiker in `recipe-actions`; de familie wordt met één `fetchFamily` per geladen recept opgehaald.

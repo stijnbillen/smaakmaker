@@ -33,7 +33,7 @@ Nieuw project: er zijn geen requirements met status "Bestaand", dus er is geen f
 
 - [x] **T-012** — R-005: Foto's (afhankelijk van T-005)
 - [x] **T-013** — R-004: Beperking van de grootte (afhankelijk van T-012, T-008)
-- [ ] **T-014** — R-006: Varianten (afhankelijk van T-013, T-006, T-007, T-009, T-011)
+- [!] **T-014** — R-006: Varianten (afhankelijk van T-013, T-006, T-007, T-009, T-011) — reden: build of tests falen na 3 pogingen
 
 ## Fase 4 — Zoeken, reviews en favorieten
 
