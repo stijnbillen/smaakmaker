@@ -17,10 +17,14 @@ export interface RecipeInput {
   /** Raw text for the time fields (T-006 / R-007); defaults to a valid 10 / 20. */
   prepMinutes?: string;
   totalMinutes?: string;
+  /** Raw text for the servings field (T-007 / R-013); defaults to a valid 4. */
+  servings?: string;
 }
 
 export const prepField = (page: Page): Locator => page.getByRole('textbox', { name: nl['form.prepMinutes'], exact: true });
 export const totalField = (page: Page): Locator => page.getByRole('textbox', { name: nl['form.totalMinutes'], exact: true });
+
+export const servingsField = (page: Page): Locator => page.getByRole('textbox', { name: nl['form.servings'], exact: true });
 
 export const titleField = (page: Page): Locator => page.getByRole('textbox', { name: nl['form.titleLabel'], exact: true });
 export const ingredientNameFields = (page: Page): Locator => page.getByRole('textbox', { name: /^Ingrediënt/ });
@@ -37,6 +41,7 @@ export async function fillRecipe(page: Page, recipe: RecipeInput): Promise<void>
   await titleField(page).fill(recipe.title);
   await prepField(page).fill(recipe.prepMinutes ?? '10');
   await totalField(page).fill(recipe.totalMinutes ?? '20');
+  await servingsField(page).fill(recipe.servings ?? '4');
   for (let i = 0; i < recipe.ingredients.length; i++) {
     if ((await ingredientNameFields(page).count()) <= i) await addIngredientButton(page).click();
     const ing = typeof recipe.ingredients[i] === 'string' ? { name: recipe.ingredients[i] as string } : (recipe.ingredients[i] as IngredientInput);

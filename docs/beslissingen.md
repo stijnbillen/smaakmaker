@@ -168,3 +168,21 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **Filterwijziging gebruikt `replace`:** de URL volgt de keuze, maar de terugknop loopt niet door elke tussenstap.
 - **De lijst blijft zichtbaar tijdens het herladen** na een filterwijziging, in plaats van terug te vallen op de laadtoestand.
 - **`draftFromRecord` leest beide vormen** (`prep_minutes` uit een rij, `prepMinutes` uit een record), zodat de bewerkpagina en de unit-test dezelfde functie gebruiken.
+
+## T-007 — Porties en omrekenen (2026-11-02, analyse)
+
+- **Kolom `servings integer` op `recipes`:** checks `recipes_servings_required` (`is not null`) en `recipes_servings_range` (1–99), beide `not valid` zoals bij de tijden. Kolomrecht `grant update (servings)` aan `authenticated`; de update-policy voor de auteur blijft dezelfde. Geen index (er wordt niet op gefilterd).
+- **Invoer in het formulier:** één tekstveld "Porties" met `inputmode="numeric"`, alleen cijfers na trimmen (`"04"` geldt als 4). Meldingen: "Vul het aantal porties in." en "Een geheel getal van 1 tot 99.".
+- **Omrekenen alleen in het scherm:** de gekozen waarde is status van de detailpagina, gekoppeld aan het recept-id. Niet in de URL, niet in `localStorage`, niet in de databank. Bij elk openen (ook terugknop en herladen) staat ze op de opgeslagen waarde.
+- **Regelaar:** knoppen "−" en "+" (≥ 44 px, `aria-label` "Minder porties"/"Meer porties"), uitgeschakeld aan de grenzen 1 en 99, met het getal in een `<output aria-live="polite">`. Geen typveld. Staat boven de ingrediëntenlijst. Wijkt de waarde af, dan staat er "Recept is voor {n} porties.".
+- **Rekenen in honderdsten:** `scaleQuantity` rondt de opgeslagen hoeveelheid eerst af op een geheel aantal honderdsten (de databank laat hoogstens 2 decimalen toe), vermenigvuldigt met het gewenste en deelt door het originele aantal, en rondt dan met `Math.round` af. Een echte helft gaat naar boven (0,125 → 0,13). Weergave via de bestaande `formatQuantity` (komma, geen overbodige nullen).
+- **Resultaat dat afgerond 0 wordt:** getoond als "< 0,01", niet als "0".
+- **Ingrediënt zonder hoeveelheid:** ongewijzigd. Stuksgetallen ("1 ei" → "0,25 ei") worden niet anders behandeld.
+- **Oude rij zonder porties:** geen regelaar, opgeslagen hoeveelheden.
+- **Testhulp:** `insertRecipe` krijgt standaard `servings: 4`; de formulierhulp vult "Porties" in.
+
+### T-007 — bouw
+
+- **Gekozen waarde hangt aan het recept-id:** `RecipeDetailPage` bewaart `{ id, value }`; hoort het id niet bij het getoonde recept, dan geldt de opgeslagen waarde. Zo schendt navigatie tussen recepten in dezelfde route-component crit. 5 niet.
+- **`ingredientLine` haalt "< {q}" uit `nl.json`:** `recipe.ts` importeert daarvoor `t`, zodat de tekst niet in de logica staat.
+- **Oude rij zonder porties:** de pagina rekent met 1/1, dus de opgeslagen hoeveelheden blijven staan.

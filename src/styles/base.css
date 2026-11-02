@@ -209,6 +209,43 @@ textarea[aria-invalid='true'] {
   font-weight: 600;
 }
 
+/* Servings stepper on the detail page: two round 44 px buttons around a large number. */
+.servings-stepper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.servings-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.servings-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border-radius: var(--radius-pill);
+}
+
+.servings-value {
+  min-width: 2.5rem;
+  text-align: center;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+}
+
+.servings-note {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
 .connection-banner {
   padding: var(--space-2) var(--space-4);
   background: var(--color-bg-sunken);

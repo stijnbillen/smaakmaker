@@ -236,6 +236,25 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo }: Recipe
           })}
         </div>
 
+        <div className="field">
+          <label htmlFor={ids('servings')}>{t('form.servings')}</label>
+          <input
+            id={ids('servings')}
+            type="text"
+            inputMode="numeric"
+            value={draft.servings}
+            autoComplete="off"
+            onChange={(e) => setDraft((d) => ({ ...d, servings: e.target.value }))}
+            aria-invalid={invalid(errors?.servings)}
+            aria-describedby={describedBy(errors?.servings && ids('servings-error'))}
+          />
+          {errors?.servings && (
+            <FieldError id={ids('servings-error')}>
+              {errors.servings === 'servingsRequired' ? t('form.servingsRequired') : t('form.servingsInvalid')}
+            </FieldError>
+          )}
+        </div>
+
         <fieldset className="form-group">
           <legend>{t('form.ingredients')}</legend>
           {ingredientsError && (

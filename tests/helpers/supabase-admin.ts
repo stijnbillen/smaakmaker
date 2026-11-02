@@ -172,6 +172,8 @@ export function validRecipe(overrides: Record<string, unknown> = {}): Record<str
     // T-006 / R-007: both times are required; valid defaults keep older tests working.
     prep_minutes: 10,
     total_minutes: 20,
+    // T-007 / R-013: servings are required (1..99).
+    servings: 4,
     ...overrides,
   };
 }

@@ -1,6 +1,8 @@
 // Recipe rules shared by the form and the detail page. The database enforces the same limits (checks in
 // the recipe_content migration); the client validates first for a clear message at the field.
 
+import { t } from '../i18n/t';
+
 export const TITLE_MAX = 100;
 export const INGREDIENT_NAME_MAX = 80;
 export const UNIT_MAX = 20;
@@ -11,6 +13,9 @@ export const MAX_STEPS = 40;
 export const QUANTITY_LIMIT = 1_000_000;
 /** Three days, in minutes (R-007). */
 export const MINUTES_MAX = 4320;
+/** Servings are a whole number from 1 to 99 (R-013). */
+export const SERVINGS_MIN = 1;
+export const SERVINGS_MAX = 99;
 
 /** What the form edits. The quantity is the raw text, so "1,2" can be shown back while typing. */
 export interface IngredientDraft {
@@ -26,6 +31,8 @@ export interface RecipeDraft {
   /** Raw text of the time fields, like the quantity. */
   prepMinutes: string;
   totalMinutes: string;
+  /** Raw text of the servings field. */
+  servings: string;
 }
 
 /** An ingredient as stored. */
@@ -42,9 +49,12 @@ export interface RecipeRow {
   steps: string[];
   prep_minutes: number;
   total_minutes: number;
+  servings: number;
 }
 
-export interface RecipeRecord extends Omit<RecipeRow, 'prep_minutes' | 'total_minutes'> {
+export interface RecipeRecord extends Omit<RecipeRow, 'prep_minutes' | 'total_minutes' | 'servings'> {
+  /** Null for old sample rows saved before the servings existed. */
+  servings: number | null;
   /** Null for old sample rows saved before the times existed. */
   prepMinutes: number | null;
   totalMinutes: number | null;
@@ -87,7 +97,38 @@ export function parseMinutes(input: string): MinutesResult {
   return { ok: true, value };
 }
 
-export type TitleError = 'titleInvalid';
+export type ServingsResult = { ok: true; value: number } | { ok: false; reason: 'required' | 'invalid' };
+
+/** Whole servings from 1 to 99. Digits only: no sign, decimals or exponent. "04" is 4. */
+export function parseServings(input: string): ServingsResult {
+  const text = input.trim();
+  if (text === '') return { ok: false, reason: 'required' };
+  if (!/^\d+$/.test(text)) return { ok: false, reason: 'invalid' };
+  const value = Number(text);
+  if (value < SERVINGS_MIN || value > SERVINGS_MAX) return { ok: false, reason: 'invalid' };
+  return { ok: true, value };
+}
+
+/**
+ * quantity x desired / original, rounded to two decimals. Works in hundredths (the database allows at
+ * most two decimals) so 0.29 is not 28.999...; a true half rounds up (0.125 -> 0.13).
+ */
+export function scaleQuantity(quantity: number, original: number, desired: number): number {
+  return Math.round((Math.round(quantity * 100) * desired) / original) / 100;
+}
+
+/** One ingredient line "quantity unit name" with the quantity scaled; without a quantity it stays as stored. */
+export function ingredientLine(ingredient: Ingredient, original: number, desired: number): string {
+  let quantity = '';
+  if (ingredient.quantity !== undefined) {
+    const scaled = scaleQuantity(ingredient.quantity, original, desired);
+    // A result that rounds to 0 would read as "none"; say it is below the smallest amount shown.
+    quantity = scaled > 0 ? formatQuantity(scaled) : t('servings.belowMinimum').replace('{q}', formatQuantity(0.01));
+  }
+  return [quantity, ingredient.unit ?? '', ingredient.name].filter(Boolean).join(' ');
+}
+
+export type TitleError ='titleInvalid';
 export interface IngredientErrors {
   name?: 'nameInvalid';
   quantity?: 'quantityInvalid';
@@ -98,6 +139,7 @@ export interface RecipeErrors {
   title?: 'titleInvalid';
   prepMinutes?: 'minutesRequired' | 'minutesInvalid';
   totalMinutes?: 'minutesRequired' | 'minutesInvalid' | 'totalBeforePrep';
+  servings?: 'servingsRequired' | 'servingsInvalid';
   /** About the list as a whole: none, or too many. */
   ingredients?: 'ingredientsRequired' | 'ingredientsTooMany';
   steps?: 'stepsRequired' | 'stepsTooMany';
@@ -124,6 +166,9 @@ export function validateRecipe(draft: RecipeDraft): ValidationResult {
   // Compared only when both are valid, so one mistake gives one message.
   if (prep.ok && total.ok && total.value < prep.value) errors.totalMinutes = 'totalBeforePrep';
 
+  const servings = parseServings(draft.servings);
+  if (!servings.ok) errors.servings = servings.reason === 'required' ? 'servingsRequired' : 'servingsInvalid';
+
   if (draft.ingredients.length === 0) errors.ingredients = 'ingredientsRequired';
   else if (draft.ingredients.length > MAX_INGREDIENTS) errors.ingredients = 'ingredientsTooMany';
   draft.ingredients.forEach((ing, i) => {
@@ -146,6 +191,7 @@ export function validateRecipe(draft: RecipeDraft): ValidationResult {
     !errors.title &&
     !errors.prepMinutes &&
     !errors.totalMinutes &&
+    !errors.servings &&
     !errors.ingredients &&
     !errors.steps &&
     Object.keys(errors.ingredientRows).length === 0 &&
@@ -197,6 +243,11 @@ const minutesOf = (text: string): number => {
   return result.ok ? result.value : Number.NaN;
 };
 
+const servingsOf = (text: string): number => {
+  const result = parseServings(text);
+  return result.ok ? result.value : Number.NaN;
+};
+
 /** Trimmed values; an empty quantity or unit is left out. Call after validation. */
 export function toRow(draft: RecipeDraft): RecipeRow {
   return {
@@ -212,6 +263,7 @@ export function toRow(draft: RecipeDraft): RecipeRow {
     steps: draft.steps.map((step) => step.trim()),
     prep_minutes: minutesOf(draft.prepMinutes),
     total_minutes: minutesOf(draft.totalMinutes),
+    servings: servingsOf(draft.servings),
   };
 }
 
@@ -221,9 +273,9 @@ export function isDirty(initial: RecipeDraft, current: RecipeDraft): boolean {
 }
 
 /** A stored recipe in either shape: the row as written (snake_case) or the record as read (camelCase). */
-type StoredRecipe = Omit<RecipeRow, 'prep_minutes' | 'total_minutes'> &
+type StoredRecipe = Omit<RecipeRow, 'prep_minutes' | 'total_minutes' | 'servings'> &
   Partial<Pick<RecipeRecord, 'prepMinutes' | 'totalMinutes'>> &
-  Partial<Pick<RecipeRow, 'prep_minutes' | 'total_minutes'>>;
+  Partial<Pick<RecipeRow, 'prep_minutes' | 'total_minutes'>> & { servings?: number | null };
 
 /** The form's starting values for a stored recipe; old rows without content get one empty row to fill in. */
 export function draftFromRecord(record: StoredRecipe): RecipeDraft {
@@ -234,6 +286,7 @@ export function draftFromRecord(record: StoredRecipe): RecipeDraft {
     title: record.title,
     prepMinutes: prep === null ? '' : String(prep),
     totalMinutes: total === null ? '' : String(total),
+    servings: record.servings == null ? '' : String(record.servings),
     ingredients:
       record.ingredients.length > 0
         ? record.ingredients.map((ing) => ({
@@ -250,6 +303,7 @@ export const emptyDraft = (): RecipeDraft => ({
   title: '',
   prepMinutes: '',
   totalMinutes: '',
+  servings: '',
   ingredients: [emptyIngredient()],
   steps: [''],
 });

@@ -94,3 +94,12 @@
 - 2026-11-02 10:16 T-006 build: geslaagd
 - 2026-11-02 10:17 T-006 reviewer: GOEDGEKEURD
 - 2026-11-02 10:20 T-006 build: geslaagd
+- 2026-11-02 10:20 T-006 savepoint: gecommit
+- 2026-11-02 10:23 T-007 analist: KLAAR
+- 2026-11-02 10:25 T-007 tester: KLAAR
+- 2026-11-02 10:33 T-007 ontwikkelaar: BLOKKADE: test `recipe-servings.spec.ts` heeft twee fouten (goBack-race v├│├│r het overzicht rendert; update naar `servings: null` faalt op de `not valid` check), tester moet ze herstellen
+- 2026-11-02 10:34 T-007 tester: KLAAR
+- 2026-11-02 10:38 T-007 ontwikkelaar: KLAAR
+- 2026-11-02 10:40 T-007 build: geslaagd
+- 2026-11-02 10:42 T-007 reviewer: GOEDGEKEURD
+- 2026-11-02 10:45 T-007 build: geslaagd

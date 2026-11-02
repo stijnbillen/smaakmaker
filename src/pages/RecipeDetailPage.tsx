@@ -3,11 +3,12 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AuthorLine } from '../components/AuthorLine';
 import { useAuth } from '../components/AuthProvider';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ServingsStepper } from '../components/ServingsStepper';
 import { useConnection } from '../components/ConnectionProvider';
 import { t } from '../i18n/t';
 import { canDelete, canEdit } from '../lib/permissions';
 import { formatDuration } from '../lib/format';
-import { formatQuantity } from '../lib/recipe';
+import { ingredientLine } from '../lib/recipe';
 import { deleteRecipe } from '../lib/recipes';
 import { useRecipe } from '../lib/useRecipe';
 
@@ -19,6 +20,9 @@ export function RecipeDetailPage() {
   const { session, isAdmin } = useAuth();
   const { report, resolve } = useConnection();
   const state = useRecipe(id, 'recipe-detail');
+  const [chosenState, setChosenState] = useState<{ id: string; value: number } | null>(null);
+  const chosen = chosenState;
+  const setChosen = (value: number) => setChosenState({ id: state.status === 'ready' ? state.recipe.id : id, value });
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteFailed, setDeleteFailed] = useState(false);
@@ -79,6 +83,9 @@ export function RecipeDetailPage() {
   // Buttons are convenience; the row-level rules in the database decide.
   const mayEdit = canEdit(item, { userId });
   const mayDelete = canDelete(item, { userId, isAdmin });
+  // Temporary choice, tied to the recipe id: another recipe or a reload starts at its stored servings.
+  const stored = recipe.servings;
+  const desired = stored !== null && chosen?.id === recipe.id ? chosen.value : (stored ?? 1);
 
   return (
     <main className="page">
@@ -100,13 +107,13 @@ export function RecipeDetailPage() {
       {recipe.ingredients.length > 0 && (
         <section className="recipe-section">
           <h2>{t('recipe.ingredients')}</h2>
+          {stored !== null && <ServingsStepper value={desired} onChange={setChosen} />}
+          {stored !== null && desired !== stored && (
+            <p className="servings-note">{t('servings.original').replace('{n}', String(stored))}</p>
+          )}
           <ul className="ingredient-list">
             {recipe.ingredients.map((ing, i) => (
-              <li key={i}>
-                {[ing.quantity === undefined ? '' : formatQuantity(ing.quantity), ing.unit ?? '', ing.name]
-                  .filter(Boolean)
-                  .join(' ')}
-              </li>
+              <li key={i}>{stored === null ? ingredientLine(ing, 1, 1) : ingredientLine(ing, stored, desired)}</li>
             ))}
           </ul>
         </section>

@@ -4,7 +4,10 @@ import {
   isDirty,
   draftFromRecord,
   moveItem,
+  ingredientLine,
   parseMinutes,
+  parseServings,
+  scaleQuantity,
   parseQuantity,
   pruneDraft,
   removeItem,
@@ -25,6 +28,7 @@ interface Draft {
   steps: string[];
   prepMinutes: string;
   totalMinutes: string;
+  servings: string;
 }
 
 function draft(overrides: Partial<Draft> = {}): Draft {
@@ -32,6 +36,7 @@ function draft(overrides: Partial<Draft> = {}): Draft {
     title: 'Soep',
     prepMinutes: '10',
     totalMinutes: '20',
+    servings: '4',
     ingredients: [{ name: 'Water', quantity: '', unit: '' }],
     steps: ['Kook het water.'],
     ...overrides,
@@ -329,5 +334,109 @@ describe('isDirty (R-003 crit. 8)', () => {
   it('is true after a time changes (R-007)', () => {
     expect(isDirty(draft(), draft({ prepMinutes: '11' }))).toBe(true);
     expect(isDirty(draft(), draft({ totalMinutes: '21' }))).toBe(true);
+  });
+
+  it('is true after servings change (R-013)', () => {
+    expect(isDirty(draft(), draft({ servings: '5' }))).toBe(true);
+  });
+});
+
+// T-007 / R-013
+function servingsResult(input: string): { ok: boolean; value?: number; reason?: string } {
+  return parseServings(input) as never;
+}
+
+describe('parseServings (R-013 crit. 1)', () => {
+  it.each([
+    ['1', 1],
+    ['4', 4],
+    ['99', 99],
+    [' 6 ', 6],
+    ['04', 4],
+  ])('"%s" gives %s', (input, value) => {
+    expect(servingsResult(input)).toEqual({ ok: true, value });
+  });
+
+  it.each(['', '   '])('"%s" is required', (input) => {
+    expect(servingsResult(input)).toEqual({ ok: false, reason: 'required' });
+  });
+
+  it.each(['0', '100', '-1', '1,5', '1.5', 'abc', '1e1', '+4', '99999999999'])('"%s" is invalid', (input) => {
+    expect(servingsResult(input)).toEqual({ ok: false, reason: 'invalid' });
+  });
+});
+
+describe('validateRecipe: servings (R-013 crit. 1)', () => {
+  it.each([
+    ['empty', '', 'servingsRequired'],
+    ['0', '0', 'servingsInvalid'],
+    ['100', '100', 'servingsInvalid'],
+    ['text', 'abc', 'servingsInvalid'],
+  ])('gives an error on servings for %s', (_n, servings, code) => {
+    expect(errorLeaves(draft({ servings }))).toEqual([['servings', code]]);
+  });
+
+  it('accepts 1 and 99', () => {
+    expect(errorLeaves(draft({ servings: '1' }))).toEqual([]);
+    expect(errorLeaves(draft({ servings: '99' }))).toEqual([]);
+  });
+});
+
+describe('servings in pruneDraft, toRow, draftFromRecord (R-013 risks)', () => {
+  const base = { title: 'Soep', ingredients: [{ name: 'Water' }], steps: ['Kook.'], prep_minutes: 1, total_minutes: 2 };
+
+  it('pruneDraft keeps servings', () => {
+    expect((pruneDraft(draft({ servings: '6' }) as never).draft as unknown as Draft).servings).toBe('6');
+  });
+
+  it('toRow writes servings as a number', () => {
+    expect((toRow(draft({ servings: ' 6 ' }) as never) as unknown as Record<string, unknown>).servings).toBe(6);
+  });
+
+  it('draftFromRecord gives servings as text, so a fresh edit form is not dirty', () => {
+    const d = draftFromRecord({ ...base, servings: 4 } as never) as unknown as Draft;
+    expect(d.servings).toBe('4');
+    expect(isDirty(d as never, draftFromRecord({ ...base, servings: 4 } as never))).toBe(false);
+  });
+
+  it('draftFromRecord gives an empty text for an old row without servings', () => {
+    expect((draftFromRecord({ ...base, servings: null } as never) as unknown as Draft).servings).toBe('');
+    expect((draftFromRecord(base as never) as unknown as Draft).servings).toBe('');
+  });
+});
+
+describe('scaleQuantity + formatQuantity (R-013 crit. 3)', () => {
+  it.each([
+    [200, 4, 6, '300'],
+    [1, 4, 1, '0,25'],
+    [1, 3, 1, '0,33'],
+    [2, 3, 1, '0,67'],
+    [0.5, 4, 6, '0,75'],
+    [1.5, 2, 3, '2,25'],
+    [2.5, 2, 4, '5'],
+    [0.25, 2, 1, '0,13'], // exact half rounds up
+    [0.1, 7, 7, '0,1'], // desired = original returns the stored quantity
+    [999999.99, 1, 99, '98999999,01'], // no exponent notation
+  ])('%s for %s -> %s portions shows "%s"', (q, original, desired, text) => {
+    expect(formatQuantity(scaleQuantity(q, original, desired))).toBe(text);
+  });
+});
+
+describe('ingredientLine (R-013 crit. 3 and 4)', () => {
+  it('scales the quantity and keeps unit and name', () => {
+    expect(ingredientLine({ name: 'bloem', quantity: 200, unit: 'g' }, 4, 6)).toBe('300 g bloem');
+    expect(ingredientLine({ name: 'ei', quantity: 1 }, 4, 6)).toBe('1,5 ei');
+    expect(ingredientLine({ name: 'melk', quantity: 0.5, unit: 'l' }, 4, 1)).toBe('0,13 l melk');
+  });
+
+  it.each([1, 4, 6, 99])('leaves an ingredient without quantity unchanged at %s portions', (desired) => {
+    expect(ingredientLine({ name: 'zout', unit: 'snuf' }, 4, desired)).toBe('snuf zout');
+    expect(ingredientLine({ name: 'peper' }, 4, desired)).toBe('peper');
+  });
+
+  it('shows "< 0,01" when the result rounds to 0', () => {
+    const line = ingredientLine({ name: 'zout', quantity: 0.01 }, 99, 1);
+    expect(line).toContain('< 0,01');
+    expect(line).toContain('zout');
   });
 });
