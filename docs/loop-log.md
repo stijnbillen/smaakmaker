@@ -168,3 +168,17 @@
 - 2026-11-02 14:15 T-012 build: geslaagd
 - 2026-11-02 14:16 T-012 reviewer: BLOKKADE: De eigenaar moet een echt HEIC-bestand aanleveren in `tests/fixtures/photos/photo.heic`, of uitdrukkelijk aanvaarden dat HEIC voorlopig zonder test van begin tot eind blijft.
 - 2026-11-02 14:16 T-012 stop: review niet goedgekeurd na 2 rondes
+- 2026-11-02 14:18 T-015 analist: KLAAR
+- 2026-11-02 14:20 T-015 tester: limiet bereikt, wacht 10 min (poging 1 van 18)
+- 2026-11-02 14:30 T-015 tester: limiet bereikt, wacht 10 min (poging 2 van 18)
+- 2026-11-02 14:40 T-015 tester: limiet bereikt, wacht 10 min (poging 3 van 18)
+- 2026-11-02 14:53 T-015 tester: KLAAR
+- 2026-11-02 14:57 T-015 ontwikkelaar: BLOKKADE: test tests/db/recipe-search.test.ts ÔÇö `quantity: '1'` moet een getal zijn (check `recipes_ingredients_valid`), en testen delen ├®├®n suffix `s` met gelijke ingredi├½ntnamen over tests heen, waardoor eerdere recepten de resultaten van crit. 4, 5 en 8 vervuilen.
+- 2026-11-02 14:57 T-015 tester: KLAAR
+- 2026-11-02 15:04 T-015 ontwikkelaar: KLAAR
+- 2026-11-02 15:08 T-015 build: geslaagd
+- 2026-11-02 15:10 T-015 reviewer: BEVINDINGEN: 0/1
+- 2026-11-02 15:10 T-015 tester: KLAAR
+- 2026-11-02 15:10 T-015 ontwikkelaar: KLAAR
+- 2026-11-02 15:14 T-015 build: mislukt
+- 2026-11-02 15:14 T-015 stop: review niet goedgekeurd na 2 rondes

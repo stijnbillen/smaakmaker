@@ -259,3 +259,14 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - Na een geslaagde schrijfactie worden ook eerder geüploade bestanden verwijderd die niet meer in de draft staan (geen wezen).
 - `README.md` en `.env.example` horen niet bij T-012-plan maar zijn kleine opstarthulp; ze blijven staan en zijn hier vermeld.
 - Open (niet door ontwikkelaar op te lossen): HEIC-fixture ontbreekt (tester); trigger-pad-controle (laag) en `aria-label` (laag, raakt testnaam) niet aangepast.
+
+## T-015 — Zoeken op ingrediënten
+- `search_recipes(p_terms, p_without, p_min)` is een `security invoker`-RPC met tabelresultaat: RLS op `recipes` en `profiles` blijft gelden, en `match_count`/`term_count` komen uit één query. Anonieme gebruikers hebben geen execute-recht.
+- Vergelijken met `strpos` op `fold_key()` in plaats van `LIKE`: `%` en `_` zijn gewone tekens, en hoofdletters en accenten tellen niet.
+- Validatie (max 10 per lijst, lege termen weg, ontdubbelen, k in 1..n → `22023`) zit in de functie; de client parset alleen voor weergave.
+- Invoer als kommavelden (`Met ingrediënten`, `Zonder`) met 300 ms debounce (`SEARCH_DEBOUNCE_MS`) of de knop; `createDebouncer` is een pure functie zodat die zonder DOM-bibliotheek te testen is.
+- URL-parameters `met`, `zonder`, `min`. Een ontbrekende `min` betekent "alle" en schuift mee met n; de keuze van de laatste optie wist `min`.
+- Alleen "zonder" (geen zoektermen) geeft alle recepten min de uitgesloten, zonder "k van n".
+- De client sorteert het RPC-resultaat zelf (`match_count`, dan `created_at`), omdat de volgorde na PostgREST-filters niet gegarandeerd is.
+- Als het overzicht later een hoofdfoto toont, moet `search_recipes` ook de foto's teruggeven (kolomlijst bijwerken).
+- Migratie eindigt met `notify pgrst, 'reload schema'` zodat PostgREST de functie direct kent.
