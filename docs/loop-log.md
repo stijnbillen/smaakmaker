@@ -239,3 +239,6 @@
 - 2026-11-02 19:09 T-014 build: geslaagd
 - 2026-11-02 19:10 T-014 reviewer: GOEDGEKEURD
 - 2026-11-02 19:16 T-014 build: geslaagd
+- 2026-11-02 19:16 T-014 savepoint: gecommit
+- 2026-11-02 19:18 T-015 tester: BLOKKADE: De T-015-bestanden (tests, `ingredientSearch.ts`, migratie) staan niet in de werkmap maar in `stash@{0}` ("On loop: T-015 niet geslaagd"). Ik mag dat stash niet lezen of terugzetten, dus ik kan de review-bevindingen niet herstellen.
+- 2026-11-02 19:18 T-015 stop: BLOKKADE: De T-015-bestanden (tests, `ingredientSearch.ts`, migratie) staan niet in de werkmap maar in `stash@{0}` ("On loop: T-015 niet geslaagd"). Ik mag dat stash niet lezen of terugzetten, dus ik kan de review-bevindingen niet herstellen.
