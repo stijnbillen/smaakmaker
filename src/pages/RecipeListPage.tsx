@@ -5,6 +5,7 @@ import { useConnection } from '../components/ConnectionProvider';
 import { EquipmentFilter } from '../components/EquipmentFilter';
 import { ListState } from '../components/ListState';
 import { TagFilter } from '../components/TagFilter';
+import { RecipePhotoPlaceholder } from '../components/RecipePhotoPlaceholder';
 import { TimeFilter } from '../components/TimeFilter';
 import { t } from '../i18n/t';
 import {
@@ -21,6 +22,8 @@ import {
   toSearchParams as sortToSearchParams,
   type ReviewSort,
 } from '../lib/reviews';
+import { signedUrls } from '../lib/photos';
+import type { StoredPhoto } from '../lib/recipe';
 import { supabase } from '../lib/supabase';
 import { tagKey, toggleTag, type TagKind } from '../lib/tags';
 import {
@@ -43,16 +46,22 @@ interface RecipeRow {
   /** Computed fields of the database; PostgREST may send numeric as a number or a string. */
   rating_avg: number | string | null;
   rating_count: number;
+  photos: StoredPhoto[] | null;
   author: { display_name: string | null } | null;
 }
 
 const KEY = 'recipe-list';
+
+/** The path of the main photo; the database guarantees exactly one main in a non-empty list. */
+const mainPhoto = (photos: StoredPhoto[] | null): string | null => photos?.find((p) => p.main)?.path ?? photos?.[0]?.path ?? null;
 
 export function RecipeListPage() {
   const { report, resolve } = useConnection();
   const [searchParams, setSearchParams] = useSearchParams();
   const [recipes, setRecipes] = useState<RecipeRow[] | null>(null);
   const [failed, setFailed] = useState(false);
+  // Signed URLs of the main photos, by path; filled after the list itself is shown.
+  const [photoUrls, setPhotoUrls] = useState<Map<string, string>>(new Map());
   // Any failed load (connection or other) stops the loading state; the banner or message takes over.
   const [errored, setErrored] = useState(false);
 
@@ -72,7 +81,7 @@ export function RecipeListPage() {
     const mine = ++requestId.current;
     const base = supabase
       .from('recipes')
-      .select('id,title,created_at,prep_minutes,total_minutes,equipment,rating_avg,rating_count,author:profiles(display_name)');
+      .select('id,title,created_at,prep_minutes,total_minutes,equipment,photos,rating_avg,rating_count,author:profiles(display_name)');
     // Rating sort: best average first, more reviews first on a tie, newest last; no reviews at the bottom.
     const ordered =
       sort === 'rating'
@@ -96,7 +105,13 @@ export function RecipeListPage() {
     resolve(KEY);
     setFailed(false);
     setErrored(false);
-    setRecipes(data as unknown as RecipeRow[]);
+    const rows = data as unknown as RecipeRow[];
+    setRecipes(rows);
+    // One call for all main photos; the list is already visible, the pictures follow.
+    const paths = rows.flatMap((r) => (mainPhoto(r.photos) ? [mainPhoto(r.photos) as string] : []));
+    const urls = await signedUrls(paths);
+    if (!active.current || mine !== requestId.current) return;
+    setPhotoUrls(urls);
   }, [filter, equipmentNames, tagFilter, sort, report, resolve]);
 
   useEffect(() => {
@@ -151,10 +166,18 @@ export function RecipeListPage() {
           emptyText={hasTimeFilter(filter) || hasEquipmentFilter(equipmentNames) || hasTagFilter(tagFilter) ? t('overview.noMatch') : t('overview.empty')}
         >
           <ul className="recipe-list">
-            {recipes?.map((r) => (
+            {recipes?.map((r) => {
+              const main = mainPhoto(r.photos);
+              const src = main ? photoUrls.get(main) : undefined;
+              return (
               <li key={r.id}>
                 {/* The whole item is the tap target. */}
                 <Link to={`/recept/${r.id}`} className="recipe-link">
+                  {/* Fixed frame, so the list does not jump when the pictures arrive. alt is empty: the title is right below. */}
+                  <span className="recipe-photo">
+                    {!src && <RecipePhotoPlaceholder />}
+                    {src && <img src={src} alt="" loading="lazy" data-testid="recipe-main-photo" />}
+                  </span>
                   <span className="recipe-title">{r.title}</span>
                   <AuthorLine name={r.author?.display_name ?? null} date={r.created_at} />
                   {r.rating_avg !== null && r.rating_count > 0 && (
@@ -178,7 +201,8 @@ export function RecipeListPage() {
                   )}
                 </Link>
               </li>
-            ))}
+              );
+            })}
           </ul>
         </ListState>
       )}

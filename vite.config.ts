@@ -26,6 +26,9 @@ export default defineConfig({
       workbox: {
         // App is online-only: precache the app shell, never cache database/auth responses.
         globPatterns: ['**/*.{js,css,html,png,svg,woff2,webmanifest}'],
+        // The HEIC decoder (about 3 MB) is loaded on first use, online; keeping it out of the precache
+        // keeps the install small and the app shell fast.
+        globIgnores: ['**/heic-to-*.js'],
         navigateFallbackDenylist: [/^\/rest\//, /^\/auth\//, /^\/storage\//],
         runtimeCaching: [],
       },

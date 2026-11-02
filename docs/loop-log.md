@@ -193,3 +193,11 @@
 - 2026-11-02 15:49 T-016 reviewer: GOEDGEKEURD
 - 2026-11-02 15:50 T-016 build: worker-crash (geen testfout), opnieuw
 - 2026-11-02 15:54 T-016 build: geslaagd
+- 2026-11-02 15:54 T-016 savepoint: gecommit
+- 2026-11-02 15:54 - loop: geen taak meer
+- 2026-11-02 15:56 T-012 tester: KLAAR
+- 2026-11-02 15:59 T-012 ontwikkelaar: KLAAR
+- 2026-11-02 16:00 T-012 build: worker-crash (geen testfout), opnieuw
+- 2026-11-02 16:04 T-012 build: geslaagd
+- 2026-11-02 16:06 T-012 reviewer: GOEDGEKEURD
+- 2026-11-02 16:10 T-012 build: geslaagd

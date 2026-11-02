@@ -258,7 +258,8 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - Opruimen van pas geüploade foto's gebeurt alleen als de server de schrijfactie weigerde; bij verbindingsverlies blijven bestanden en sessie staan, zodat "Opnieuw proberen" kan slagen. Een `23505` op het eigen recept-id bij `createRecipe` betekent "al bewaard" en loopt door als update.
 - Na een geslaagde schrijfactie worden ook eerder geüploade bestanden verwijderd die niet meer in de draft staan (geen wezen).
 - `README.md` en `.env.example` horen niet bij T-012-plan maar zijn kleine opstarthulp; ze blijven staan en zijn hier vermeld.
-- Open (niet door ontwikkelaar op te lossen): HEIC-fixture ontbreekt (tester); trigger-pad-controle (laag) en `aria-label` (laag, raakt testnaam) niet aangepast.
+- Ronde 2: trigger `recipes_check_photos` controleert bij een update alleen paden die niet al in `old.photos` stonden, zodat een buiten de app verdwenen bestand andere wijzigingen niet blokkeert (migratie is nog niet in de cloud, dus in dezelfde migratie aangepast).
+- Open: `aria-label` "Foto n als hoofdfoto" (laag) blijft zoals de brief en de tests; hernoemen vraagt eerst een testwijziging.
 
 ## T-015 — Zoeken op ingrediënten
 - `search_recipes(p_terms, p_without, p_min)` is een `security invoker`-RPC met tabelresultaat: RLS op `recipes` en `profiles` blijft gelden, en `match_count`/`term_count` komen uit één query. Anonieme gebruikers hebben geen execute-recht.

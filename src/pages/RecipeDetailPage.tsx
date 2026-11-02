@@ -10,6 +10,7 @@ import { t } from '../i18n/t';
 import { canDelete, canEdit } from '../lib/permissions';
 import { formatDuration } from '../lib/format';
 import { ingredientLine, sourceLink } from '../lib/recipe';
+import { signedUrls } from '../lib/photos';
 import { deleteRecipe } from '../lib/recipes';
 import { useRecipe } from '../lib/useRecipe';
 
@@ -29,6 +30,20 @@ export function RecipeDetailPage() {
   const [deleteFailed, setDeleteFailed] = useState(false);
   const deletingRef = useRef(false);
   const mounted = useRef(true);
+
+  // Signed URLs for the photos (the bucket is private); the page itself does not wait for them.
+  const [photoUrls, setPhotoUrls] = useState<Map<string, string>>(new Map());
+  const readyRecipe = state.status === 'ready' ? state.recipe : null;
+  useEffect(() => {
+    if (!readyRecipe || readyRecipe.photos.length === 0) return;
+    let active = true;
+    void signedUrls(readyRecipe.photos.map((p) => p.path)).then((urls) => {
+      if (active) setPhotoUrls(urls);
+    });
+    return () => {
+      active = false;
+    };
+  }, [readyRecipe]);
 
   // A left page must not stay registered as a retry action: retrying would delete behind the user's back.
   useEffect(() => {
@@ -92,6 +107,26 @@ export function RecipeDetailPage() {
   return (
     <main className="page">
       <h1>{recipe.title}</h1>
+      {recipe.photos.length > 0 && (
+        // The strip scrolls sideways by itself; the page never does. Order is the one the author chose.
+        <ul className="photo-strip" data-testid="recipe-photos">
+          {recipe.photos.map((photo, i) => {
+            const src = photoUrls.get(photo.path);
+            return (
+              <li key={photo.path}>
+                {src && (
+                  <img
+                    src={src}
+                    alt={t('photos.alt')
+                      .replace('{n}', String(i + 1))
+                      .replace('{title}', recipe.title)}
+                  />
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
       <AuthorLine name={recipe.authorName} date={recipe.createdAt} />
       {recipe.prepMinutes !== null && recipe.totalMinutes !== null && (
         <dl className="recipe-times-list">

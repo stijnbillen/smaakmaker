@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useBlocker } from 'react-router-dom';
-import { t, type TextKey } from '../i18n/t';
+import { t } from '../i18n/t';
 import {
   emptyIngredient,
   isDirty,
@@ -17,6 +17,8 @@ import {
 import type { SaveResult } from '../lib/recipes';
 import { ConfirmDialog } from './ConfirmDialog';
 import { EquipmentPicker } from './EquipmentPicker';
+import { PhotoPicker } from './PhotoPicker';
+import { RowButtons } from './RowButtons';
 import { TagPicker } from './TagPicker';
 import { useConnection } from './ConnectionProvider';
 
@@ -44,40 +46,6 @@ function check(draft: RecipeDraft): { ok: boolean; pruned: RecipeDraft; errors: 
   return { ok: result.ok, pruned, errors };
 }
 
-// Decorative icons (aria-hidden); the buttons carry their meaning in aria-label.
-const icons = {
-  up: <path d="M6 15l6-6 6 6" />,
-  down: <path d="M6 9l6 6 6-6" />,
-  remove: <path d="M6 6l12 12M18 6L6 18" />,
-};
-
-interface RowButtonsProps {
-  label: string;
-  index: number;
-  count: number;
-  onMove: (direction: -1 | 1) => void;
-  onRemove: () => void;
-}
-
-function RowButtons({ label, index, count, onMove, onRemove }: RowButtonsProps) {
-  const item = label;
-  const fill = (key: TextKey) => t(key).replace('{item}', item);
-  const button = (key: TextKey, icon: keyof typeof icons, disabled: boolean, onClick: () => void) => (
-    <button type="button" className="icon-button" aria-label={fill(key)} disabled={disabled} onClick={onClick}>
-      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        {icons[icon]}
-      </svg>
-    </button>
-  );
-  return (
-    <div className="row-buttons">
-      {button('form.moveUp', 'up', index === 0, () => onMove(-1))}
-      {button('form.moveDown', 'down', index === count - 1, () => onMove(1))}
-      {button('form.remove', 'remove', false, onRemove)}
-    </div>
-  );
-}
-
 function FieldError({ id, children }: { id: string; children: ReactNode }) {
   return (
     <p id={id} className="field-error">
@@ -95,6 +63,8 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo }: Recipe
   const [focusTick, setFocusTick] = useState(0);
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
+  // A photo that is still being converted is not in the draft yet; saving now would lose it.
+  const [photoBusy, setPhotoBusy] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   // Retry must save what is in the form now, not what was there at the first attempt.
@@ -207,6 +177,12 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo }: Recipe
           />
           {titleError && <FieldError id={ids('title-error')}>{t('form.titleInvalid')}</FieldError>}
         </div>
+
+        <PhotoPicker
+          photos={draft.photos ?? []}
+          onChange={(photos) => setDraft((d) => ({ ...d, photos }))}
+          onBusyChange={setPhotoBusy}
+        />
 
         <div className="field-pair">
           {(['prepMinutes', 'totalMinutes'] as const).map((name) => {
@@ -446,7 +422,7 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo }: Recipe
             {t('form.error')}
           </p>
         )}
-        <button type="submit" disabled={saving}>
+        <button type="submit" disabled={saving || photoBusy}>
           {t('form.save')}
         </button>
       </form>

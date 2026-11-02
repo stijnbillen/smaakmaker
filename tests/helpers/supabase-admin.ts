@@ -1,6 +1,7 @@
 // Test-only helper. The service key lives here and must never be imported from src/
 // (T-001 criterion 7: no secret keys in the client).
 import { execSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
 
 export const NOT_REACHABLE_MESSAGE = 'Lokale Supabase niet bereikbaar; draai `supabase start`';
@@ -195,8 +196,50 @@ export async function insertRecipe(
   return res.data as StoredRecipe;
 }
 
+export const PHOTO_BUCKET = 'recipe-photos';
+
+/** Bytes that look like a JPEG to the bucket (type is taken from the upload, not sniffed). */
+export function fakeJpegBytes(size = 2048): Uint8Array {
+  const bytes = new Uint8Array(size);
+  bytes.set([0xff, 0xd8, 0xff, 0xe0]);
+  bytes.set([0xff, 0xd9], size - 2);
+  return bytes;
+}
+
+/**
+ * Uploads a small JPEG to `<recipeId>/<uuid>.jpg` as the given signed-in client (T-012 / R-005).
+ * Returns the storage path. Errors are returned, not thrown, so tests can assert on refusals.
+ */
+export async function uploadTestPhoto(
+  client: SupabaseClient,
+  recipeId: string,
+  opts: { size?: number; contentType?: string; path?: string } = {},
+): Promise<{ path: string; error: { message: string } | null }> {
+  const path = opts.path ?? `${recipeId}/${randomUUID()}.jpg`;
+  const res = await client.storage
+    .from(PHOTO_BUCKET)
+    .upload(path, fakeJpegBytes(opts.size), { contentType: opts.contentType ?? 'image/jpeg', upsert: false });
+  return { path, error: res.error };
+}
+
+/** Names of the files in a recipe's folder, read with the service client. */
+export async function listRecipeFiles(recipeId: string): Promise<string[]> {
+  const res = await adminClient().storage.from(PHOTO_BUCKET).list(recipeId);
+  if (res.error) throw res.error;
+  return (res.data ?? []).map((f) => f.name).filter((name) => name !== '.emptyFolderPlaceholder');
+}
+
+/** Removes a recipe's folder through the Storage API (a SQL delete on storage.objects is blocked). */
+export async function removeRecipeFiles(recipeId: string): Promise<void> {
+  const names = await listRecipeFiles(recipeId).catch(() => [] as string[]);
+  if (names.length > 0) await adminClient().storage.from(PHOTO_BUCKET).remove(names.map((n) => `${recipeId}/${n}`));
+}
+
 export async function deleteTestUser(user: TestUser): Promise<void> {
   const admin = adminClient();
+  // Photo folders first: the recipe rows tell which folders belong to this user.
+  const mine = await admin.from('recipes').select('id').eq('author_id', user.id);
+  for (const row of mine.data ?? []) await removeRecipeFiles((row as { id: string }).id);
   // recipes.author_id references auth.users; remove rows first in case there is no cascade.
   await admin.from('recipes').delete().eq('author_id', user.id);
   await admin.auth.admin.deleteUser(user.id);

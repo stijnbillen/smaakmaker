@@ -31,7 +31,7 @@ Nieuw project: er zijn geen requirements met status "Bestaand", dus er is geen f
 
 ## Fase 3 — Foto's en varianten
 
-- [!] **T-012** — R-005: Foto's (afhankelijk van T-005) — reden: review niet goedgekeurd na 2 rondes
+- [x] **T-012** — R-005: Foto's (afhankelijk van T-005)
 - [ ] **T-013** — R-004: Beperking van de grootte (afhankelijk van T-012, T-008)
 - [ ] **T-014** — R-006: Varianten (afhankelijk van T-013, T-006, T-007, T-009, T-011)
 

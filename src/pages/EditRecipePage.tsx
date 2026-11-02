@@ -1,11 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../components/AuthProvider';
 import { RecipeForm } from '../components/RecipeForm';
 import { t } from '../i18n/t';
 import { canEdit } from '../lib/permissions';
 import { draftFromRecord } from '../lib/recipe';
-import { updateRecipe } from '../lib/recipes';
+import { newSaveSession, updateRecipe } from '../lib/recipes';
 import { useRecipe } from '../lib/useRecipe';
 
 export function EditRecipePage() {
@@ -15,6 +15,8 @@ export function EditRecipePage() {
   const state = useRecipe(id, 'recipe-edit');
   const recipe = state.status === 'ready' ? state.recipe : null;
   const initial = useMemo(() => (recipe ? draftFromRecord(recipe) : null), [recipe]);
+  // Uploaded files survive a failed attempt, so "try again" does not upload them twice.
+  const saveSession = useRef(newSaveSession(id));
 
   if (state.status === 'loading') {
     return (
@@ -44,7 +46,14 @@ export function EditRecipePage() {
     <RecipeForm
       heading={t('form.editTitle')}
       initial={initial}
-      submit={(draft) => updateRecipe(id, draft)}
+      submit={(draft) =>
+        updateRecipe(
+          id,
+          draft,
+          saveSession.current,
+          recipe.photos.map((p) => p.path),
+        )
+      }
       onSaved={() => navigate(`/recept/${id}`)}
       backTo={`/recept/${id}`}
     />

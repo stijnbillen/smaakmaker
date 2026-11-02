@@ -174,5 +174,18 @@
   "email.linkIntro": "Tik op de knop om meteen aan te melden:",
   "email.linkButton": "Aanmelden",
   "email.codeIntro": "Werkt de link niet, bijvoorbeeld in de geïnstalleerde app? Typ dan deze code over in het veld Code uit de e-mail:",
-  "email.ignore": "Heb je dit niet gevraagd? Dan mag je deze mail negeren."
+  "email.ignore": "Heb je dit niet gevraagd? Dan mag je deze mail negeren.",
+  "photos.legend": "Foto's",
+  "photos.hint": "Hoogstens 3. Kies welke de hoofdfoto is.",
+  "photos.take": "Foto nemen",
+  "photos.gallery": "Kies uit galerij",
+  "photos.main": "Hoofdfoto",
+  "photos.makeMain": "Maak hoofdfoto",
+  "photos.asMain": "Foto {n} als hoofdfoto",
+  "photos.item": "Foto {n}",
+  "photos.alt": "Foto {n} van {title}",
+  "photos.tooMany": "Maximaal 3 foto's.",
+  "photos.notAPhoto": "Dit bestand is geen foto. Kies een JPEG, PNG, WebP of HEIC.",
+  "photos.processFailed": "Deze foto kon niet verwerkt worden.",
+  "photos.processing": "Foto verwerken…"
 }

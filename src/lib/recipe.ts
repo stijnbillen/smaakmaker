@@ -23,6 +23,27 @@ export const NOTE_MAX = 1000;
 export const EQUIPMENT_MAX_ITEMS = 20;
 /** Dish tags are optional; same own upper bound, enforced in the database too (R-010). */
 export const TAGS_MAX_ITEMS = 20;
+/** At most three photos per recipe (R-005); the database enforces it too. */
+export const MAX_PHOTOS = 3;
+
+/**
+ * A photo as the form holds it. `path` is set for a stored photo, `blob` for a new one that is not
+ * uploaded yet. `key` identifies it in the form (the path of a stored one), `previewUrl` is what the
+ * <img> shows (an object URL, or a signed URL once loaded).
+ */
+export interface PhotoDraft {
+  key: string;
+  path?: string;
+  blob?: Blob;
+  previewUrl: string;
+  main: boolean;
+}
+
+/** A photo as stored in recipes.photos. */
+export interface StoredPhoto {
+  path: string;
+  main: boolean;
+}
 
 /** What the form edits. The quantity is the raw text, so "1,2" can be shown back while typing. */
 export interface IngredientDraft {
@@ -48,6 +69,8 @@ export interface RecipeDraft {
   /** Chosen dish tags; none is fine. Optional so drafts built without it still work. */
   dishTags?: string[];
   traitTags?: string[];
+  /** In the order the user chose; none is fine. Optional so drafts built without it still work. */
+  photos?: PhotoDraft[];
 }
 
 /** An ingredient as stored. */
@@ -75,6 +98,7 @@ export interface RecipeRow {
 export interface RecipeRecord extends Omit<RecipeRow, 'prep_minutes' | 'total_minutes' | 'servings' | 'dish_tags' | 'trait_tags'> {
   dishTags: string[];
   traitTags: string[];
+  photos: StoredPhoto[];
   /** Null for old sample rows saved before the servings existed. */
   servings: number | null;
   /** Null for old sample rows saved before the times existed. */
@@ -167,6 +191,7 @@ export interface RecipeErrors {
   equipment?: 'equipmentTooMany';
   dishTags?: 'tagsTooMany';
   traitTags?: 'tagsTooMany';
+  photos?: 'photosTooMany';
   /** About the list as a whole: none, or too many. */
   ingredients?: 'ingredientsRequired' | 'ingredientsTooMany';
   steps?: 'stepsRequired' | 'stepsTooMany';
@@ -203,6 +228,8 @@ export function validateRecipe(draft: RecipeDraft): ValidationResult {
   if ((draft.dishTags ?? []).length > TAGS_MAX_ITEMS) errors.dishTags = 'tagsTooMany';
   if ((draft.traitTags ?? []).length > TAGS_MAX_ITEMS) errors.traitTags = 'tagsTooMany';
 
+  if ((draft.photos ?? []).length > MAX_PHOTOS) errors.photos = 'photosTooMany';
+
   if (draft.ingredients.length === 0) errors.ingredients = 'ingredientsRequired';
   else if (draft.ingredients.length > MAX_INGREDIENTS) errors.ingredients = 'ingredientsTooMany';
   draft.ingredients.forEach((ing, i) => {
@@ -231,6 +258,7 @@ export function validateRecipe(draft: RecipeDraft): ValidationResult {
     !errors.equipment &&
     !errors.dishTags &&
     !errors.traitTags &&
+    !errors.photos &&
     !errors.ingredients &&
     !errors.steps &&
     Object.keys(errors.ingredientRows).length === 0 &&
@@ -249,6 +277,30 @@ export function moveItem<T>(list: readonly T[], index: number, direction: -1 | 1
 
 export function removeItem<T>(list: readonly T[], index: number): T[] {
   return list.filter((_, i) => i !== index);
+}
+
+/**
+ * Adds photos up to the maximum; the rest is counted as rejected. The first photo of an empty list becomes
+ * the main photo. Pure: the input list is not changed.
+ */
+export function addPhotos(list: readonly PhotoDraft[], incoming: readonly PhotoDraft[]): { photos: PhotoDraft[]; rejected: number } {
+  const room = Math.max(0, MAX_PHOTOS - list.length);
+  const added = incoming.slice(0, room).map((p) => ({ ...p, main: false }));
+  const photos = [...list, ...added];
+  if (photos.length > 0 && !photos.some((p) => p.main)) photos[0] = { ...photos[0], main: true };
+  return { photos, rejected: incoming.length - added.length };
+}
+
+/** Exactly one main photo: the one at `index`. */
+export function setMain(list: readonly PhotoDraft[], index: number): PhotoDraft[] {
+  return list.map((p, i) => ({ ...p, main: i === index }));
+}
+
+/** Removes a photo; when it was the main photo the new first photo becomes the main one. */
+export function removePhoto(list: readonly PhotoDraft[], index: number): PhotoDraft[] {
+  const left = removeItem(list, index);
+  if (left.length > 0 && !left.some((p) => p.main)) left[0] = { ...left[0], main: true };
+  return left;
 }
 
 export const emptyIngredient = (): IngredientDraft => ({ name: '', quantity: '', unit: '' });
@@ -322,12 +374,15 @@ export function sourceLink(source: string | null): string | null {
 
 /** Compared with the starting value, so a change that is set back does not count. */
 export function isDirty(initial: RecipeDraft, current: RecipeDraft): boolean {
-  return JSON.stringify(initial) !== JSON.stringify(current);
+  // A Blob serialises to {}, so photos are compared on key, main flag and order instead.
+  const signature = (draft: RecipeDraft): string =>
+    JSON.stringify({ ...draft, photos: (draft.photos ?? []).map((p) => [p.key, p.main]) });
+  return signature(initial) !== signature(current);
 }
 
 /** A stored recipe in either shape: the row as written (snake_case) or the record as read (camelCase). */
 type StoredRecipe = Omit<RecipeRow, 'prep_minutes' | 'total_minutes' | 'servings' | 'equipment' | 'dish_tags' | 'trait_tags'> &
-  Partial<Pick<RecipeRecord, 'prepMinutes' | 'totalMinutes' | 'dishTags' | 'traitTags'>> &
+  Partial<Pick<RecipeRecord, 'prepMinutes' | 'totalMinutes' | 'dishTags' | 'traitTags' | 'photos'>> &
   Partial<Pick<RecipeRow, 'prep_minutes' | 'total_minutes' | 'source' | 'note' | 'equipment' | 'dish_tags' | 'trait_tags'>> & { servings?: number | null };
 
 /** The form's starting values for a stored recipe; old rows without content get one empty row to fill in. */
@@ -345,6 +400,8 @@ export function draftFromRecord(record: StoredRecipe): RecipeDraft {
     equipment: [...(record.equipment ?? [])],
     dishTags: [...(record.dishTags ?? record.dish_tags ?? [])],
     traitTags: [...(record.traitTags ?? record.trait_tags ?? [])],
+    // A stored photo is keyed by its path; its preview URL is signed later, when the form is shown.
+    photos: (record.photos ?? []).map((p) => ({ key: p.path, path: p.path, previewUrl: '', main: p.main })),
     ingredients:
       record.ingredients.length > 0
         ? record.ingredients.map((ing) => ({
@@ -367,6 +424,7 @@ export const emptyDraft = (): RecipeDraft => ({
   equipment: [],
   dishTags: [],
   traitTags: [],
+  photos: [],
   ingredients: [emptyIngredient()],
   steps: [''],
 });

@@ -28,6 +28,12 @@ Uitgebreid: `tests/helpers/supabase-admin.ts` (`PHOTO_BUCKET`, `fakeJpegBytes`, 
 - **Aparte tests voor i18n en `no-hardcoded-styles`:** de bestaande generieke tests dekken nieuwe sleutels en stijlen.
 - `tests/build/no-secrets.test.ts` is niet aangepast; die slaagt of faalt vanzelf met de HEIC-bundel.
 
+## Na review ronde 2
+- Bevinding A: `photo.heic` staat nu in `tests/fixtures/photos/`. De HEIC-test (`recipe-photos.spec.ts`) is verplicht: `test.skip` weg, `heicFixture()` gooit bij een ontbrekend bestand. Crit. 2 HEIC dekt nu het decoderen tot een voorbeeld. Niet geprobeerd: draaien tegen Supabase/Chromium.
+- Bevinding B (ontwikkelaar): geen testwijziging nu. Nog niet getest: titel wijzigen als een bestand ontbreekt.
+- Bevinding C (ontwikkelaar): de test (`photoMain` in `tests/helpers/photos.ts`) zoekt nog "Foto n als hoofdfoto", zoals de brief. Hernoemt de ontwikkelaar de knop (bv. "Maak foto n hoofdfoto"), dan past één regel in `photoMain` aan; de tester doet dat zodra de naam vastligt.
+- `npx tsc --noEmit` slaagt.
+
 ## Aannames over vormen (de brief legt ze niet vast; ontwikkelaar mag afwijken, dan pas ik de test aan)
 - `fitWithin(w, h, max)` → `{ width, height }` (of `[w, h]`).
 - `nextAttempt(quality, scale)` → `{ quality, scale }`, of `null` als de ladder op is. Start is `(0.85, 1)`; daarna 0,75 → 0,65 → 0,55, daarna `scale × 0,85`.

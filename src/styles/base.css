@@ -790,3 +790,114 @@ textarea[aria-invalid='true'] {
   margin: var(--space-4) 0 var(--space-2);
   font-size: var(--font-size-md);
 }
+
+/* Photos: picker in the form, frame in the overview, strip on the detail page */
+.photo-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.photo-add button {
+  flex: 1 1 auto;
+}
+
+.photo-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.photo-thumb {
+  flex: 0 0 var(--photo-thumb-size);
+  width: var(--photo-thumb-size);
+  height: var(--photo-thumb-size);
+  overflow: hidden;
+  background: var(--color-bg-sunken);
+  border-radius: var(--radius-sm);
+}
+
+.photo-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-controls {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.photo-controls button {
+  margin: 0;
+}
+
+.photo-controls .photo-main {
+  margin-bottom: var(--space-2);
+}
+
+/* The chosen main photo: filled, so the state is not carried by colour alone (it also says "Hoofdfoto"). */
+.photo-main--on {
+  border: 2px solid var(--color-accent);
+}
+
+.recipe-photo {
+  display: block;
+  aspect-ratio: var(--photo-ratio);
+  margin-bottom: var(--space-2);
+  overflow: hidden;
+  color: var(--color-text-muted);
+  background: var(--color-bg-sunken);
+  border-radius: var(--radius-sm);
+}
+
+.recipe-photo img,
+.photo-placeholder {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.recipe-photo img {
+  object-fit: cover;
+}
+
+.photo-placeholder {
+  padding: var(--space-4);
+  box-sizing: border-box;
+}
+
+.photo-strip {
+  display: flex;
+  gap: var(--space-3);
+  margin: var(--space-3) 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+
+.photo-strip li {
+  flex: 0 0 var(--photo-strip-width);
+  scroll-snap-align: start;
+  aspect-ratio: var(--photo-ratio);
+  overflow: hidden;
+  background: var(--color-bg-sunken);
+  border-radius: var(--radius-md);
+}
+
+.photo-strip img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The hidden attribute must win over component display rules (the file inputs behind the photo buttons). */
+[hidden] {
+  display: none !important;
+}
