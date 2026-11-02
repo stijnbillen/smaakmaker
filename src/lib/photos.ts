@@ -1,3 +1,4 @@
+import { PHOTO_MAX_BYTES } from './photoResize';
 import { supabase } from './supabase';
 
 // Storage calls for recipe photos (R-005). Kept apart from the pure photo code because supabase.ts
@@ -27,7 +28,7 @@ export async function removePhotos(paths: string[]): Promise<void> {
   try {
     await supabase.storage.from(PHOTO_BUCKET).remove(paths);
   } catch {
-    // Left-over files are for the clean-up task (T-013).
+    // A file left behind is never counted in a recipe (only the paths in `photos` are) and is not shown.
   }
 }
 
@@ -42,4 +43,28 @@ export async function signedUrls(paths: string[]): Promise<Map<string, string>> 
     // Without URLs the screen shows the placeholder; the rest of the screen works.
   }
   return urls;
+}
+
+export interface SizesResult {
+  sizes: Map<string, number>;
+  error: unknown;
+  status: number | undefined;
+}
+
+/** Stored file sizes of a recipe's folder (path -> bytes), for the used-size counter in the form. */
+export async function fetchPhotoSizes(recipeId: string): Promise<SizesResult> {
+  const sizes = new Map<string, number>();
+  try {
+    const { data, error } = await supabase.storage.from(PHOTO_BUCKET).list(recipeId, { limit: 100 });
+    if (error) return { sizes, error, status: (error as { status?: number }).status };
+    for (const file of data ?? []) {
+      const size = (file.metadata as { size?: number } | null)?.size;
+      // No known size counts as the bucket maximum, like the database does.
+      sizes.set(`${recipeId}/${file.name}`, typeof size === 'number' ? size : PHOTO_MAX_BYTES);
+    }
+    return { sizes, error: null, status: 200 };
+  } catch (error) {
+    // A lost connection throws; without a status `report` shows the connection banner.
+    return { sizes, error, status: undefined };
+  }
 }

@@ -187,5 +187,9 @@
   "photos.tooMany": "Maximaal 3 foto's.",
   "photos.notAPhoto": "Dit bestand is geen foto. Kies een JPEG, PNG, WebP of HEIC.",
   "photos.processFailed": "Deze foto kon niet verwerkt worden.",
-  "photos.processing": "Foto verwerken…"
+  "photos.processing": "Foto verwerken…",
+  "size.used": "{used} van 2 MB",
+  "size.loading": "…",
+  "size.photosTooLarge": "Foto's zijn samen te groot.",
+  "size.textTooLarge": "De tekst van het recept is te groot."
 }

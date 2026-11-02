@@ -14,7 +14,8 @@ import {
   type RecipeDraft,
   type RecipeErrors,
 } from '../lib/recipe';
-import type { SaveResult } from '../lib/recipes';
+import type { SaveResult, SizeProblem } from '../lib/recipes';
+import { checkRecipeSize, formatRecipeSize, PHOTO_MAX_BYTES, recipeSizeBytes, recipeTextBytes, RECIPE_MAX_BYTES } from '../lib/recipeSize';
 import { ConfirmDialog } from './ConfirmDialog';
 import { EquipmentPicker } from './EquipmentPicker';
 import { PhotoPicker } from './PhotoPicker';
@@ -34,6 +35,26 @@ interface RecipeFormProps {
   onSaved: (id: string) => void;
   /** The "back" link. */
   backTo: string;
+  /**
+   * Stored file sizes (path -> bytes) of the recipe being edited. Null while they are still loading or when
+   * the lookup failed; the counter then shows "…" and the database stays the real limit.
+   */
+  photoSizes?: ReadonlyMap<string, number> | null;
+}
+
+/** Sizes of the photos in the draft; `unknown` when a stored photo's size is not known (yet). */
+function photoBytesOf(draft: RecipeDraft, sizes: ReadonlyMap<string, number> | null | undefined): { bytes: number[]; unknown: boolean } {
+  const bytes: number[] = [];
+  let unknown = false;
+  for (const photo of draft.photos ?? []) {
+    let size = photo.bytes ?? (photo.path ? sizes?.get(photo.path) : undefined);
+    // Lookup done but this path is not in it (missing file, or folder listing cut off): the database
+    // counts that as the bucket maximum, so do the same.
+    if (size === undefined && photo.path && sizes) size = PHOTO_MAX_BYTES;
+    if (size === undefined) unknown = true;
+    else bytes.push(size);
+  }
+  return { bytes, unknown };
 }
 
 /** Validates the draft without its empty rows and maps the messages back onto the rows as shown. */
@@ -55,7 +76,7 @@ function FieldError({ id, children }: { id: string; children: ReactNode }) {
 }
 
 /** The one form for a new recipe and for editing. */
-export function RecipeForm({ heading, initial, submit, onSaved, backTo }: RecipeFormProps) {
+export function RecipeForm({ heading, initial, submit, onSaved, backTo, photoSizes }: RecipeFormProps) {
   const { report, resolve } = useConnection();
   const base = useId();
   const [draft, setDraft] = useState<RecipeDraft>(initial);
@@ -63,6 +84,8 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo }: Recipe
   const [focusTick, setFocusTick] = useState(0);
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
+  // Which part is too large, from the client check or from the database's refusal (R-004).
+  const [sizeProblem, setSizeProblem] = useState<SizeProblem | null>(null);
   // A photo that is still being converted is not in the draft yet; saving now would lose it.
   const [photoBusy, setPhotoBusy] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -77,6 +100,8 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo }: Recipe
   const savingRef = useRef(false);
   const savedRef = useRef(false);
   const mounted = useRef(true);
+  const photoSizesRef = useRef(photoSizes);
+  photoSizesRef.current = photoSizes;
 
   const dirty = useMemo(() => isDirty(initial, draft), [initial, draft]);
   const dirtyRef = useRef(dirty);
@@ -124,13 +149,27 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo }: Recipe
       setFocusTick((n) => n + 1);
       return;
     }
+    // Convenience only (no pointless upload, a quick message): the database makes the real decision.
+    const known = photoBytesOf(result.pruned, photoSizesRef.current);
+    const verdict = checkRecipeSize(recipeTextBytes(result.pruned), known.bytes);
+    if (verdict !== 'ok') {
+      setFailed(false);
+      setSizeProblem(verdict === 'textTooLarge' ? 'text' : 'photos');
+      return;
+    }
     savingRef.current = true;
     setSaving(true);
     setFailed(false);
+    setSizeProblem(null);
     const res = await submitRef.current(result.pruned);
     savingRef.current = false;
     if (!mounted.current) return;
     setSaving(false);
+    if (res.sizeProblem) {
+      // An answer from the database, not a connection problem: no banner, the form stays as it is.
+      setSizeProblem(res.sizeProblem);
+      return;
+    }
     if (res.error || !res.id) {
       setFailed(!report(KEY, res.error, res.status, () => void save()));
       return;
@@ -155,6 +194,16 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo }: Recipe
   const ids = (suffix: string) => `${base}-${suffix}`;
   const describedBy = (...parts: (string | false | undefined)[]) => parts.filter(Boolean).join(' ') || undefined;
   const invalid = (flag: unknown) => (flag ? true : undefined);
+
+  const photoSize = photoBytesOf(draft, photoSizes);
+  const usedBytes = recipeSizeBytes(recipeTextBytes(draft), photoSize.bytes);
+  const sizeOver = usedBytes > RECIPE_MAX_BYTES;
+
+  // A shown size message must not contradict the counter once the user has brought the recipe under the limit.
+  // Only while the sizes are all known; the database's own refusal stays until the next save otherwise.
+  useEffect(() => {
+    if (!photoSize.unknown && usedBytes <= RECIPE_MAX_BYTES) setSizeProblem(null);
+  }, [photoSize.unknown, usedBytes]);
 
   const titleError = errors?.title;
   const ingredientsError = errors?.ingredients;
@@ -422,6 +471,15 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo }: Recipe
             {t('form.error')}
           </p>
         )}
+        {sizeProblem && (
+          <p role="alert" id="size-error" className="field-error">
+            {sizeProblem === 'text' ? t('size.textTooLarge') : t('size.photosTooLarge')}
+          </p>
+        )}
+        {/* Not a live region: a screen reader must not read it out at every keystroke. */}
+        <p data-testid="recipe-size" className={sizeOver ? 'recipe-size recipe-size--over' : 'recipe-size'}>
+          {photoSize.unknown ? t('size.loading') : formatRecipeSize(usedBytes)}
+        </p>
         <button type="submit" disabled={saving || photoBusy}>
           {t('form.save')}
         </button>

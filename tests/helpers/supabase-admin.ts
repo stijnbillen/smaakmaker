@@ -235,6 +235,9 @@ export async function removeRecipeFiles(recipeId: string): Promise<void> {
   if (names.length > 0) await adminClient().storage.from(PHOTO_BUCKET).remove(names.map((n) => `${recipeId}/${n}`));
 }
 
+/** T-013: see pg.ts. Re-exported so size tests import all storage helpers from one place. */
+export { setPhotoSize } from './pg';
+
 export async function deleteTestUser(user: TestUser): Promise<void> {
   const admin = adminClient();
   // Photo folders first: the recipe rows tell which folders belong to this user.

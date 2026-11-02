@@ -37,6 +37,8 @@ export interface PhotoDraft {
   blob?: Blob;
   previewUrl: string;
   main: boolean;
+  /** File size in bytes: the converted blob, or the stored file's size once looked up. Not part of "changed". */
+  bytes?: number;
 }
 
 /** A photo as stored in recipes.photos. */
@@ -386,7 +388,7 @@ type StoredRecipe = Omit<RecipeRow, 'prep_minutes' | 'total_minutes' | 'servings
   Partial<Pick<RecipeRow, 'prep_minutes' | 'total_minutes' | 'source' | 'note' | 'equipment' | 'dish_tags' | 'trait_tags'>> & { servings?: number | null };
 
 /** The form's starting values for a stored recipe; old rows without content get one empty row to fill in. */
-export function draftFromRecord(record: StoredRecipe): RecipeDraft {
+export function draftFromRecord(record: StoredRecipe, sizes?: ReadonlyMap<string, number>): RecipeDraft {
   // Times as text, so a fresh form is not "changed"; an old row without times starts empty.
   const prep = record.prepMinutes ?? record.prep_minutes ?? null;
   const total = record.totalMinutes ?? record.total_minutes ?? null;
@@ -401,7 +403,10 @@ export function draftFromRecord(record: StoredRecipe): RecipeDraft {
     dishTags: [...(record.dishTags ?? record.dish_tags ?? [])],
     traitTags: [...(record.traitTags ?? record.trait_tags ?? [])],
     // A stored photo is keyed by its path; its preview URL is signed later, when the form is shown.
-    photos: (record.photos ?? []).map((p) => ({ key: p.path, path: p.path, previewUrl: '', main: p.main })),
+    photos: (record.photos ?? []).map((p) => {
+      const bytes = sizes?.get(p.path);
+      return { key: p.path, path: p.path, previewUrl: '', main: p.main, ...(bytes === undefined ? {} : { bytes }) };
+    }),
     ingredients:
       record.ingredients.length > 0
         ? record.ingredients.map((ing) => ({

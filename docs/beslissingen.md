@@ -284,3 +284,22 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - Een gebruiker verwijderen verwijdert zijn reviews (`on delete cascade`), zoals bij recepten.
 - Voor de zoektaak: `search_recipes` moet ook `rating_avg`/`rating_count` teruggeven en er moet beslist worden hoe "Sorteren op beoordeling" zich verhoudt tot sorteren op het aantal overeenkomsten.
 - Varianten beginnen zonder reviews; reviews worden niet gekopieerd.
+
+## T-013 — Grootte (2026-11-02, analyse)
+
+- **Wat telt:** de UTF-8-bytes (`octet_length`, in de client `TextEncoder`) van de tekstwaarden: titel, naam en eenheid van elk ingrediënt, elke stap, bron, opmerking, en elke naam in `dish_tags`, `trait_tags` en `equipment`. Daarbij komt de som van `metadata->>'size'` van de bestanden in `photos`. Getallen (tijden, porties, hoeveelheden) en de JSON-structuur tellen niet. Hun tekstvorm verschilt tussen JavaScript en Postgres, en het gaat om hoogstens enkele honderden bytes.
+- **Waar het afgedwongen wordt:** een `after insert or update`-trigger `recipes_check_size` op `recipes` (`security definer`, `set search_path = ''`, niet uitvoerbaar voor de client). Hij ziet de rij na alle normaliserende `before`-triggers (trim, canonieke tags en gerief). Bij een te grote rij geeft hij `raise exception 'recipe_too_large' using errcode = '23514', detail = 'photos' | 'text'`, en het hele statement rolt terug.
+- **Welk onderdeel genoemd wordt:** is de tekst alleen al groter dan de grens, dan `text` ("De tekst van het recept is te groot."), anders `photos` ("Foto's zijn samen te groot."). De pure functie `recipe_size_problem(text_bytes, photo_bytes)` houdt die regel testbaar.
+- **Bestand zonder grootte:** een ontbrekende `metadata.size`, of een pad zonder bestand, telt als 512.000 bytes (het maximum van de bucket). Dat is streng maar kan geen geldig recept weigeren.
+- **Grenstests via pg:** met geldige invoer haalt een recept de grens niet (tekst ≈ 196 KB max + foto's 1.536.000 = ≈ 1,73 MB). De tests blazen daarom `storage.objects.metadata.size` op via `tests/helpers/pg.ts`, alleen lokaal. De 2 MB is in de praktijk een vangnet.
+- **Teller in het formulier:** `formatRecipeSize` deelt door 1.048.576 en rondt naar boven af op 1 decimaal ("0,0 van 2 MB" bij 0 bytes, "2,1 van 2 MB" bij 1 byte erover). De teller is geen live-regio. Boven de grens krijgt hij dezelfde kleur als `.field-error` (`--color-text-accent`).
+- **Grootte van opgeslagen foto's in de client:** via `storage.list(recipeId)` (metadata `size`) met de sessie van de gebruiker. Alleen de paden in `photos` tellen, net als in de databank.
+- **Controle in de client vóór upload:** een recept boven de grens wordt niet geüpload; de databank blijft de echte grens. Een weigering door de server (`23514` + `recipe_too_large`) wordt `SaveResult.sizeProblem` en toont dezelfde melding. De nieuwe bestanden worden opgeruimd via de bestaande `discardAfterFailure`.
+- **Geen opruiming aan de serverkant:** wezen na een verbroken verbinding of een verlaten formulier blijven mogelijk. Een opruiming zou een geplande Edge Function met de service-sleutel vragen. Ze tellen niet mee in de grootte van een recept.
+
+## T-013 — bouw
+
+- Migratie `20261103100000_recipe_size_limit.sql`: `recipe_size_limit()`, `recipe_text_bytes(recipes)`, `recipe_photo_bytes(jsonb)` (`security definer`, niet uitvoerbaar voor clients (ook niet via `/rpc`); de trigger draait als eigenaar), `recipe_size_problem` en de `after`-trigger `recipes_check_size` zonder kolomlijst. De trigger geeft `null` terug omdat het een `after`-trigger is.
+- `RecipeForm` krijgt de opgeslagen fotogroottes als aparte prop `photoSizes` (en niet via `initial`): de formulierstate wordt maar één keer uit `initial` gevuld, dus een later geladen map zou anders genegeerd worden. `draftFromRecord(record, sizes?)` ondersteunt de map wel.
+- Een opgeslagen foto zonder bekende grootte (nog laden of mislukt) laat de teller "…" tonen en telt niet mee in de clientcontrole; de databank beslist dan.
+- `EditRecipePage` zoekt de groottes één keer per geladen recept op en meldt een verbindingsfout via `report` met een eigen sleutel, zodat de retry-knop alleen die opzoeking herhaalt.

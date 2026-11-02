@@ -78,6 +78,21 @@ export async function inviteValidAt(code: string, offset: string): Promise<boole
   return rows[0].v;
 }
 
+/**
+ * T-013: sets storage.objects.metadata.size of a stored photo (local database only; assertLocal in sql()).
+ * Real photos are at most 512000 bytes, so only this makes a recipe reach the 2 MB limit.
+ * `bytes: null` removes the size key (a file without a known size).
+ */
+export async function setPhotoSize(path: string, bytes: number | null): Promise<void> {
+  const rows = await sql<{ id: string }>(
+    bytes === null
+      ? `update storage.objects set metadata = metadata - 'size' where bucket_id = 'recipe-photos' and name = ${lit(path)} returning id`
+      : `update storage.objects set metadata = jsonb_set(coalesce(metadata, '{}'::jsonb), '{size}', to_jsonb(${Math.trunc(bytes)}::bigint))
+         where bucket_id = 'recipe-photos' and name = ${lit(path)} returning id`,
+  );
+  if (rows.length !== 1) throw new Error(`photo ${path} not found in storage.objects`);
+}
+
 export async function inviteValidAtUnknown(code: string): Promise<boolean> {
   const rows = await sql<{ v: boolean }>(`select public.invite_is_valid_at(${lit(code)}, now()) as v`);
   return rows[0].v;

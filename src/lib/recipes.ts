@@ -85,7 +85,17 @@ export async function fetchTags(kind: TagKind): Promise<CallResult & { names: st
   return { names: error ? [] : (data ?? []).map((row) => row.name as string), error, status };
 }
 
-export type SaveResult = CallResult & { id: string | null };
+/** Set when the database refused the recipe as too large (R-004): which part is too large. */
+export type SizeProblem = 'photos' | 'text';
+
+export type SaveResult = CallResult & { id: string | null; sizeProblem?: SizeProblem };
+
+/** The database answers a too large recipe with 23514, message `recipe_too_large` and the part in `details`. */
+export function sizeProblemOf(error: unknown): SizeProblem | undefined {
+  const e = error as { code?: string; message?: string; details?: string } | null;
+  if (!e || e.code !== '23514' || e.message !== 'recipe_too_large') return undefined;
+  return e.details === 'text' ? 'text' : 'photos';
+}
 
 /**
  * What survives between save attempts of one form: the id of a new recipe (photos are uploaded into its
@@ -133,7 +143,7 @@ export async function createRecipe(draft: RecipeDraft, session: SaveSession = ne
   }
   if (error || !data) {
     await discardAfterFailure(session, up.fresh, error, status);
-    return { id: null, error, status };
+    return { id: null, error, status, sizeProblem: sizeProblemOf(error) };
   }
   await removeUnused(session, up.photos);
   return { id: data.id, error: null, status };
@@ -175,7 +185,7 @@ export async function updateRecipe(
     .select('id');
   if (error || !data || data.length === 0) {
     await discardAfterFailure(session, up.fresh, error, status);
-    if (error) return { id: null, error, status };
+    if (error) return { id: null, error, status, sizeProblem: sizeProblemOf(error) };
     // A made-up status in the 2xx range: this is an answer from the server, not a lost connection.
     return { id: null, error: NO_ROWS, status: 200 };
   }

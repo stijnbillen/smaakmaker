@@ -1,9 +1,11 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../components/AuthProvider';
+import { useConnection } from '../components/ConnectionProvider';
 import { RecipeForm } from '../components/RecipeForm';
 import { t } from '../i18n/t';
 import { canEdit } from '../lib/permissions';
+import { fetchPhotoSizes } from '../lib/photos';
 import { draftFromRecord } from '../lib/recipe';
 import { newSaveSession, updateRecipe } from '../lib/recipes';
 import { useRecipe } from '../lib/useRecipe';
@@ -14,6 +16,35 @@ export function EditRecipePage() {
   const { session } = useAuth();
   const state = useRecipe(id, 'recipe-edit');
   const recipe = state.status === 'ready' ? state.recipe : null;
+  const { report, resolve } = useConnection();
+  // Stored file sizes for the size counter; null until known. The form works without them.
+  const [photoSizes, setPhotoSizes] = useState<Map<string, number> | null>(null);
+  const hasPhotos = (recipe?.photos.length ?? 0) > 0;
+  useEffect(() => {
+    if (!recipe) return;
+    if (!hasPhotos) {
+      setPhotoSizes(new Map());
+      return;
+    }
+    let active = true;
+    const load = async () => {
+      const res = await fetchPhotoSizes(id);
+      if (!active) return;
+      if (res.error) {
+        // Connection trouble gets the banner and a retry; the form stays usable meanwhile.
+        report('recipe-photo-sizes', res.error, res.status, () => void load());
+        return;
+      }
+      resolve('recipe-photo-sizes');
+      setPhotoSizes(res.sizes);
+    };
+    void load();
+    return () => {
+      active = false;
+      resolve('recipe-photo-sizes');
+    };
+    // Once per loaded recipe; the photo list of the form itself may change without a new lookup.
+  }, [id, recipe, hasPhotos, report, resolve]);
   const initial = useMemo(() => (recipe ? draftFromRecord(recipe) : null), [recipe]);
   // Uploaded files survive a failed attempt, so "try again" does not upload them twice.
   const saveSession = useRef(newSaveSession(id));
@@ -56,6 +87,7 @@ export function EditRecipePage() {
       }
       onSaved={() => navigate(`/recept/${id}`)}
       backTo={`/recept/${id}`}
+      photoSizes={photoSizes}
     />
   );
 }

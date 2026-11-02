@@ -201,3 +201,17 @@
 - 2026-11-02 16:04 T-012 build: geslaagd
 - 2026-11-02 16:06 T-012 reviewer: GOEDGEKEURD
 - 2026-11-02 16:10 T-012 build: geslaagd
+- 2026-11-02 16:10 T-012 savepoint: gecommit
+- 2026-11-02 16:16 T-013 analist: KLAAR
+- 2026-11-02 16:20 T-013 tester: KLAAR
+- 2026-11-02 16:30 T-013 ontwikkelaar: BLOKKADE: test `tests/db/recipe-size.test.ts` leaves tags and equipment in the shared catalogue (`Proeftag`, `Proefkenmerk`, `d00ÔÇª`/`t00ÔÇª`/`g00ÔÇª`), which makes `recipe-trait-tags.test.ts` and the Tab-reach check in `a11y.spec.ts` fail; the tester must clean up or avoid catalogue entries.
+- 2026-11-02 16:31 T-013 tester: KLAAR
+- 2026-11-02 16:42 T-013 ontwikkelaar: KLAAR
+- 2026-11-02 16:47 T-013 build: geslaagd
+- 2026-11-02 16:48 T-013 reviewer: BEVINDINGEN: 0/1
+- 2026-11-02 16:49 T-013 tester: KLAAR
+- 2026-11-02 16:54 T-013 ontwikkelaar: KLAAR
+- 2026-11-02 16:55 T-013 build: worker-crash (geen testfout), opnieuw
+- 2026-11-02 17:00 T-013 build: geslaagd
+- 2026-11-02 17:01 T-013 reviewer: GOEDGEKEURD
+- 2026-11-02 17:06 T-013 build: geslaagd

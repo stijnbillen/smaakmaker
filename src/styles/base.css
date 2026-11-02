@@ -142,6 +142,18 @@ button:disabled {
   color: var(--color-text-muted);
 }
 
+/* Used recipe size (R-004): one quiet line above "Opslaan"; the accent text colour once over the limit. */
+.recipe-size {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.recipe-size--over {
+  font-weight: 600;
+  color: var(--color-text-accent);
+}
+
 /* Text for screen readers only. */
 .visually-hidden {
   position: absolute;

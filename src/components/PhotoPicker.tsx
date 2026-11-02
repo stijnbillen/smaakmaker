@@ -82,7 +82,7 @@ export function PhotoPicker({ photos, onChange, onBusyChange }: PhotoPickerProps
       reserved.current += 1;
       try {
         const blob = await toJpeg(file);
-        const draft: PhotoDraft = { key: crypto.randomUUID(), blob, previewUrl: URL.createObjectURL(blob), main: false };
+        const draft: PhotoDraft = { key: crypto.randomUUID(), blob, previewUrl: URL.createObjectURL(blob), main: false, bytes: blob.size };
         commit(addPhotos(photosRef.current, [draft]).photos);
       } catch (error) {
         failure = error instanceof PhotoError && error.kind === 'processFailed' ? 'processFailed' : 'notAPhoto';
