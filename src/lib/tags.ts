@@ -6,7 +6,7 @@ export { TAGS_MAX_ITEMS } from './recipe';
 export const TAG_NAME_MAX = 30;
 
 /** Groups of tags; a second group is added here and in the tag filter table. */
-export type TagKind = 'dish';
+export type TagKind = 'dish' | 'trait';
 
 /** Counts code points after trimming, like the database does with its trim and char_length. */
 const length = (value: string): number => [...value.trim()].length;

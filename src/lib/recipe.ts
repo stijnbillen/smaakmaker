@@ -47,6 +47,7 @@ export interface RecipeDraft {
   equipment?: string[];
   /** Chosen dish tags; none is fine. Optional so drafts built without it still work. */
   dishTags?: string[];
+  traitTags?: string[];
 }
 
 /** An ingredient as stored. */
@@ -68,10 +69,12 @@ export interface RecipeRow {
   note: string | null;
   equipment: string[];
   dish_tags: string[];
+  trait_tags: string[];
 }
 
-export interface RecipeRecord extends Omit<RecipeRow, 'prep_minutes' | 'total_minutes' | 'servings' | 'dish_tags'> {
+export interface RecipeRecord extends Omit<RecipeRow, 'prep_minutes' | 'total_minutes' | 'servings' | 'dish_tags' | 'trait_tags'> {
   dishTags: string[];
+  traitTags: string[];
   /** Null for old sample rows saved before the servings existed. */
   servings: number | null;
   /** Null for old sample rows saved before the times existed. */
@@ -163,6 +166,7 @@ export interface RecipeErrors {
   note?: 'noteTooLong';
   equipment?: 'equipmentTooMany';
   dishTags?: 'tagsTooMany';
+  traitTags?: 'tagsTooMany';
   /** About the list as a whole: none, or too many. */
   ingredients?: 'ingredientsRequired' | 'ingredientsTooMany';
   steps?: 'stepsRequired' | 'stepsTooMany';
@@ -197,6 +201,7 @@ export function validateRecipe(draft: RecipeDraft): ValidationResult {
 
   if ((draft.equipment ?? []).length > EQUIPMENT_MAX_ITEMS) errors.equipment = 'equipmentTooMany';
   if ((draft.dishTags ?? []).length > TAGS_MAX_ITEMS) errors.dishTags = 'tagsTooMany';
+  if ((draft.traitTags ?? []).length > TAGS_MAX_ITEMS) errors.traitTags = 'tagsTooMany';
 
   if (draft.ingredients.length === 0) errors.ingredients = 'ingredientsRequired';
   else if (draft.ingredients.length > MAX_INGREDIENTS) errors.ingredients = 'ingredientsTooMany';
@@ -225,6 +230,7 @@ export function validateRecipe(draft: RecipeDraft): ValidationResult {
     !errors.note &&
     !errors.equipment &&
     !errors.dishTags &&
+    !errors.traitTags &&
     !errors.ingredients &&
     !errors.steps &&
     Object.keys(errors.ingredientRows).length === 0 &&
@@ -301,6 +307,7 @@ export function toRow(draft: RecipeDraft): RecipeRow {
     note: draft.note.trim() || null,
     equipment: (draft.equipment ?? []).map((name) => name.trim()),
     dish_tags: (draft.dishTags ?? []).map((name) => name.trim()),
+    trait_tags: (draft.traitTags ?? []).map((name) => name.trim()),
   };
 }
 
@@ -319,9 +326,9 @@ export function isDirty(initial: RecipeDraft, current: RecipeDraft): boolean {
 }
 
 /** A stored recipe in either shape: the row as written (snake_case) or the record as read (camelCase). */
-type StoredRecipe = Omit<RecipeRow, 'prep_minutes' | 'total_minutes' | 'servings' | 'equipment' | 'dish_tags'> &
-  Partial<Pick<RecipeRecord, 'prepMinutes' | 'totalMinutes' | 'dishTags'>> &
-  Partial<Pick<RecipeRow, 'prep_minutes' | 'total_minutes' | 'source' | 'note' | 'equipment' | 'dish_tags'>> & { servings?: number | null };
+type StoredRecipe = Omit<RecipeRow, 'prep_minutes' | 'total_minutes' | 'servings' | 'equipment' | 'dish_tags' | 'trait_tags'> &
+  Partial<Pick<RecipeRecord, 'prepMinutes' | 'totalMinutes' | 'dishTags' | 'traitTags'>> &
+  Partial<Pick<RecipeRow, 'prep_minutes' | 'total_minutes' | 'source' | 'note' | 'equipment' | 'dish_tags' | 'trait_tags'>> & { servings?: number | null };
 
 /** The form's starting values for a stored recipe; old rows without content get one empty row to fill in. */
 export function draftFromRecord(record: StoredRecipe): RecipeDraft {
@@ -337,6 +344,7 @@ export function draftFromRecord(record: StoredRecipe): RecipeDraft {
     note: record.note ?? '',
     equipment: [...(record.equipment ?? [])],
     dishTags: [...(record.dishTags ?? record.dish_tags ?? [])],
+    traitTags: [...(record.traitTags ?? record.trait_tags ?? [])],
     ingredients:
       record.ingredients.length > 0
         ? record.ingredients.map((ing) => ({
@@ -358,6 +366,7 @@ export const emptyDraft = (): RecipeDraft => ({
   note: '',
   equipment: [],
   dishTags: [],
+  traitTags: [],
   ingredients: [emptyIngredient()],
   steps: [''],
 });

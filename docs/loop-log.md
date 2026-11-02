@@ -147,3 +147,13 @@
 - 2026-11-02 12:55 T-010 build: geslaagd
 - 2026-11-02 12:56 T-010 reviewer: GOEDGEKEURD
 - 2026-11-02 13:00 T-010 build: geslaagd
+- 2026-11-02 13:00 T-010 savepoint: gecommit
+- 2026-11-02 13:01 T-011 analist: KLAAR
+- 2026-11-02 13:04 T-011 tester: KLAAR
+- 2026-11-02 13:14 T-011 ontwikkelaar: BLOKKADE: test recipe-trait-tags.spec.ts:82 is instabiel, want de titel "Zonder kenmerken ÔÇª" is zelf een h1 die op `getByRole('heading', { name: 'Kenmerken' })` matcht; de test slaagt alleen als de pagina nog niet geladen is.
+- 2026-11-02 13:15 T-011 tester: KLAAR
+- 2026-11-02 13:21 T-011 ontwikkelaar: KLAAR
+- 2026-11-02 13:24 T-011 build: geslaagd
+- 2026-11-02 13:26 T-011 reviewer: GOEDGEKEURD
+- 2026-11-02 13:26 T-011 build: worker-crash (geen testfout), opnieuw
+- 2026-11-02 13:30 T-011 build: geslaagd

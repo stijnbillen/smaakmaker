@@ -599,3 +599,54 @@ describe('dish tags in the draft (T-010 / R-010 crit. 2)', () => {
     expect(isDirty(changed, fresh)).toBe(true);
   });
 });
+
+describe('trait tags in the draft (T-011 / R-011 crit. 1)', () => {
+  const base = { title: 'Soep', ingredients: [{ name: 'Water' }], steps: ['Kook.'], prep_minutes: 1, total_minutes: 2, servings: 4 };
+  const withTags = (traitTags: string[]) => draft({ traitTags } as never) as never;
+  const check = (traitTags: string[]) =>
+    validateRecipe(withTags(traitTags)) as unknown as { ok?: boolean; errors?: Record<string, unknown> };
+  const names = (n: number) => Array.from({ length: n }, (_, i) => `kenmerk${i}`);
+
+  it('accepts zero tags', () => {
+    const r = check([]);
+    expect(r.errors?.traitTags).toBeUndefined();
+    expect(r.ok).toBe(true);
+  });
+
+  it('accepts 20 tags and refuses 21 with tagsTooMany', () => {
+    expect(check(names(20)).errors?.traitTags).toBeUndefined();
+    const over = check(names(21));
+    expect(over.errors?.traitTags).toBe('tagsTooMany');
+    expect(over.ok).toBe(false);
+  });
+
+  it('the limit is per group: 20 dish plus 20 trait tags give no error', () => {
+    const r = validateRecipe(draft({ dishTags: names(20), traitTags: names(20) } as never) as never) as unknown as {
+      errors?: Record<string, unknown>;
+    };
+    expect(r.errors?.dishTags).toBeUndefined();
+    expect(r.errors?.traitTags).toBeUndefined();
+  });
+
+  it('toRow writes trait_tags as an array of trimmed names', () => {
+    const row = toRow(withTags([' vegetarisch ', 'snel'])) as unknown as Record<string, unknown>;
+    expect(row.trait_tags).toEqual(['vegetarisch', 'snel']);
+  });
+
+  it('draftFromRecord takes the tags over and defaults to []', () => {
+    const tags = (r: unknown) => (draftFromRecord(r as never) as unknown as { traitTags: string[] }).traitTags;
+    expect(tags({ ...base, traitTags: ['snel'] })).toEqual(['snel']);
+    expect(tags(base)).toEqual([]);
+  });
+
+  it('emptyDraft starts without trait tags', () => {
+    expect((emptyDraft() as unknown as { traitTags: string[] }).traitTags).toEqual([]);
+  });
+
+  it('removing a trait tag makes the form dirty (R-003 crit. 8)', () => {
+    const record = { ...base, traitTags: ['vegetarisch', 'snel'] };
+    const fresh = draftFromRecord(record as never);
+    expect(isDirty(draftFromRecord(record as never), fresh)).toBe(false);
+    expect(isDirty({ ...(fresh as object), traitTags: ['snel'] } as never, fresh)).toBe(true);
+  });
+});

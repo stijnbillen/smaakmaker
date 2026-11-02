@@ -6,6 +6,7 @@ import type { TagKind } from './tags';
 /** Per group: the (Dutch, repeatable) URL parameter and the recipe column. */
 const GROUPS: Record<TagKind, { param: string; column: string }> = {
   dish: { param: 'soort', column: 'dish_tags' },
+  trait: { param: 'kenmerk', column: 'trait_tags' },
 };
 
 const KINDS = Object.keys(GROUPS) as TagKind[];

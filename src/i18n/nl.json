@@ -78,6 +78,8 @@
   "form.equipmentInvalid": "Een naam van 1 tot 30 tekens.",
   "form.equipmentTooMany": "Hoogstens 20 items.",
   "tags.dish": "Soort gerecht",
+  "tags.trait": "Kenmerken",
+  "form.traitTagsHint": "Seizoen, dieet of stijl. Optioneel.",
   "form.dishTagsHint": "Kies wat past of voeg een tag toe. Optioneel.",
   "form.tagNew": "Nieuwe tag",
   "form.tagAdd": "Tag toevoegen",

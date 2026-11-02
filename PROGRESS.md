@@ -27,7 +27,7 @@ Nieuw project: er zijn geen requirements met status "Bestaand", dus er is geen f
 - [x] **T-008** — R-015: Bron en opmerking (afhankelijk van T-005)
 - [x] **T-009** — R-008: Kookgerief (afhankelijk van T-005)
 - [x] **T-010** — R-010: Tags voor soort gerecht (afhankelijk van T-005)
-- [ ] **T-011** — R-011: Tags voor seizoen, dieet en stijl (afhankelijk van T-010)
+- [x] **T-011** — R-011: Tags voor seizoen, dieet en stijl (afhankelijk van T-010)
 
 ## Fase 3 — Foto's en varianten
 

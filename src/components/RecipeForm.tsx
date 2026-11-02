@@ -267,6 +267,16 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo }: Recipe
           onChange={(dishTags) => setDraft((d) => ({ ...d, dishTags }))}
         />
 
+        <TagPicker
+          kind="trait"
+          label={t('tags.trait')}
+          hint={t('form.traitTagsHint')}
+          errorId="trait-tags-error"
+          tooMany={Boolean(errors?.traitTags)}
+          selected={draft.traitTags ?? []}
+          onChange={(traitTags) => setDraft((d) => ({ ...d, traitTags }))}
+        />
+
         <EquipmentPicker
           tooMany={Boolean(errors?.equipment)}
           selected={draft.equipment ?? []}

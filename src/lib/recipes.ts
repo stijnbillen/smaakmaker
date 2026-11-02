@@ -13,7 +13,7 @@ export interface CallResult {
 /** SQLSTATE for an id that is not a uuid. */
 const INVALID_TEXT_REPRESENTATION = '22P02';
 
-const SELECT = 'id,title,ingredients,steps,prep_minutes,total_minutes,servings,source,note,equipment,dish_tags,author_id,created_at,author:profiles(display_name)';
+const SELECT = 'id,title,ingredients,steps,prep_minutes,total_minutes,servings,source,note,equipment,dish_tags,trait_tags,author_id,created_at,author:profiles(display_name)';
 
 interface FetchedRow {
   id: string;
@@ -27,6 +27,7 @@ interface FetchedRow {
   note: string | null;
   equipment: string[] | null;
   dish_tags: string[] | null;
+  trait_tags: string[] | null;
   author_id: string;
   created_at: string;
   author: { display_name: string | null } | null;
@@ -57,6 +58,7 @@ export async function fetchRecipe(id: string): Promise<FetchResult> {
       note: row.note ?? null,
       equipment: row.equipment ?? [],
       dishTags: row.dish_tags ?? [],
+      traitTags: row.trait_tags ?? [],
       authorId: row.author_id,
       authorName: row.author?.display_name ?? null,
       createdAt: row.created_at,

@@ -15,7 +15,7 @@ import {
 } from '../lib/equipmentFilter';
 import { formatDuration } from '../lib/format';
 import { supabase } from '../lib/supabase';
-import { tagKey, toggleTag } from '../lib/tags';
+import { tagKey, toggleTag, type TagKind } from '../lib/tags';
 import {
   applyTagFilter,
   hasTagFilter,
@@ -107,10 +107,10 @@ export function RecipeListPage() {
   const changeFilter = (next: TimeFilterValue) => commit(toSearchParams(next, latestParams.current));
   const changeEquipment = (next: string[]) => commit(equipmentToSearchParams(next, latestParams.current));
   // Read from the ref, not from the render: a quick second tap must build on the first.
-  const toggleDishTag = (name: string) => {
+  const toggleTagIn = (kind: TagKind, name: string) => {
     const latest = parseTagFilter(latestParams.current);
-    const same = latest.dish.find((n) => tagKey(n) === tagKey(name));
-    const next: TagFilterValue = { ...latest, dish: toggleTag(latest.dish, same ?? name) };
+    const same = latest[kind].find((n) => tagKey(n) === tagKey(name));
+    const next: TagFilterValue = { ...latest, [kind]: toggleTag(latest[kind], same ?? name) };
     commit(tagsToSearchParams(next, latestParams.current));
   };
 
@@ -118,7 +118,8 @@ export function RecipeListPage() {
     <main className="page">
       <h1>{t('overview.title')}</h1>
       <TimeFilter value={filter} onChange={changeFilter} />
-      <TagFilter kind="dish" label={t('tags.dish')} value={tagFilter.dish} onToggle={toggleDishTag} />
+      <TagFilter kind="dish" label={t('tags.dish')} value={tagFilter.dish} onToggle={(name) => toggleTagIn('dish', name)} />
+      <TagFilter kind="trait" label={t('tags.trait')} value={tagFilter.trait} onToggle={(name) => toggleTagIn('trait', name)} />
       <EquipmentFilter value={equipmentNames} onChange={changeEquipment} />
       {failed && <p>{t('overview.error')}</p>}
       {/* Loading only while nothing is known yet and no error is shown. */}

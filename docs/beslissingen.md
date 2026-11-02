@@ -214,3 +214,9 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - `README.md` en `.env.example` horen niet bij T-010 en zijn niet door deze taak gewijzigd; de eigenaar beslist of ze in een aparte commit komen.
 - De knop in `TagPicker` heet "Tag toevoegen" (`form.tagAdd`), niet "Toevoegen": de kookgerief-kiezer heeft al een knop "Toevoegen", en de ongescopete kookgerief-testhulp botste daarop (strict mode).
 - `TagChoices` bepaalt `aria-pressed` en het (de)selecteren op `tagKey`, zodat een naam uit de URL met andere hoofdletters (`?soort=Soep`) de knop "soep" gewoon indrukt en uitzet.
+
+### T-011 — bouw
+- Migratie `20261102180000_recipe_trait_tags.sql`: tweede groep `trait` in dezelfde catalogus `tags` (check op `kind` uitgebreid), kolom `trait_tags` met GIN-index en een eigen trigger `recipes_resolve_trait_tags`. `resolve_tags`, `fold_key` en de dish-trigger zijn ongewijzigd; `unique (kind, name_key)` laat dezelfde naam in beide groepen toe.
+- Het maximum van 20 geldt per groep (volgt `resolve_tags`), dus samen kunnen er 40 zijn.
+- Identifiers: `trait`, `trait_tags`, URL-parameter `kenmerk`. Overzicht gebruikt `toggleTagIn(kind, name)` uit de ref met laatste URL-params; filters van beide groepen combineren met "en" via twee `overlaps`.
+- Vegetarisch-filter kijkt alleen naar de tag, niet naar ingrediënten.
