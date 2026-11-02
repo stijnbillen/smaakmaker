@@ -192,3 +192,14 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - `sourceLink` is hoofdletterongevoelig voor het schema en laat alleen http(s) door, zodat `javascript:` nooit een `href` wordt; de opmerking wordt als gewone tekst met `white-space: pre-line` getoond.
 - Formulier zonder `maxlength`, zodat een te lange plak de melding toont in plaats van stil af te kappen.
 - `.visually-hidden` gebruikt `margin: 0` en `clip-path`, omdat de stijlscanner negatieve marges weigert.
+
+## T-009 — Kookgerief (bouw)
+- Migratie `20261102160000_recipe_equipment.sql`: namen staan als `text[]` in de receptrij (atomair opslaan, `&&` met GIN-index, een variant kopieert de rij) plus een catalogus `equipment` voor de canonieke spelling. Geen koppeltabel, geen hernoemen of verwijderen.
+- `fold_key()` (immutable wrapper om `unaccent` met expliciete woordenlijst) is de hoofdletter- en accentongevoelige sleutel; herbruikbaar voor tags en zoeken.
+- Trimmen, lengte, maximum 20 en hergebruik gebeuren in `recipe_equipment_resolve()` (security definer, uitvoerrecht ingetrokken voor de client). `recipes_normalize()` is daarom ook security definer gemaakt: een trigger roept de functie anders aan met de rechten van de client, die geweigerd worden.
+- Keuzelijst en filter tonen alleen items die in een recept staan (`equipment_in_use()`, security invoker).
+- `fetchEquipmentInUse` staat in `recipes.ts` en niet in `equipment.ts`: `supabase.ts` gooit zonder omgevingsvariabelen, en de unit tests laden `equipment.ts` zonder.
+- `RecipeDraft.equipment` is optioneel, zodat bestaande tests die drafts zonder het veld bouwen blijven compileren en slagen; `emptyDraft` en `draftFromRecord` vullen het altijd.
+- `.recipe-list li` werd `.recipe-list > li`, anders kregen de geneste gerieflabels de kaartstijl.
+
+- Overview filters (time, equipment) build URL params from a ref that handlers update immediately: two quick changes otherwise both used the same stale render and the second erased the first.

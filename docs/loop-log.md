@@ -110,3 +110,17 @@
 - 2026-11-02 10:57 T-008 build: geslaagd
 - 2026-11-02 10:58 T-008 reviewer: GOEDGEKEURD
 - 2026-11-02 11:01 T-008 build: geslaagd
+- 2026-11-02 11:01 T-008 savepoint: gecommit
+- 2026-11-02 11:03 T-009 analist: KLAAR
+- 2026-11-02 11:06 T-009 tester: KLAAR
+- 2026-11-02 11:15 T-009 ontwikkelaar: KLAAR
+- 2026-11-02 11:18 T-009 build: mislukt
+- 2026-11-02 11:20 T-009 ontwikkelaar: KLAAR
+- 2026-11-02 11:23 T-009 build: geslaagd
+- 2026-11-02 11:24 T-009 reviewer: BEVINDINGEN: 0/1
+- 2026-11-02 11:25 T-009 tester: KLAAR
+- 2026-11-02 11:25 T-009 ontwikkelaar: KLAAR
+- 2026-11-02 11:28 T-009 build: geslaagd
+- 2026-11-02 11:29 T-009 reviewer: GOEDGEKEURD
+- 2026-11-02 11:30 T-009 build: mislukt
+- 2026-11-02 11:30 T-009 stop: eindcontrole faalt
