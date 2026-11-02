@@ -104,3 +104,42 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **Rejection sampling in `generate_invite_code()`:** bytes ≥ 248 worden overgeslagen, zodat elk van de 31 tekens even waarschijnlijk is (geen modulo-bias).
 - **Token `--font-mono`** voor de codes, zodat geen lettertype letterlijk in componenten staat.
 - **Eigen foutmelding op `InvitesPage`:** `report()` geeft `false` bij een fout die geen verbindingsfout is; dan toont de pagina `invites.error` (`role="alert"`) in plaats van stil niets. `README.md` en `.env.example` horen niet bij T-004 (opstarthulp); ze worden apart gecommit.
+
+## T-005 — Recept toevoegen en bewerken (2026-11-02, analyse)
+
+- **Ingrediënten en stappen als `jsonb` in de receptrij:** `ingredients` (array van `{ name, quantity?, unit? }`) en `steps` (array van tekst), geen aparte tabellen.
+  - Opslaan is zo één `insert`/`update`, dus atomisch zonder RPC.
+  - "Minstens 1" is een gewone check.
+  - De groottelimiet (R-004) kan later één rij meten, en een variant (R-006) kopieert één rij.
+  - Zoeken op ingrediënten (R-009) kan met `jsonb_array_elements`.
+- **Validatie in de databank:** immutable functies `recipe_ingredients_valid(jsonb)` en `recipe_steps_valid(jsonb)` in checks, met de grenzen uit R-003. Een hoeveelheid is een JSON-getal > 0, met hoogstens 2 decimalen en < 1.000.000 (de bovengrens is een eigen keuze tegen onzinwaarden). Lengtes worden geteld met `char_length`, in de client in code points.
+- **Normaliseren in een trigger:** `before insert or update` trimt witruimte van de titel, de ingrediëntnaam, de eenheid en elke stap, en laat een lege eenheid weg. De checks lopen op het resultaat. Zo telt "na weghalen van spaties" ook bij een directe API-aanroep.
+- **Checks `not valid`:** bestaande proefrijen met alleen een titel breken de migratie niet. Nieuwe en gewijzigde rijen worden wel gecontroleerd. Er wordt niets gewist.
+- **Bewerken alleen door de auteur:**
+  - kolomrecht `update (title, ingredients, steps)`, dus `author_id`, `id` en `created_at` zijn niet te wijzigen;
+  - policy `recipes update by author` (`using` en `with check` op `author_id = auth.uid()`), zonder `is_admin()`;
+  - `canEdit` in `permissions.ts` spiegelt dat.
+- **0 rijen = mislukt:** `update` en `delete` doen `select('id')`. Een lege lijst geeft "Opslaan mislukt." of "Verwijderen mislukt.".
+- **Router:** `createBrowserRouter` + `RouterProvider` in plaats van `BrowserRouter`, omdat `useBlocker` (voor "Wijzigingen weggooien?") een data-router vraagt. Daarnaast komt er `beforeunload` voor herladen en sluiten; die tekst is van de browser.
+- **Routes:** `/recept/:id` (detail) en `/recept/:id/bewerken`.
+  - Een niet-auteur op `/bewerken` gaat naar de detailpagina.
+  - Een onbekend id of een ongeldige uuid toont "Recept niet gevonden.".
+  - Na opslaan gaat de app met `replace` naar de detailpagina.
+- **Formulier:**
+  - Herordenen gaat met knoppen omhoog en omlaag (≥ 44 px, toegankelijke naam met volgnummer), niet met slepen.
+  - Een nieuw formulier start met één lege ingrediëntregel en één lege stap. Volledig lege regels worden bij opslaan weggelaten.
+  - De hoeveelheid aanvaardt een komma en een punt (`inputmode="decimal"`) en wordt met een komma getoond.
+  - "Gewijzigd" is een vergelijking met de beginwaarde, dus terugzetten telt niet.
+- **Bevestigingen:** één component `ConfirmDialog` (`<dialog>`, `role="alertdialog"`).
+  - De focus staat eerst op de veilige knop; Escape telt als annuleren.
+  - Teksten: "Dit recept verwijderen?" (Verwijderen/Annuleren) en "Wijzigingen weggooien?" (Weggooien/Blijven).
+- **Overzicht:** blijft op `created_at desc`; bewerken verandert de volgorde niet. Elk item is een link naar de detailpagina.
+- **Testhulp `insertRecipe(client, overrides?)`:** voegt een geldig minimumrecept in. De bestaande tests die alleen een titel invoegen, gebruiken voortaan deze hulp.
+
+### T-005 — bouw
+- **Kolomrecht eerst intrekken:** Supabase geeft `authenticated` standaard `update` op alle kolommen. De migratie doet daarom eerst `revoke update` en dan `grant update (title, ingredients, steps)`; anders beperkt het kolomrecht niets.
+- **Routes blijven JSX:** `createBrowserRouter(createRoutesFromElements(...))`, zodat `App.tsx` `path="…"` houdt (de test op de beheerroutes leest dat).
+- **0 rijen = mislukt met een eigen fout:** `updateRecipe` en `deleteRecipe` geven bij een lege lijst een fout met status 200. `report` ziet die niet als verbindingsfout (een ontbrekende status zou dat wel zijn).
+- **Lege regels:** het formulier laat volledig lege regels weg vóór het valideren (`pruneDraft`) en zet de meldingen terug op de getoonde regels. Na de eerste mislukte poging wordt live opnieuw gevalideerd.
+- **Navigatie na opslaan:** `savedRef` gaat aan vóór `navigate`; `useBlocker` leest `dirty && !saved` op het moment van navigeren.
+- **Omhoog/omlaag** zijn uitgeschakeld op de eerste/laatste regel in plaats van een knop die niets doet.

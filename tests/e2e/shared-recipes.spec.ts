@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { signInViaStorage } from '../helpers/session';
-import { assertSupabaseUp, createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase-admin';
+import { assertSupabaseUp, createTestUser, deleteTestUser, insertRecipe, type TestUser } from '../helpers/supabase-admin';
 
 let a: TestUser;
 let b: TestUser;
@@ -30,8 +30,7 @@ test('recipe added by A shows for B after reload, not hidden by a cache (R-001 c
   });
   await expect(page.getByText(title)).toHaveCount(0);
 
-  const ins = await a.client.from('recipes').insert({ title });
-  expect(ins.error).toBeNull();
+  await insertRecipe(a.client, { title });
 
   const recipesRequest = page.waitForRequest((r) => r.url().includes('/rest/v1/recipes'));
   await page.reload();

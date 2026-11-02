@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { signInForRoute, signInViaStorage, supabaseRoutePattern } from '../helpers/session';
-import { assertSupabaseUp, createTestUser, deleteTestUser, makeAdmin, type TestUser } from '../helpers/supabase-admin';
-import { routes } from './routes';
+import { assertSupabaseUp, createTestUser, deleteTestUser, insertRecipe, makeAdmin, type TestUser } from '../helpers/supabase-admin';
+import { prepareRoutes, routes } from './routes';
 
 let user: TestUser;
 let unnamed: TestUser;
@@ -13,8 +13,8 @@ test.beforeAll(async () => {
   unnamed = await createTestUser('a11ynn', { displayName: null });
   admin = await createTestUser('a11yadm');
   await makeAdmin(admin.id);
-  const ins = await user.client.from('recipes').insert({ title: 'A11y testrecept' });
-  if (ins.error) throw ins.error;
+  await insertRecipe(user.client, { title: 'A11y testrecept' });
+  await prepareRoutes(user.client); // recipe for /recept/:id and /recept/:id/bewerken
 });
 
 test.afterAll(async () => {
@@ -146,7 +146,7 @@ test('label check detects an input without visible label (R-016 crit. 4, negativ
 });
 
 for (const route of routes) {
-  test.describe(`toegankelijkheid op ${route.name} (${route.path})`, () => {
+  test.describe(`toegankelijkheid op ${route.name}` /* no route.path: it changes after beforeAll (prepareRoutes) */, () => {
     test.beforeEach(async ({ page }) => {
       await signInForRoute(page, route.auth, { full: user.session, unnamed: unnamed.session, admin: admin.session });
     });

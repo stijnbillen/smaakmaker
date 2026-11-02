@@ -55,7 +55,8 @@ label {
   color: var(--color-text-body);
 }
 
-input {
+input,
+textarea {
   display: block;
   width: 100%;
   min-height: var(--tap-min);
@@ -69,7 +70,14 @@ input {
   transition: border-color var(--duration-fast);
 }
 
-input:focus {
+textarea {
+  min-height: calc(var(--tap-min) * 2);
+  padding: var(--space-2) var(--space-3);
+  resize: vertical;
+}
+
+input:focus,
+textarea:focus {
   border-color: var(--color-focus);
 }
 
@@ -107,7 +115,8 @@ button:disabled {
   cursor: default;
 }
 
-.button-link--quiet {
+.button-link--quiet,
+.button-quiet {
   color: var(--color-text-accent);
   background: transparent;
   border: 2px solid var(--color-accent);
@@ -125,7 +134,8 @@ button:disabled {
   color: var(--color-text-accent);
 }
 
-input[aria-invalid='true'] {
+input[aria-invalid='true'],
+textarea[aria-invalid='true'] {
   border-color: var(--color-accent);
 }
 
@@ -181,6 +191,153 @@ input[aria-invalid='true'] {
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+}
+
+/* The whole list item is the link, so the tap target is the full card. */
+.recipe-link {
+  display: block;
+  padding: var(--space-3) var(--space-4);
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+}
+
+/* Recipe form: groups, rows with their buttons, add buttons */
+.form-group {
+  min-width: 0;
+  margin: 0 0 var(--space-5);
+  padding: 0;
+  border: 0;
+}
+
+.form-group legend {
+  padding: 0;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.row-list {
+  list-style: none;
+  margin: var(--space-3) 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.row {
+  padding: var(--space-3);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+/* Name on its own line; quantity and unit side by side below it, so 360 px needs no sideways scrolling. */
+.row-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: var(--space-3);
+}
+
+.row-name {
+  grid-column: 1 / -1;
+}
+
+.row .field {
+  margin-bottom: var(--space-3);
+}
+
+.row-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.icon-button {
+  padding: 0;
+  margin: 0;
+  color: var(--color-text-body);
+  background: var(--color-bg-sunken);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.icon-button svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.list-add {
+  margin-top: 0;
+}
+
+/* Confirmation dialog */
+.dialog {
+  width: min(100% - var(--space-6), 24rem);
+  padding: var(--space-5);
+  color: var(--color-text-body);
+  background: var(--color-bg-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.dialog::backdrop {
+  background: var(--overlay-backdrop);
+}
+
+.dialog-question {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.dialog-actions button {
+  margin: 0;
+}
+
+/* Detail page */
+.recipe-section h2 {
+  margin: var(--space-5) 0 var(--space-2);
+  font-size: var(--font-size-lg);
+}
+
+.ingredient-list {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+
+.step-list {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+
+.step-list li,
+.ingredient-list li {
+  margin-bottom: var(--space-2);
+}
+
+.recipe-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.recipe-actions > * {
+  margin: 0;
 }
 
 /* Bottom navigation: four equal entries, fixed to the bottom edge. */

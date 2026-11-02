@@ -8,6 +8,7 @@ import {
   createInvite,
   createTestUser,
   deleteTestUser,
+  insertRecipe,
   uniqueEmail,
   type TestUser,
 } from '../helpers/supabase-admin';
@@ -259,8 +260,7 @@ test.describe('auteur en datum bij een recept (crit. 8)', () => {
     const b = await createTestUser('lezer', { displayName: 'Bart' });
     extraUsers.push(a, b);
     const title = `Auteurtest ${Date.now()}`;
-    const ins = await a.client.from('recipes').insert({ title }).select('created_at').single();
-    expect(ins.error).toBeNull();
+    const ins = { data: await insertRecipe(a.client, { title }) };
     const date = new Intl.DateTimeFormat('nl-BE', {
       day: 'numeric',
       month: 'long',

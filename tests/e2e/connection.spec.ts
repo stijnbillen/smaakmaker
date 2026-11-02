@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { signInViaStorage, supabaseRoutePattern } from '../helpers/session';
-import { assertSupabaseUp, createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase-admin';
+import { fillRecipe, ingredientNameFields, stepFields, titleField } from '../helpers/recipe-form';
+import { assertSupabaseUp, createTestUser, deleteTestUser, insertRecipe, type TestUser } from '../helpers/supabase-admin';
 
 const MESSAGE = 'Geen verbinding. Probeer opnieuw.';
 let user: TestUser;
@@ -9,8 +10,7 @@ const title = `Verbindingstest ${Date.now()}`;
 test.beforeAll(async () => {
   await assertSupabaseUp();
   user = await createTestUser('conn');
-  const ins = await user.client.from('recipes').insert({ title });
-  if (ins.error) throw ins.error;
+  await insertRecipe(user.client, { title });
 });
 
 test.afterAll(async () => {
@@ -43,13 +43,16 @@ test('overview shows connection error and recovers without page reload (R-001 cr
 test('retry after leaving the form inserts no recipe (R-001 crit. 6)', async ({ page }) => {
   const abandoned = `Verlaten ${Date.now()}`;
   await page.goto('/nieuw');
-  await page.getByRole('textbox').first().fill(abandoned);
+  await fillRecipe(page, { title: abandoned, ingredients: ['Zout'], steps: ['Roer.'] });
 
   await page.route(supabaseRoutePattern(), (r) => r.abort());
   await page.getByRole('button', { name: 'Opslaan' }).click();
   await expect(page.getByText(MESSAGE)).toBeVisible();
 
   await page.getByRole('link', { name: 'Terug naar overzicht' }).click();
+  // The form is dirty (R-003 crit. 8): confirm leaving it.
+  await page.getByRole('button', { name: 'Weggooien', exact: true }).click();
+  await expect(page).toHaveURL(/\/$/);
   await page.unroute(supabaseRoutePattern());
 
   // The banner may be gone (correct) or still there; tapping retry must never insert.
@@ -71,17 +74,21 @@ test('retry after leaving the form inserts no recipe (R-001 crit. 6)', async ({ 
 // T-001 criterion 6, form
 test('typed form input survives a connection error and retry (R-001 crit. 6)', async ({ page }) => {
   await page.goto('/nieuw');
-  const input = page.getByRole('textbox').first();
-  await input.fill('Mijn halfaf recept');
+  await fillRecipe(page, { title: 'Mijn halfaf recept', ingredients: ['Zout'], steps: ['Roer goed.'] });
+  const expectInputKept = async () => {
+    await expect(titleField(page)).toHaveValue('Mijn halfaf recept');
+    await expect(ingredientNameFields(page).first()).toHaveValue('Zout');
+    await expect(stepFields(page).first()).toHaveValue('Roer goed.');
+  };
 
   await page.route(supabaseRoutePattern(), (r) => r.abort());
   await page.getByRole('button', { name: 'Opslaan' }).click();
 
   await expect(page.getByText(MESSAGE)).toBeVisible();
-  await expect(input).toHaveValue('Mijn halfaf recept');
+  await expectInputKept();
 
   // retry while still offline: message stays, value stays
   await page.getByRole('button', { name: 'Opnieuw proberen' }).click();
   await expect(page.getByText(MESSAGE)).toBeVisible();
-  await expect(input).toHaveValue('Mijn halfaf recept');
+  await expectInputKept();
 });

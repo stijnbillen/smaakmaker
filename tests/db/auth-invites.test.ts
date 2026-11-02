@@ -9,6 +9,7 @@ import {
   createTestUser,
   deleteTestUser,
   uniqueEmail,
+  validRecipe,
   type TestUser,
 } from '../helpers/supabase-admin';
 
@@ -345,7 +346,7 @@ describe('nothing readable or writable without signing in (R-002 crit. 5)', () =
   beforeAll(async () => {
     u = await createTestUser('prive');
     users.push(u);
-    const ins = await u.client.from('recipes').insert({ title: 'Privé testrecept' });
+    const ins = await u.client.from('recipes').insert(validRecipe({ title: 'Privé testrecept' }));
     expect(ins.error).toBeNull();
   });
 
@@ -356,7 +357,7 @@ describe('nothing readable or writable without signing in (R-002 crit. 5)', () =
   });
 
   it('anonymous insert into recipes is refused', async () => {
-    const r = await anonClient().from('recipes').insert({ title: 'Anoniem' });
+    const r = await anonClient().from('recipes').insert(validRecipe({ title: 'Anoniem' }));
     expect(r.error).not.toBeNull();
   });
 

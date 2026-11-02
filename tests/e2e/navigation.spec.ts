@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import nlJson from '../../src/i18n/nl.json' with { type: 'json' };
 import { signInForRoute, signInViaStorage } from '../helpers/session';
-import { assertSupabaseUp, createTestUser, deleteTestUser, makeAdmin, type TestUser } from '../helpers/supabase-admin';
-import { routesWithNav as routes } from './routes'; // sign-in and welcome screens have no navigation bar
+import { assertSupabaseUp, createTestUser, deleteTestUser, makeAdmin, validRecipe, type TestUser } from '../helpers/supabase-admin';
+import { prepareRoutes, routesWithNav as routes } from './routes'; // sign-in and welcome screens have no navigation bar
 
 const nl = nlJson as Record<string, string>;
 
@@ -23,7 +23,8 @@ test.beforeAll(async () => {
   admin = await createTestUser('navadm');
   await makeAdmin(admin.id);
   // Many recipes so the overview is long enough to scroll.
-  const rows = Array.from({ length: 40 }, (_, i) => ({ title: `Navigatietest recept ${i + 1}` }));
+  const rows = Array.from({ length: 40 }, (_, i) => validRecipe({ title: `Navigatietest recept ${i + 1}` }));
+  await prepareRoutes(user.client); // recipe for /recept/:id and /recept/:id/bewerken
   const ins = await user.client.from('recipes').insert(rows);
   if (ins.error) throw ins.error;
 });
@@ -42,7 +43,7 @@ function navOf(page: Page) {
 }
 
 for (const route of routes) {
-  test.describe(`navigatiebalk op ${route.name} (${route.path})`, () => {
+  test.describe(`navigatiebalk op ${route.name}` /* no route.path: it changes after beforeAll (prepareRoutes) */, () => {
     test.beforeEach(async ({ page }) => {
       // Runs after the default sign-in, so the admin session wins on admin-only screens (T-004).
       if (route.auth === 'admin') {

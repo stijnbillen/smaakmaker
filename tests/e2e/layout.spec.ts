@@ -1,10 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 import { signInForRoute, signInViaStorage, supabaseRoutePattern } from '../helpers/session';
-import { assertSupabaseUp, createTestUser, deleteTestUser, makeAdmin, type TestUser } from '../helpers/supabase-admin';
-import { routes } from './routes';
+import { assertSupabaseUp, createTestUser, deleteTestUser, insertRecipe, makeAdmin, type TestUser } from '../helpers/supabase-admin';
+import { prepareRoutes, routes } from './routes';
 
-// Long unbroken title: would overflow 360 px without overflow-wrap.
-const LONG_TITLE = 'Superlangeaaneengeschrevenrecepttitelzonderspaties'.repeat(3);
+// Long unbroken title (100 chars = the title limit): would overflow 360 px without overflow-wrap.
+const LONG_TITLE = 'Superlangeaaneengeschrevenrecepttitelzonderspaties'.repeat(2);
 
 let user: TestUser;
 let unnamed: TestUser;
@@ -16,8 +16,8 @@ test.beforeAll(async () => {
   unnamed = await createTestUser('layoutnn', { displayName: null });
   admin = await createTestUser('layoutadm');
   await makeAdmin(admin.id);
-  const ins = await user.client.from('recipes').insert({ title: LONG_TITLE });
-  if (ins.error) throw ins.error;
+  await insertRecipe(user.client, { title: LONG_TITLE });
+  await prepareRoutes(user.client); // recipe for /recept/:id and /recept/:id/bewerken
 });
 
 test.afterAll(async () => {
@@ -82,7 +82,7 @@ test('overflow check detects a 500 px wide element (R-001 crit. 4, negative cont
 });
 
 for (const route of routes) {
-  test.describe(`scherm ${route.name} (${route.path})`, () => {
+  test.describe(`scherm ${route.name}` /* no route.path: it changes after beforeAll (prepareRoutes) */, () => {
     test.beforeEach(async ({ page }) => {
       await signInForRoute(page, route.auth, { full: user.session, unnamed: unnamed.session, admin: admin.session });
     });

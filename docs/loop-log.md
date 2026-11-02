@@ -74,3 +74,14 @@
 - 2026-11-02 00:37 T-004 build: geslaagd
 - 2026-11-02 00:38 T-004 reviewer: GOEDGEKEURD
 - 2026-11-02 00:40 T-004 build: geslaagd
+- 2026-11-02 00:40 T-004 savepoint: gecommit
+- 2026-11-02 00:44 T-005 analist: KLAAR
+- 2026-11-02 00:49 T-005 tester: KLAAR
+- 2026-11-02 01:02 T-005 ontwikkelaar: BLOKKADE: test layout.spec.ts (LONG_TITLE is 150 tekens, grens is 100), recipe-detail.spec.ts (abort v├│├│r het recept geladen is) en discard.spec.ts (page.goto geeft een volledige lading, dus de router-blocker ziet de terugknop niet)
+- 2026-11-02 01:02 T-005 tester: KLAAR
+- 2026-11-02 01:06 T-005 ontwikkelaar: BLOKKADE: test layout.spec.ts en navigation.spec.ts: de describe-titel bevat route.path, dat na beforeAll (prepareRoutes) verandert, dus 12 tests geven "Test not found in the worker process"
+- 2026-11-02 01:06 T-005 tester: KLAAR
+- 2026-11-02 01:09 T-005 ontwikkelaar: KLAAR
+- 2026-11-02 01:12 T-005 build: geslaagd
+- 2026-11-02 01:14 T-005 reviewer: GOEDGEKEURD
+- 2026-11-02 01:17 T-005 build: geslaagd

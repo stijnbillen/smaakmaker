@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { AuthorLine } from '../components/AuthorLine';
 import { useConnection } from '../components/ConnectionProvider';
 import { ListState } from '../components/ListState';
@@ -62,8 +63,11 @@ export function RecipeListPage() {
           <ul className="recipe-list">
             {recipes?.map((r) => (
               <li key={r.id}>
-                <span className="recipe-title">{r.title}</span>
-                <AuthorLine name={r.author?.display_name ?? null} date={r.created_at} />
+                {/* The whole item is the tap target. Room for the times (R-007) comes later. */}
+                <Link to={`/recept/${r.id}`} className="recipe-link">
+                  <span className="recipe-title">{r.title}</span>
+                  <AuthorLine name={r.author?.display_name ?? null} date={r.created_at} />
+                </Link>
               </li>
             ))}
           </ul>

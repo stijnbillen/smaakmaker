@@ -1,5 +1,8 @@
 // Central list of screens. Later tasks MUST add their screens here so that the
 // 360 px and tap-target checks (R-001) cover them.
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { insertRecipe } from '../helpers/supabase-admin';
+
 export interface AppRoute {
   name: string;
   path: string;
@@ -13,9 +16,33 @@ export interface AppRoute {
   auth: 'full' | 'none' | 'unnamed' | 'admin';
 }
 
+/**
+ * Screens with an id in the path need a recipe of the test user (T-005).
+ * A spec calls `prepareRoutes(user.client)` in its beforeAll; `path` is then filled in.
+ */
+const fixture = { recipeId: 'nog-niet-klaargezet' };
+
+export async function prepareRoutes(client: SupabaseClient): Promise<void> {
+  fixture.recipeId = (await insertRecipe(client, { title: 'Routetest recept' })).id;
+}
+
 export const routes: AppRoute[] = [
   { name: 'overzicht', path: '/', auth: 'full' },
   { name: 'nieuw recept', path: '/nieuw', auth: 'full' },
+  {
+    name: 'recept',
+    get path() {
+      return `/recept/${fixture.recipeId}`;
+    },
+    auth: 'full',
+  },
+  {
+    name: 'recept bewerken',
+    get path() {
+      return `/recept/${fixture.recipeId}/bewerken`;
+    },
+    auth: 'full',
+  },
   { name: 'favorieten', path: '/favorieten', auth: 'full' },
   { name: 'profiel', path: '/profiel', auth: 'full' },
   { name: 'uitnodigingen', path: '/uitnodigingen', auth: 'admin' },

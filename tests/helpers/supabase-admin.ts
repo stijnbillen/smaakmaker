@@ -163,6 +163,33 @@ export async function createTestUser(
   };
 }
 
+/** A minimal valid recipe row (R-003: 1 ingredient, 1 step); overrides replace single fields. */
+export function validRecipe(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    title: `Testrecept ${Date.now()}`,
+    ingredients: [{ name: 'Zout' }],
+    steps: ['Meng alles.'],
+    ...overrides,
+  };
+}
+
+export interface StoredRecipe {
+  id: string;
+  title: string;
+  author_id: string;
+  created_at: string;
+}
+
+/** Inserts a valid recipe as the given (signed-in) client and returns the stored row. Throws on a database error. */
+export async function insertRecipe(
+  client: SupabaseClient,
+  overrides: Record<string, unknown> = {},
+): Promise<StoredRecipe> {
+  const res = await client.from('recipes').insert(validRecipe(overrides)).select('id,title,author_id,created_at').single();
+  if (res.error || !res.data) throw res.error ?? new Error('insertRecipe failed');
+  return res.data as StoredRecipe;
+}
+
 export async function deleteTestUser(user: TestUser): Promise<void> {
   const admin = adminClient();
   // recipes.author_id references auth.users; remove rows first in case there is no cascade.

@@ -7,6 +7,7 @@ import {
   createInvite,
   createTestUser,
   deleteTestUser,
+  insertRecipe as insertValidRecipe,
   makeAdmin,
   type TestUser,
 } from '../helpers/supabase-admin';
@@ -185,9 +186,7 @@ describe('administrator (R-017)', () => {
 
   describe('crit. 3: deleting recipes (author or administrator)', () => {
     async function insertRecipe(owner: TestUser, title: string): Promise<string> {
-      const ins = await owner.client.from('recipes').insert({ title }).select('id').single();
-      expect(ins.error).toBeNull();
-      return ins.data!.id as string;
+      return (await insertValidRecipe(owner.client, { title })).id;
     }
     const exists = async (id: string) =>
       ((await adminClient().from('recipes').select('id').eq('id', id)).data ?? []).length === 1;
