@@ -14,6 +14,13 @@ import {
   toSearchParams as equipmentToSearchParams,
 } from '../lib/equipmentFilter';
 import { formatDuration } from '../lib/format';
+import {
+  formatRating,
+  parseSort,
+  reviewCountText,
+  toSearchParams as sortToSearchParams,
+  type ReviewSort,
+} from '../lib/reviews';
 import { supabase } from '../lib/supabase';
 import { tagKey, toggleTag, type TagKind } from '../lib/tags';
 import {
@@ -33,6 +40,9 @@ interface RecipeRow {
   prep_minutes: number | null;
   total_minutes: number | null;
   equipment: string[] | null;
+  /** Computed fields of the database; PostgREST may send numeric as a number or a string. */
+  rating_avg: number | string | null;
+  rating_count: number;
   author: { display_name: string | null } | null;
 }
 
@@ -55,21 +65,24 @@ export function RecipeListPage() {
   const filter = useMemo(() => parseTimeFilter(new URLSearchParams(query)), [query]);
   const equipmentNames = useMemo(() => parseEquipmentFilter(new URLSearchParams(query)), [query]);
   const tagFilter = useMemo(() => parseTagFilter(new URLSearchParams(query)), [query]);
+  const sort = useMemo(() => parseSort(new URLSearchParams(query)), [query]);
 
   // Fetched on every mount, no client cache: other users' recipes must show after a reload.
   const load = useCallback(async () => {
     const mine = ++requestId.current;
+    const base = supabase
+      .from('recipes')
+      .select('id,title,created_at,prep_minutes,total_minutes,equipment,rating_avg,rating_count,author:profiles(display_name)');
+    // Rating sort: best average first, more reviews first on a tie, newest last; no reviews at the bottom.
+    const ordered =
+      sort === 'rating'
+        ? base
+            .order('rating_avg', { ascending: false, nullsFirst: false })
+            .order('rating_count', { ascending: false })
+            .order('created_at', { ascending: false })
+        : base.order('created_at', { ascending: false });
     const { data, error, status } = await applyTagFilter(
-      applyEquipmentFilter(
-        applyTimeFilter(
-          supabase
-            .from('recipes')
-            .select('id,title,created_at,prep_minutes,total_minutes,equipment,author:profiles(display_name)')
-            .order('created_at', { ascending: false }),
-          filter,
-        ),
-        equipmentNames,
-      ),
+      applyEquipmentFilter(applyTimeFilter(ordered, filter), equipmentNames),
       tagFilter,
     );
     // A late answer after leaving the page, or for an older filter, must not report, resolve or set state.
@@ -84,7 +97,7 @@ export function RecipeListPage() {
     setFailed(false);
     setErrored(false);
     setRecipes(data as unknown as RecipeRow[]);
-  }, [filter, equipmentNames, tagFilter, report, resolve]);
+  }, [filter, equipmentNames, tagFilter, sort, report, resolve]);
 
   useEffect(() => {
     active.current = true;
@@ -105,6 +118,7 @@ export function RecipeListPage() {
     setSearchParams(next, { replace: true });
   };
   const changeFilter = (next: TimeFilterValue) => commit(toSearchParams(next, latestParams.current));
+  const changeSort = (next: ReviewSort) => commit(sortToSearchParams(next, latestParams.current));
   const changeEquipment = (next: string[]) => commit(equipmentToSearchParams(next, latestParams.current));
   // Read from the ref, not from the render: a quick second tap must build on the first.
   const toggleTagIn = (kind: TagKind, name: string) => {
@@ -121,6 +135,13 @@ export function RecipeListPage() {
       <TagFilter kind="dish" label={t('tags.dish')} value={tagFilter.dish} onToggle={(name) => toggleTagIn('dish', name)} />
       <TagFilter kind="trait" label={t('tags.trait')} value={tagFilter.trait} onToggle={(name) => toggleTagIn('trait', name)} />
       <EquipmentFilter value={equipmentNames} onChange={changeEquipment} />
+      <div className="field sort-field">
+        <label htmlFor="recipe-sort">{t('overview.sort')}</label>
+        <select id="recipe-sort" value={sort} onChange={(e) => changeSort(e.target.value === 'rating' ? 'rating' : 'newest')}>
+          <option value="newest">{t('overview.sortNewest')}</option>
+          <option value="rating">{t('overview.sortRating')}</option>
+        </select>
+      </div>
       {failed && <p>{t('overview.error')}</p>}
       {/* Loading only while nothing is known yet and no error is shown. */}
       {!errored && (
@@ -136,6 +157,13 @@ export function RecipeListPage() {
                 <Link to={`/recept/${r.id}`} className="recipe-link">
                   <span className="recipe-title">{r.title}</span>
                   <AuthorLine name={r.author?.display_name ?? null} date={r.created_at} />
+                  {r.rating_avg !== null && r.rating_count > 0 && (
+                    <span className="recipe-rating" data-testid="recipe-rating">
+                      {t('reviews.summary')
+                        .replace('{avg}', formatRating(Number(r.rating_avg)))
+                        .replace('{count}', reviewCountText(r.rating_count))}
+                    </span>
+                  )}
                   {r.prep_minutes !== null && r.total_minutes !== null && (
                     <span className="recipe-times">
                       {t('time.prep')} {formatDuration(r.prep_minutes)} · {t('time.total')} {formatDuration(r.total_minutes)}

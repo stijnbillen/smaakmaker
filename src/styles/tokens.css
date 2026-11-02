@@ -21,6 +21,9 @@
   /* Accent used as text colour: named text-* so the contrast test checks it on every background. */
   --color-text-accent: var(--color-accent);
 
+  /* Stars: named text-* so the contrast test checks them on every background. */
+  --color-text-star: #8a5300;
+
   --color-focus: #1d4e89;
   --color-border: #d9ccb6;
   --color-theme: var(--color-accent);

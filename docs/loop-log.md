@@ -182,3 +182,14 @@
 - 2026-11-02 15:10 T-015 ontwikkelaar: KLAAR
 - 2026-11-02 15:14 T-015 build: mislukt
 - 2026-11-02 15:14 T-015 stop: review niet goedgekeurd na 2 rondes
+- 2026-11-02 15:17 - loop: geen taak meer
+- 2026-11-02 15:17 - loop: geen taak meer
+- 2026-11-02 15:17 T-016 analist: KLAAR
+- 2026-11-02 15:21 T-016 tester: KLAAR
+- 2026-11-02 15:37 T-016 ontwikkelaar: BLOKKADE: test ÔÇö `reviews.spec.ts` gebruikt `getByRole('dialog')` waar de app `alertdialog` heeft (regels 197/279), het zoekt `getByText('Nieuw', { exact: true })` dat ook het navigatielink raakt (regel 183), en de 23505-test (regel 206) voegt de review in v├│├│r de lijst geladen is. `a11y.spec.ts` ("reachable by Tab") telt elk keuzerondje van ├®├®n groep als eigen tabstop, wat botst met het criterium over pijltjestoetsen.
+- 2026-11-02 15:37 T-016 tester: KLAAR
+- 2026-11-02 15:43 T-016 ontwikkelaar: KLAAR
+- 2026-11-02 15:47 T-016 build: geslaagd
+- 2026-11-02 15:49 T-016 reviewer: GOEDGEKEURD
+- 2026-11-02 15:50 T-016 build: worker-crash (geen testfout), opnieuw
+- 2026-11-02 15:54 T-016 build: geslaagd

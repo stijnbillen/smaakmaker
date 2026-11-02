@@ -270,3 +270,16 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - De client sorteert het RPC-resultaat zelf (`match_count`, dan `created_at`), omdat de volgorde na PostgREST-filters niet gegarandeerd is.
 - Als het overzicht later een hoofdfoto toont, moet `search_recipes` ook de foto's teruggeven (kolomlijst bijwerken).
 - Migratie eindigt met `notify pgrst, 'reload schema'` zodat PostgREST de functie direct kent.
+
+## T-016 — Reviews (bouw)
+- Eigen tabel `reviews` met kolomrechten (insert `recipe_id,rating,body`; update `rating,body`) na een eerste `revoke all`; een beheerder mag alleen verwijderen. De recept-rij wordt nooit bijgewerkt bij een review.
+- `rating_avg(recipes)` en `rating_count(recipes)` zijn `security invoker` functies (berekende velden voor PostgREST), geen kolommen: reviews tellen zo niet mee in de groottelimiet van 2 MB. De echte grootteproef hoort bij de groottetaak.
+- Afronding `round(numeric, 1)` (4,25 → 4,3). Sorteren op beoordeling: gemiddelde, dan aantal, dan nieuwste; zonder review onderaan (`nullsFirst: false`).
+- Lijst en datum volgen `created_at`; een bewerkte review verschuift niet. `updated_at` wordt wel bijgehouden.
+- URL-parameter `sorteer=beoordeling`; de standaard laat de URL schoon.
+- Sterren zijn echte keuzerondjes (transparant over de ster, geen `opacity: 0`) zodat de focusring op het rondje zelf staat. Sterkleur is `--color-text-star` zodat de contrasttest hem meeneemt.
+- De samenvatting staat alleen in de reviewsectie (geen tweede samenvatting bovenaan de detailpagina, geen extra velden in `fetchRecipe`); het criterium vraagt alleen dat ze op de detailpagina staat.
+- `ReviewSection` laadt lijst en samenvatting na elke geslaagde actie opnieuw; `23505` bij aanmaken wordt een eigen resultaat `duplicate` (melding + herladen).
+- Een gebruiker verwijderen verwijdert zijn reviews (`on delete cascade`), zoals bij recepten.
+- Voor de zoektaak: `search_recipes` moet ook `rating_avg`/`rating_count` teruggeven en er moet beslist worden hoe "Sorteren op beoordeling" zich verhoudt tot sorteren op het aantal overeenkomsten.
+- Varianten beginnen zonder reviews; reviews worden niet gekopieerd.

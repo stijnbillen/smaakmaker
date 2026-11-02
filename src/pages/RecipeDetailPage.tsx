@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AuthorLine } from '../components/AuthorLine';
 import { useAuth } from '../components/AuthProvider';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ReviewSection } from '../components/ReviewSection';
 import { ServingsStepper } from '../components/ServingsStepper';
 import { useConnection } from '../components/ConnectionProvider';
 import { t } from '../i18n/t';
@@ -186,6 +187,8 @@ export function RecipeDetailPage() {
           </p>
         </section>
       )}
+
+      <ReviewSection recipeId={recipe.id} />
 
       {deleteFailed && (
         <p role="alert" className="field-error">

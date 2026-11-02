@@ -680,3 +680,113 @@ textarea[aria-invalid='true'] {
   border-radius: var(--radius-sm);
   overflow-wrap: anywhere;
 }
+
+/* Reviews */
+.rating-summary {
+  margin: 0 0 var(--space-3);
+  font-weight: 600;
+}
+
+.recipe-rating {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-star);
+}
+
+.sort-field {
+  margin-top: var(--space-3);
+}
+
+/* Stars: a star drawn under a transparent radio button. Five times 44 px fits 360 px. */
+.star-group {
+  margin-bottom: var(--space-3);
+}
+
+.star-choices {
+  display: flex;
+}
+
+.star-choice {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  color: var(--color-text-star);
+  cursor: pointer;
+}
+
+/* The radio covers the star, transparent but not hidden, so the normal focus ring shows on it. */
+.star-choice input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.star {
+  width: 1.75rem;
+  height: 1.75rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.star--on {
+  fill: currentColor;
+}
+
+.star-display,
+.star-row {
+  display: inline-flex;
+  color: var(--color-text-star);
+}
+
+.star-row .star {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.review-list {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.review-item {
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.review-body {
+  margin: var(--space-2) 0 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.review-new h3 {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: var(--font-size-md);
+}

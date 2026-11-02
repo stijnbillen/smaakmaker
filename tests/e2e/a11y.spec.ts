@@ -113,6 +113,13 @@ async function focusProblems(page: Page): Promise<string[]> {
         );
       })
       .filter((el) => !el.dataset.tabKey)
+      // A radio group is one tab stop (arrow keys move inside it): reached if any member was.
+      .filter((el) => {
+        const radio = el as HTMLInputElement;
+        if (radio.type !== 'radio' || !radio.name) return true;
+        const group = Array.from(document.querySelectorAll('input[type=radio]')) as HTMLInputElement[];
+        return !group.some((g) => g.name === radio.name && g.form === radio.form && g.dataset.tabKey);
+      })
       .map((el) => el.outerHTML.slice(0, 80));
   }, INTERACTIVE);
   for (const u of unreached) problems.push(`not reached with Tab: ${u}`);

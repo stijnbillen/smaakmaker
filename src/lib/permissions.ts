@@ -11,3 +11,16 @@ export function canDelete(
   if (viewer.isAdmin) return true;
   return viewer.userId !== null && item.authorId !== null && item.authorId === viewer.userId;
 }
+
+/** Only the author edits a review; not even an administrator does. The database enforces the same rule. */
+export function canEditReview(review: { authorId: string | null }, viewer: { userId: string | null }): boolean {
+  return canEdit(review, viewer);
+}
+
+/** The author or an administrator may delete a review; the database enforces the same rule. */
+export function canDeleteReview(
+  review: { authorId: string | null },
+  viewer: { userId: string | null; isAdmin: boolean },
+): boolean {
+  return canDelete(review, viewer);
+}
