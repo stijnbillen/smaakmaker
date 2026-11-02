@@ -12,7 +12,7 @@ export interface CallResult {
 /** SQLSTATE for an id that is not a uuid. */
 const INVALID_TEXT_REPRESENTATION = '22P02';
 
-const SELECT = 'id,title,ingredients,steps,prep_minutes,total_minutes,servings,source,note,author_id,created_at,author:profiles(display_name)';
+const SELECT = 'id,title,ingredients,steps,prep_minutes,total_minutes,servings,source,note,equipment,author_id,created_at,author:profiles(display_name)';
 
 interface FetchedRow {
   id: string;
@@ -24,6 +24,7 @@ interface FetchedRow {
   servings: number | null;
   source: string | null;
   note: string | null;
+  equipment: string[] | null;
   author_id: string;
   created_at: string;
   author: { display_name: string | null } | null;
@@ -52,6 +53,7 @@ export async function fetchRecipe(id: string): Promise<FetchResult> {
       // Old rows may lack the columns entirely.
       source: row.source ?? null,
       note: row.note ?? null,
+      equipment: row.equipment ?? [],
       authorId: row.author_id,
       authorName: row.author?.display_name ?? null,
       createdAt: row.created_at,
@@ -60,6 +62,12 @@ export async function fetchRecipe(id: string): Promise<FetchResult> {
     error: null,
     status,
   };
+}
+
+/** Catalogue names that are in at least one recipe: the choices in the form and the filter. */
+export async function fetchEquipmentInUse(): Promise<CallResult & { names: string[] }> {
+  const { data, error, status } = await supabase.rpc('equipment_in_use');
+  return { names: error ? [] : ((data ?? []) as unknown as string[]), error, status };
 }
 
 export type SaveResult = CallResult & { id: string | null };

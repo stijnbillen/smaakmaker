@@ -317,7 +317,7 @@ textarea[aria-invalid='true'] {
   gap: var(--space-2);
 }
 
-.recipe-list li {
+.recipe-list > li {
   padding: var(--space-3) var(--space-4);
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
@@ -612,4 +612,71 @@ textarea[aria-invalid='true'] {
     transition: none !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Equipment: toggle buttons in the form and filter, small labels on the overview and detail page */
+.choice-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+}
+
+.choice {
+  margin: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: var(--color-text-body);
+  background: transparent;
+  border: 2px solid var(--color-border);
+}
+
+.choice[aria-pressed='true'] {
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.choice:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.inline-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.inline-add input {
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+.inline-add button {
+  margin: 0;
+}
+
+.equipment-filter {
+  margin-top: var(--space-3);
+}
+
+.equipment-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.equipment-tags li {
+  min-width: 0;
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-body);
+  background: var(--color-bg-sunken);
+  border-radius: var(--radius-sm);
+  overflow-wrap: anywhere;
 }

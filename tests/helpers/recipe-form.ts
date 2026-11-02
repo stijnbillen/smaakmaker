@@ -22,7 +22,17 @@ export interface RecipeInput {
   /** Optional source and note (T-008 / R-015); left empty when not given. */
   source?: string;
   note?: string;
+  /** Equipment (T-009 / R-008): tap the choice button when it exists, else type it and press "Toevoegen". */
+  equipment?: string[];
 }
+
+export const equipmentGroup = (page: Page): Locator => page.getByRole('group', { name: nl['form.equipment'], exact: true });
+export const equipmentChoice = (page: Page, name: string): Locator =>
+  equipmentGroup(page).getByRole('button', { name, exact: true });
+export const equipmentNewField = (page: Page): Locator =>
+  page.getByRole('textbox', { name: nl['form.equipmentNew'], exact: true });
+export const equipmentAddButton = (page: Page): Locator =>
+  page.getByRole('button', { name: nl['form.equipmentAdd'], exact: true });
 
 export const prepField = (page: Page): Locator => page.getByRole('textbox', { name: nl['form.prepMinutes'], exact: true });
 export const totalField = (page: Page): Locator => page.getByRole('textbox', { name: nl['form.totalMinutes'], exact: true });
@@ -61,6 +71,15 @@ export async function fillRecipe(page: Page, recipe: RecipeInput): Promise<void>
   }
   if (recipe.source !== undefined) await sourceField(page).fill(recipe.source);
   if (recipe.note !== undefined) await noteField(page).fill(recipe.note);
+  for (const name of recipe.equipment ?? []) {
+    const choice = equipmentChoice(page, name);
+    if ((await choice.count()) > 0) {
+      if ((await choice.getAttribute('aria-pressed')) !== 'true') await choice.click();
+    } else {
+      await equipmentNewField(page).fill(name);
+      await equipmentAddButton(page).click();
+    }
+  }
 }
 
 export async function expectIngredientOrder(page: Page, names: string[]): Promise<void> {

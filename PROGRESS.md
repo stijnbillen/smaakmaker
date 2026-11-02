@@ -25,7 +25,7 @@ Nieuw project: er zijn geen requirements met status "Bestaand", dus er is geen f
 - [x] **T-006** — R-007: Preptijd en totale doorlooptijd (afhankelijk van T-005)
 - [x] **T-007** — R-013: Porties en omrekenen (afhankelijk van T-005)
 - [x] **T-008** — R-015: Bron en opmerking (afhankelijk van T-005)
-- [!] **T-009** — R-008: Kookgerief (afhankelijk van T-005) — reden: eindcontrole faalt
+- [x] **T-009** — R-008: Kookgerief (afhankelijk van T-005)
 - [!] **T-010** — R-010: Tags voor soort gerecht (afhankelijk van T-005) — reden: eindcontrole faalt
 - [ ] **T-011** — R-011: Tags voor seizoen, dieet en stijl (afhankelijk van T-010)
 

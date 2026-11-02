@@ -19,6 +19,8 @@ export const SERVINGS_MAX = 99;
 /** Optional free text (R-015). */
 export const SOURCE_MAX = 200;
 export const NOTE_MAX = 1000;
+/** Equipment is optional; the upper bound is an own choice, and the database enforces it too (R-008). */
+export const EQUIPMENT_MAX_ITEMS = 20;
 
 /** What the form edits. The quantity is the raw text, so "1,2" can be shown back while typing. */
 export interface IngredientDraft {
@@ -39,6 +41,8 @@ export interface RecipeDraft {
   /** Optional; empty text means none. */
   source: string;
   note: string;
+  /** Chosen equipment names; none is fine. Optional so drafts built without it still work. */
+  equipment?: string[];
 }
 
 /** An ingredient as stored. */
@@ -58,6 +62,7 @@ export interface RecipeRow {
   servings: number;
   source: string | null;
   note: string | null;
+  equipment: string[];
 }
 
 export interface RecipeRecord extends Omit<RecipeRow, 'prep_minutes' | 'total_minutes' | 'servings'> {
@@ -150,6 +155,7 @@ export interface RecipeErrors {
   servings?: 'servingsRequired' | 'servingsInvalid';
   source?: 'sourceTooLong';
   note?: 'noteTooLong';
+  equipment?: 'equipmentTooMany';
   /** About the list as a whole: none, or too many. */
   ingredients?: 'ingredientsRequired' | 'ingredientsTooMany';
   steps?: 'stepsRequired' | 'stepsTooMany';
@@ -182,6 +188,8 @@ export function validateRecipe(draft: RecipeDraft): ValidationResult {
   if (length(draft.source) > SOURCE_MAX) errors.source = 'sourceTooLong';
   if (length(draft.note) > NOTE_MAX) errors.note = 'noteTooLong';
 
+  if ((draft.equipment ?? []).length > EQUIPMENT_MAX_ITEMS) errors.equipment = 'equipmentTooMany';
+
   if (draft.ingredients.length === 0) errors.ingredients = 'ingredientsRequired';
   else if (draft.ingredients.length > MAX_INGREDIENTS) errors.ingredients = 'ingredientsTooMany';
   draft.ingredients.forEach((ing, i) => {
@@ -207,6 +215,7 @@ export function validateRecipe(draft: RecipeDraft): ValidationResult {
     !errors.servings &&
     !errors.source &&
     !errors.note &&
+    !errors.equipment &&
     !errors.ingredients &&
     !errors.steps &&
     Object.keys(errors.ingredientRows).length === 0 &&
@@ -281,6 +290,7 @@ export function toRow(draft: RecipeDraft): RecipeRow {
     servings: servingsOf(draft.servings),
     source: draft.source.trim() || null,
     note: draft.note.trim() || null,
+    equipment: (draft.equipment ?? []).map((name) => name.trim()),
   };
 }
 
@@ -299,9 +309,9 @@ export function isDirty(initial: RecipeDraft, current: RecipeDraft): boolean {
 }
 
 /** A stored recipe in either shape: the row as written (snake_case) or the record as read (camelCase). */
-type StoredRecipe = Omit<RecipeRow, 'prep_minutes' | 'total_minutes' | 'servings'> &
+type StoredRecipe = Omit<RecipeRow, 'prep_minutes' | 'total_minutes' | 'servings' | 'equipment'> &
   Partial<Pick<RecipeRecord, 'prepMinutes' | 'totalMinutes'>> &
-  Partial<Pick<RecipeRow, 'prep_minutes' | 'total_minutes' | 'source' | 'note'>> & { servings?: number | null };
+  Partial<Pick<RecipeRow, 'prep_minutes' | 'total_minutes' | 'source' | 'note' | 'equipment'>> & { servings?: number | null };
 
 /** The form's starting values for a stored recipe; old rows without content get one empty row to fill in. */
 export function draftFromRecord(record: StoredRecipe): RecipeDraft {
@@ -315,6 +325,7 @@ export function draftFromRecord(record: StoredRecipe): RecipeDraft {
     servings: record.servings == null ? '' : String(record.servings),
     source: record.source ?? '',
     note: record.note ?? '',
+    equipment: [...(record.equipment ?? [])],
     ingredients:
       record.ingredients.length > 0
         ? record.ingredients.map((ing) => ({
@@ -334,6 +345,7 @@ export const emptyDraft = (): RecipeDraft => ({
   servings: '',
   source: '',
   note: '',
+  equipment: [],
   ingredients: [emptyIngredient()],
   steps: [''],
 });

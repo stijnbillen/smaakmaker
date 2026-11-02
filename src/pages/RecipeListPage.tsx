@@ -2,9 +2,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AuthorLine } from '../components/AuthorLine';
 import { useConnection } from '../components/ConnectionProvider';
+import { EquipmentFilter } from '../components/EquipmentFilter';
 import { ListState } from '../components/ListState';
 import { TimeFilter } from '../components/TimeFilter';
 import { t } from '../i18n/t';
+import {
+  applyEquipmentFilter,
+  hasEquipmentFilter,
+  parseEquipmentFilter,
+  toSearchParams as equipmentToSearchParams,
+} from '../lib/equipmentFilter';
 import { formatDuration } from '../lib/format';
 import { supabase } from '../lib/supabase';
 import { applyTimeFilter, hasTimeFilter, parseTimeFilter, toSearchParams, type TimeFilter as TimeFilterValue } from '../lib/timeFilter';
@@ -16,6 +23,7 @@ interface RecipeRow {
   /** Null for old sample rows saved before the times existed. */
   prep_minutes: number | null;
   total_minutes: number | null;
+  equipment: string[] | null;
   author: { display_name: string | null } | null;
 }
 
@@ -36,16 +44,20 @@ export function RecipeListPage() {
   // Rebuilt from the URL text only, so the filter object is stable between renders.
   const query = searchParams.toString();
   const filter = useMemo(() => parseTimeFilter(new URLSearchParams(query)), [query]);
+  const equipmentNames = useMemo(() => parseEquipmentFilter(new URLSearchParams(query)), [query]);
 
   // Fetched on every mount, no client cache: other users' recipes must show after a reload.
   const load = useCallback(async () => {
     const mine = ++requestId.current;
-    const { data, error, status } = await applyTimeFilter(
-      supabase
-        .from('recipes')
-        .select('id,title,created_at,prep_minutes,total_minutes,author:profiles(display_name)')
-        .order('created_at', { ascending: false }),
-      filter,
+    const { data, error, status } = await applyEquipmentFilter(
+      applyTimeFilter(
+        supabase
+          .from('recipes')
+          .select('id,title,created_at,prep_minutes,total_minutes,equipment,author:profiles(display_name)')
+          .order('created_at', { ascending: false }),
+        filter,
+      ),
+      equipmentNames,
     );
     // A late answer after leaving the page, or for an older filter, must not report, resolve or set state.
     if (!active.current || mine !== requestId.current) return;
@@ -59,7 +71,7 @@ export function RecipeListPage() {
     setFailed(false);
     setErrored(false);
     setRecipes(data as unknown as RecipeRow[]);
-  }, [filter, report, resolve]);
+  }, [filter, equipmentNames, report, resolve]);
 
   useEffect(() => {
     active.current = true;
@@ -71,19 +83,29 @@ export function RecipeListPage() {
   }, [load, resolve]);
 
   // replace: a filter change is a refinement of this page, not a step the back button should undo one by one.
-  const changeFilter = (next: TimeFilterValue) => setSearchParams(toSearchParams(next, searchParams), { replace: true });
+  // The latest params live in a ref that handlers update at once: two quick changes (equipment, then time)
+  // would otherwise both build on the same stale render and the second would undo the first.
+  const latestParams = useRef(searchParams);
+  latestParams.current = searchParams;
+  const commit = (next: URLSearchParams) => {
+    latestParams.current = next;
+    setSearchParams(next, { replace: true });
+  };
+  const changeFilter = (next: TimeFilterValue) => commit(toSearchParams(next, latestParams.current));
+  const changeEquipment = (next: string[]) => commit(equipmentToSearchParams(next, latestParams.current));
 
   return (
     <main className="page">
       <h1>{t('overview.title')}</h1>
       <TimeFilter value={filter} onChange={changeFilter} />
+      <EquipmentFilter value={equipmentNames} onChange={changeEquipment} />
       {failed && <p>{t('overview.error')}</p>}
       {/* Loading only while nothing is known yet and no error is shown. */}
       {!errored && (
         <ListState
           items={recipes}
           loadingText={t('overview.loading')}
-          emptyText={hasTimeFilter(filter) ? t('overview.noMatch') : t('overview.empty')}
+          emptyText={hasTimeFilter(filter) || hasEquipmentFilter(equipmentNames) ? t('overview.noMatch') : t('overview.empty')}
         >
           <ul className="recipe-list">
             {recipes?.map((r) => (
@@ -96,6 +118,13 @@ export function RecipeListPage() {
                     <span className="recipe-times">
                       {t('time.prep')} {formatDuration(r.prep_minutes)} · {t('time.total')} {formatDuration(r.total_minutes)}
                     </span>
+                  )}
+                  {r.equipment && r.equipment.length > 0 && (
+                    <ul className="equipment-tags" data-testid="recipe-equipment">
+                      {r.equipment.map((name) => (
+                        <li key={name}>{name}</li>
+                      ))}
+                    </ul>
                   )}
                 </Link>
               </li>

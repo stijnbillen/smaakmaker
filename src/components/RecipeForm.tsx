@@ -16,6 +16,7 @@ import {
 } from '../lib/recipe';
 import type { SaveResult } from '../lib/recipes';
 import { ConfirmDialog } from './ConfirmDialog';
+import { EquipmentPicker } from './EquipmentPicker';
 import { useConnection } from './ConnectionProvider';
 
 const KEY = 'recipe-form';
@@ -254,6 +255,11 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo }: Recipe
             </FieldError>
           )}
         </div>
+
+        <EquipmentPicker
+          tooMany={Boolean(errors?.equipment)}
+          selected={draft.equipment ?? []}
+          onChange={(equipment) => setDraft((d) => ({ ...d, equipment }))} />
 
         <fieldset className="form-group">
           <legend>{t('form.ingredients')}</legend>
