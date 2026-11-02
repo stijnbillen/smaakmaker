@@ -264,3 +264,11 @@
 - 2026-11-02 21:24 T-015 build: worker-crash (geen testfout), opnieuw
 - 2026-11-02 21:25 T-015 build: mislukt
 - 2026-11-02 21:25 T-015 stop: review niet goedgekeurd na 2 rondes
+- 2026-11-02 21:25 - loop: geen taak meer
+- 2026-11-02 21:29 T-015 ontwikkelaar: KLAAR
+- 2026-11-02 21:34 T-015 build: mislukt
+- 2026-11-02 21:41 T-015 ontwikkelaar: KLAAR
+- 2026-11-02 21:42 T-015 build: worker-crash (geen testfout), opnieuw
+- 2026-11-02 21:47 T-015 build: geslaagd
+- 2026-11-02 21:49 T-015 reviewer: GOEDGEKEURD
+- 2026-11-02 21:54 T-015 build: geslaagd

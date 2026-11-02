@@ -200,5 +200,13 @@
   "variant.family": "Alle varianten ({n})",
   "variant.current": "(dit recept)",
   "variant.label": "Variant",
-  "variant.sourceGone": "Het bronrecept is intussen verwijderd. Je variant is niet bewaard."
+  "variant.sourceGone": "Het bronrecept is intussen verwijderd. Je variant is niet bewaard.",
+  "search.with": "Met ingrediënten",
+  "search.withHint": "Scheid met een komma, bv. feta, tomaat.",
+  "search.without": "Zonder",
+  "search.min": "Minstens",
+  "search.minAll": "alle {n}",
+  "search.submit": "Zoeken",
+  "search.tooMany": "Maximaal 10 ingrediënten.",
+  "search.matches": "{count} van {total}"
 }

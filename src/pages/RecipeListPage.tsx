@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { AuthorLine } from '../components/AuthorLine';
 import { useConnection } from '../components/ConnectionProvider';
 import { EquipmentFilter } from '../components/EquipmentFilter';
+import { IngredientSearch } from '../components/IngredientSearch';
 import { ListState } from '../components/ListState';
 import { TagFilter } from '../components/TagFilter';
 import { RecipePhotoPlaceholder } from '../components/RecipePhotoPlaceholder';
@@ -15,6 +16,12 @@ import {
   toSearchParams as equipmentToSearchParams,
 } from '../lib/equipmentFilter';
 import { formatDuration } from '../lib/format';
+import {
+  hasSearch,
+  parseSearch,
+  toSearchParams as searchToSearchParams,
+  type IngredientSearch as IngredientSearchValue,
+} from '../lib/ingredientSearch';
 import {
   formatRating,
   parseSort,
@@ -36,6 +43,7 @@ import {
 } from '../lib/tagFilter';
 import { applyTimeFilter, hasTimeFilter, parseTimeFilter, toSearchParams, type TimeFilter as TimeFilterValue } from '../lib/timeFilter';
 
+/** One row shape for both answers: the plain table query and the search function. */
 interface RecipeRow {
   id: string;
   title: string;
@@ -49,8 +57,26 @@ interface RecipeRow {
   rating_count: number;
   photos: StoredPhoto[] | null;
   family_id: string;
-  author: { display_name: string | null } | null;
+  authorName: string | null;
+  /** Only in search answers; both come from the database. */
+  matchCount?: number;
+  termCount?: number;
 }
+
+/** What PostgREST sends: the table query nests the author, the search function returns a flat name. */
+type RawRow = Omit<RecipeRow, 'authorName' | 'matchCount' | 'termCount'> & {
+  author?: { display_name: string | null } | null;
+  author_name?: string | null;
+  match_count?: number;
+  term_count?: number;
+};
+
+const toRow = ({ author, author_name, match_count, term_count, ...rest }: RawRow): RecipeRow => ({
+  ...rest,
+  authorName: author_name ?? author?.display_name ?? null,
+  matchCount: match_count,
+  termCount: term_count,
+});
 
 const KEY = 'recipe-list';
 
@@ -70,6 +96,8 @@ export function RecipeListPage() {
   const active = useRef(true);
   // Numbers the requests: a slow answer for an earlier filter must not overwrite the current list.
   const requestId = useRef(0);
+  // The search the current list belongs to.
+  const shownSearch = useRef(searchToSearchParams(parseSearch(searchParams)).toString());
 
   // Rebuilt from the URL text only, so the filter object is stable between renders.
   const query = searchParams.toString();
@@ -77,21 +105,40 @@ export function RecipeListPage() {
   const equipmentNames = useMemo(() => parseEquipmentFilter(new URLSearchParams(query)), [query]);
   const tagFilter = useMemo(() => parseTagFilter(new URLSearchParams(query)), [query]);
   const sort = useMemo(() => parseSort(new URLSearchParams(query)), [query]);
+  const search = useMemo(() => parseSearch(new URLSearchParams(query)), [query]);
 
   // Fetched on every mount, no client cache: other users' recipes must show after a reload.
   const load = useCallback(async () => {
     const mine = ++requestId.current;
-    const base = supabase
-      .from('recipes')
-      .select('id,title,created_at,prep_minutes,total_minutes,equipment,photos,rating_avg,rating_count,family_id,author:profiles(display_name)');
+    // Rows of another search (other order, no or other "k van n") must not stay on screen while the new answer
+    // is on its way. Other filters keep the old list, as before.
+    const searchKey = searchToSearchParams(search).toString();
+    if (shownSearch.current !== searchKey) {
+      shownSearch.current = searchKey;
+      setRecipes(null);
+    }
     // Rating sort: best average first, more reviews first on a tie, newest last; no reviews at the bottom.
-    const ordered =
+    const byRating = <T extends { order(column: string, options?: { ascending?: boolean; nullsFirst?: boolean }): T }>(q: T): T =>
       sort === 'rating'
-        ? base
-            .order('rating_avg', { ascending: false, nullsFirst: false })
-            .order('rating_count', { ascending: false })
-            .order('created_at', { ascending: false })
-        : base.order('created_at', { ascending: false });
+        ? q.order('rating_avg', { ascending: false, nullsFirst: false }).order('rating_count', { ascending: false })
+        : q;
+    let ordered;
+    if (hasSearch(search)) {
+      // "All" (k >= n) goes as null, so the database picks k = n itself and a client/database difference in
+      // de-duplicating rare characters cannot fail the plain case.
+      const n = search.with.length;
+      const pMin = search.min === null || search.min >= n ? null : search.min;
+      // Matches first (R-009), then the chosen sort, then newest. Sorted here: the order after PostgREST filters is not guaranteed.
+      ordered = byRating(
+        supabase.rpc('search_recipes', { p_terms: search.with, p_without: search.without, p_min: pMin }).order('match_count', { ascending: false }),
+      ).order('created_at', { ascending: false });
+    } else {
+      ordered = byRating(
+        supabase
+          .from('recipes')
+          .select('id,title,created_at,prep_minutes,total_minutes,equipment,photos,rating_avg,rating_count,family_id,author:profiles(display_name)'),
+      ).order('created_at', { ascending: false });
+    }
     const { data, error, status } = await applyTagFilter(
       applyEquipmentFilter(applyTimeFilter(ordered, filter), equipmentNames),
       tagFilter,
@@ -107,14 +154,14 @@ export function RecipeListPage() {
     resolve(KEY);
     setFailed(false);
     setErrored(false);
-    const rows = data as unknown as RecipeRow[];
+    const rows = (data as unknown as RawRow[]).map(toRow);
     setRecipes(rows);
     // One call for all main photos; the list is already visible, the pictures follow.
     const paths = rows.flatMap((r) => (mainPhoto(r.photos) ? [mainPhoto(r.photos) as string] : []));
     const urls = await signedUrls(paths);
     if (!active.current || mine !== requestId.current) return;
     setPhotoUrls(urls);
-  }, [filter, equipmentNames, tagFilter, sort, report, resolve]);
+  }, [filter, equipmentNames, tagFilter, sort, search, report, resolve]);
 
   useEffect(() => {
     active.current = true;
@@ -135,7 +182,8 @@ export function RecipeListPage() {
     setSearchParams(next, { replace: true });
   };
   const changeFilter = (next: TimeFilterValue) => commit(toSearchParams(next, latestParams.current));
-  const changeSort = (next: ReviewSort) => commit(sortToSearchParams(next, latestParams.current));
+  const changeSearch = (next: IngredientSearchValue) => commit(searchToSearchParams(next, latestParams.current));
+  const changeSort =(next: ReviewSort) => commit(sortToSearchParams(next, latestParams.current));
   const changeEquipment = (next: string[]) => commit(equipmentToSearchParams(next, latestParams.current));
   // Read from the ref, not from the render: a quick second tap must build on the first.
   const toggleTagIn = (kind: TagKind, name: string) => {
@@ -148,6 +196,7 @@ export function RecipeListPage() {
   return (
     <main className="page">
       <h1>{t('overview.title')}</h1>
+      <IngredientSearch value={search} onChange={changeSearch} />
       <TimeFilter value={filter} onChange={changeFilter} />
       <TagFilter kind="dish" label={t('tags.dish')} value={tagFilter.dish} onToggle={(name) => toggleTagIn('dish', name)} />
       <TagFilter kind="trait" label={t('tags.trait')} value={tagFilter.trait} onToggle={(name) => toggleTagIn('trait', name)} />
@@ -165,7 +214,7 @@ export function RecipeListPage() {
         <ListState
           items={recipes}
           loadingText={t('overview.loading')}
-          emptyText={hasTimeFilter(filter) || hasEquipmentFilter(equipmentNames) || hasTagFilter(tagFilter) ? t('overview.noMatch') : t('overview.empty')}
+          emptyText={hasTimeFilter(filter) || hasEquipmentFilter(equipmentNames) || hasTagFilter(tagFilter) || hasSearch(search) ? t('overview.noMatch') : t('overview.empty')}
         >
           <ul className="recipe-list">
             {recipes?.map((r) => {
@@ -187,7 +236,12 @@ export function RecipeListPage() {
                       {t('variant.label')}
                     </span>
                   )}
-                  <AuthorLine name={r.author?.display_name ?? null} date={r.created_at} />
+                  <AuthorLine name={r.authorName} date={r.created_at} />
+                  {r.termCount !== undefined && r.termCount > 0 && r.matchCount !== undefined && (
+                    <span className="recipe-matches" data-testid="recipe-matches">
+                      {t('search.matches').replace('{count}', String(r.matchCount)).replace('{total}', String(r.termCount))}
+                    </span>
+                  )}
                   {r.rating_avg !== null && r.rating_count > 0 && (
                     <span className="recipe-rating" data-testid="recipe-rating">
                       {t('reviews.summary')

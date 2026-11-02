@@ -973,3 +973,22 @@ textarea[aria-invalid='true'] {
   font-weight: 600;
   cursor: pointer;
 }
+
+/* Ingredient search (R-009): fields stacked at full width; the button and the list keep the tap size. */
+.ingredient-search {
+  margin-top: var(--space-3);
+}
+
+.search-submit {
+  min-width: var(--tap-min);
+  margin-bottom: var(--space-4);
+}
+
+.recipe-matches {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-accent);
+  overflow-wrap: anywhere;
+}

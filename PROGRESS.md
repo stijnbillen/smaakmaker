@@ -37,7 +37,7 @@ Nieuw project: er zijn geen requirements met status "Bestaand", dus er is geen f
 
 ## Fase 4 — Zoeken, reviews en favorieten
 
-- [!] **T-015** — R-009: Zoeken op ingrediënten (afhankelijk van T-005) — reden: review niet goedgekeurd na 2 rondes
+- [x] **T-015** — R-009: Zoeken op ingrediënten (afhankelijk van T-005)
 - [x] **T-016** — R-012: Reviews (afhankelijk van T-005)
 - [ ] **T-017** — R-014: Favorieten (afhankelijk van T-005, T-015)
 
