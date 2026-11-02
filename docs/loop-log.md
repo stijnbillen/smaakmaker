@@ -103,3 +103,10 @@
 - 2026-11-02 10:40 T-007 build: geslaagd
 - 2026-11-02 10:42 T-007 reviewer: GOEDGEKEURD
 - 2026-11-02 10:45 T-007 build: geslaagd
+- 2026-11-02 10:45 T-007 savepoint: gecommit
+- 2026-11-02 10:46 T-008 analist: KLAAR
+- 2026-11-02 10:48 T-008 tester: KLAAR
+- 2026-11-02 10:54 T-008 ontwikkelaar: KLAAR
+- 2026-11-02 10:57 T-008 build: geslaagd
+- 2026-11-02 10:58 T-008 reviewer: GOEDGEKEURD
+- 2026-11-02 11:01 T-008 build: geslaagd

@@ -8,7 +8,7 @@ import { useConnection } from '../components/ConnectionProvider';
 import { t } from '../i18n/t';
 import { canDelete, canEdit } from '../lib/permissions';
 import { formatDuration } from '../lib/format';
-import { ingredientLine } from '../lib/recipe';
+import { ingredientLine, sourceLink } from '../lib/recipe';
 import { deleteRecipe } from '../lib/recipes';
 import { useRecipe } from '../lib/useRecipe';
 
@@ -84,6 +84,7 @@ export function RecipeDetailPage() {
   const mayEdit = canEdit(item, { userId });
   const mayDelete = canDelete(item, { userId, isAdmin });
   // Temporary choice, tied to the recipe id: another recipe or a reload starts at its stored servings.
+  const link = sourceLink(recipe.source);
   const stored = recipe.servings;
   const desired = stored !== null && chosen?.id === recipe.id ? chosen.value : (stored ?? 1);
 
@@ -101,6 +102,21 @@ export function RecipeDetailPage() {
             <dt>{t('time.total')}</dt>
             <dd>{formatDuration(recipe.totalMinutes)}</dd>
           </div>
+        </dl>
+      )}
+      {recipe.source && (
+        <dl className="recipe-source">
+          <dt>{t('recipe.source')}</dt>
+          <dd data-testid="recipe-source">
+            {link ? (
+              <a href={link} target="_blank" rel="noopener noreferrer">
+                {link}
+                <span className="visually-hidden"> ({t('recipe.sourceNewTab')})</span>
+              </a>
+            ) : (
+              recipe.source
+            )}
+          </dd>
         </dl>
       )}
 
@@ -126,6 +142,15 @@ export function RecipeDetailPage() {
               <li key={i}>{step}</li>
             ))}
           </ol>
+        </section>
+      )}
+      {recipe.note && (
+        <section className="recipe-section">
+          <h2>{t('recipe.note')}</h2>
+          {/* Plain text only: React escapes it, line breaks come from CSS. */}
+          <p className="recipe-note" data-testid="recipe-note">
+            {recipe.note}
+          </p>
         </section>
       )}
 

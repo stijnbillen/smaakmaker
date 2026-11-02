@@ -16,6 +16,9 @@ export const MINUTES_MAX = 4320;
 /** Servings are a whole number from 1 to 99 (R-013). */
 export const SERVINGS_MIN = 1;
 export const SERVINGS_MAX = 99;
+/** Optional free text (R-015). */
+export const SOURCE_MAX = 200;
+export const NOTE_MAX = 1000;
 
 /** What the form edits. The quantity is the raw text, so "1,2" can be shown back while typing. */
 export interface IngredientDraft {
@@ -33,6 +36,9 @@ export interface RecipeDraft {
   totalMinutes: string;
   /** Raw text of the servings field. */
   servings: string;
+  /** Optional; empty text means none. */
+  source: string;
+  note: string;
 }
 
 /** An ingredient as stored. */
@@ -50,6 +56,8 @@ export interface RecipeRow {
   prep_minutes: number;
   total_minutes: number;
   servings: number;
+  source: string | null;
+  note: string | null;
 }
 
 export interface RecipeRecord extends Omit<RecipeRow, 'prep_minutes' | 'total_minutes' | 'servings'> {
@@ -140,6 +148,8 @@ export interface RecipeErrors {
   prepMinutes?: 'minutesRequired' | 'minutesInvalid';
   totalMinutes?: 'minutesRequired' | 'minutesInvalid' | 'totalBeforePrep';
   servings?: 'servingsRequired' | 'servingsInvalid';
+  source?: 'sourceTooLong';
+  note?: 'noteTooLong';
   /** About the list as a whole: none, or too many. */
   ingredients?: 'ingredientsRequired' | 'ingredientsTooMany';
   steps?: 'stepsRequired' | 'stepsTooMany';
@@ -169,6 +179,9 @@ export function validateRecipe(draft: RecipeDraft): ValidationResult {
   const servings = parseServings(draft.servings);
   if (!servings.ok) errors.servings = servings.reason === 'required' ? 'servingsRequired' : 'servingsInvalid';
 
+  if (length(draft.source) > SOURCE_MAX) errors.source = 'sourceTooLong';
+  if (length(draft.note) > NOTE_MAX) errors.note = 'noteTooLong';
+
   if (draft.ingredients.length === 0) errors.ingredients = 'ingredientsRequired';
   else if (draft.ingredients.length > MAX_INGREDIENTS) errors.ingredients = 'ingredientsTooMany';
   draft.ingredients.forEach((ing, i) => {
@@ -192,6 +205,8 @@ export function validateRecipe(draft: RecipeDraft): ValidationResult {
     !errors.prepMinutes &&
     !errors.totalMinutes &&
     !errors.servings &&
+    !errors.source &&
+    !errors.note &&
     !errors.ingredients &&
     !errors.steps &&
     Object.keys(errors.ingredientRows).length === 0 &&
@@ -264,7 +279,18 @@ export function toRow(draft: RecipeDraft): RecipeRow {
     prep_minutes: minutesOf(draft.prepMinutes),
     total_minutes: minutesOf(draft.totalMinutes),
     servings: servingsOf(draft.servings),
+    source: draft.source.trim() || null,
+    note: draft.note.trim() || null,
   };
+}
+
+/**
+ * The source as a link target when it starts with http:// or https:// (scheme case-insensitive, as in
+ * the URL standard); anything else, notably javascript: and data:, is plain text.
+ */
+export function sourceLink(source: string | null): string | null {
+  const text = source?.trim() ?? '';
+  return /^https?:\/\//i.test(text) ? text : null;
 }
 
 /** Compared with the starting value, so a change that is set back does not count. */
@@ -275,7 +301,7 @@ export function isDirty(initial: RecipeDraft, current: RecipeDraft): boolean {
 /** A stored recipe in either shape: the row as written (snake_case) or the record as read (camelCase). */
 type StoredRecipe = Omit<RecipeRow, 'prep_minutes' | 'total_minutes' | 'servings'> &
   Partial<Pick<RecipeRecord, 'prepMinutes' | 'totalMinutes'>> &
-  Partial<Pick<RecipeRow, 'prep_minutes' | 'total_minutes'>> & { servings?: number | null };
+  Partial<Pick<RecipeRow, 'prep_minutes' | 'total_minutes' | 'source' | 'note'>> & { servings?: number | null };
 
 /** The form's starting values for a stored recipe; old rows without content get one empty row to fill in. */
 export function draftFromRecord(record: StoredRecipe): RecipeDraft {
@@ -287,6 +313,8 @@ export function draftFromRecord(record: StoredRecipe): RecipeDraft {
     prepMinutes: prep === null ? '' : String(prep),
     totalMinutes: total === null ? '' : String(total),
     servings: record.servings == null ? '' : String(record.servings),
+    source: record.source ?? '',
+    note: record.note ?? '',
     ingredients:
       record.ingredients.length > 0
         ? record.ingredients.map((ing) => ({
@@ -304,6 +332,8 @@ export const emptyDraft = (): RecipeDraft => ({
   prepMinutes: '',
   totalMinutes: '',
   servings: '',
+  source: '',
+  note: '',
   ingredients: [emptyIngredient()],
   steps: [''],
 });

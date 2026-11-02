@@ -186,3 +186,9 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **Gekozen waarde hangt aan het recept-id:** `RecipeDetailPage` bewaart `{ id, value }`; hoort het id niet bij het getoonde recept, dan geldt de opgeslagen waarde. Zo schendt navigatie tussen recepten in dezelfde route-component crit. 5 niet.
 - **`ingredientLine` haalt "< {q}" uit `nl.json`:** `recipe.ts` importeert daarvoor `t`, zodat de tekst niet in de logica staat.
 - **Oude rij zonder porties:** de pagina rekent met 1/1, dus de opgeslagen hoeveelheden blijven staan.
+
+## T-008 — Bron en opmerking (bouw)
+- Migratie `20261102150000_recipe_source_note.sql`: kolommen `source`/`note` nullable, checks `not valid` (zelfde patroon als de rest); `recipes_normalize()` herschreven met `create or replace` en trimt beide, leeg wordt `null`.
+- `sourceLink` is hoofdletterongevoelig voor het schema en laat alleen http(s) door, zodat `javascript:` nooit een `href` wordt; de opmerking wordt als gewone tekst met `white-space: pre-line` getoond.
+- Formulier zonder `maxlength`, zodat een te lange plak de melding toont in plaats van stil af te kappen.
+- `.visually-hidden` gebruikt `margin: 0` en `clip-path`, omdat de stijlscanner negatieve marges weigert.

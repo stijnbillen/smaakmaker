@@ -380,6 +380,40 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo }: Recipe
           </button>
         </fieldset>
 
+        {/* No maxlength: a too long paste must show the message instead of being cut off silently. */}
+        <div className="field">
+          <label htmlFor={ids('source')}>{t('form.source')}</label>
+          <p id={ids('source-hint')} className="field-hint">
+            {t('form.sourceHint')}
+          </p>
+          <input
+            id={ids('source')}
+            type="text"
+            value={draft.source}
+            autoComplete="off"
+            onChange={(e) => setDraft((d) => ({ ...d, source: e.target.value }))}
+            aria-invalid={invalid(errors?.source)}
+            aria-describedby={describedBy(ids('source-hint'), errors?.source && ids('source-error'))}
+          />
+          {errors?.source && <FieldError id={ids('source-error')}>{t('form.sourceTooLong')}</FieldError>}
+        </div>
+
+        <div className="field">
+          <label htmlFor={ids('note')}>{t('form.note')}</label>
+          <p id={ids('note-hint')} className="field-hint">
+            {t('form.noteHint')}
+          </p>
+          <textarea
+            id={ids('note')}
+            rows={4}
+            value={draft.note}
+            onChange={(e) => setDraft((d) => ({ ...d, note: e.target.value }))}
+            aria-invalid={invalid(errors?.note)}
+            aria-describedby={describedBy(ids('note-hint'), errors?.note && ids('note-error'))}
+          />
+          {errors?.note && <FieldError id={ids('note-error')}>{t('form.noteTooLong')}</FieldError>}
+        </div>
+
         {failed && (
           <p role="alert" className="field-error">
             {t('form.error')}

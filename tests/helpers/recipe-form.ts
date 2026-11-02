@@ -19,12 +19,18 @@ export interface RecipeInput {
   totalMinutes?: string;
   /** Raw text for the servings field (T-007 / R-013); defaults to a valid 4. */
   servings?: string;
+  /** Optional source and note (T-008 / R-015); left empty when not given. */
+  source?: string;
+  note?: string;
 }
 
 export const prepField = (page: Page): Locator => page.getByRole('textbox', { name: nl['form.prepMinutes'], exact: true });
 export const totalField = (page: Page): Locator => page.getByRole('textbox', { name: nl['form.totalMinutes'], exact: true });
 
 export const servingsField = (page: Page): Locator => page.getByRole('textbox', { name: nl['form.servings'], exact: true });
+
+export const sourceField = (page: Page): Locator => page.getByRole('textbox', { name: nl['form.source'], exact: true });
+export const noteField = (page: Page): Locator => page.getByRole('textbox', { name: nl['form.note'], exact: true });
 
 export const titleField = (page: Page): Locator => page.getByRole('textbox', { name: nl['form.titleLabel'], exact: true });
 export const ingredientNameFields = (page: Page): Locator => page.getByRole('textbox', { name: /^Ingrediënt/ });
@@ -53,6 +59,8 @@ export async function fillRecipe(page: Page, recipe: RecipeInput): Promise<void>
     if ((await stepFields(page).count()) <= i) await addStepButton(page).click();
     await stepFields(page).nth(i).fill(recipe.steps[i]);
   }
+  if (recipe.source !== undefined) await sourceField(page).fill(recipe.source);
+  if (recipe.note !== undefined) await noteField(page).fill(recipe.note);
 }
 
 export async function expectIngredientOrder(page: Page, names: string[]): Promise<void> {

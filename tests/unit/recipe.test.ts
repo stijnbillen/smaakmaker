@@ -3,6 +3,8 @@ import {
   formatQuantity,
   isDirty,
   draftFromRecord,
+  emptyDraft,
+  sourceLink,
   moveItem,
   ingredientLine,
   parseMinutes,
@@ -29,6 +31,8 @@ interface Draft {
   prepMinutes: string;
   totalMinutes: string;
   servings: string;
+  source: string;
+  note: string;
 }
 
 function draft(overrides: Partial<Draft> = {}): Draft {
@@ -37,6 +41,8 @@ function draft(overrides: Partial<Draft> = {}): Draft {
     prepMinutes: '10',
     totalMinutes: '20',
     servings: '4',
+    source: '',
+    note: '',
     ingredients: [{ name: 'Water', quantity: '', unit: '' }],
     steps: ['Kook het water.'],
     ...overrides,
@@ -438,5 +444,114 @@ describe('ingredientLine (R-013 crit. 3 and 4)', () => {
     const line = ingredientLine({ name: 'zout', quantity: 0.01 }, 99, 1);
     expect(line).toContain('< 0,01');
     expect(line).toContain('zout');
+  });
+});
+
+// T-008 / R-015
+describe('validateRecipe: source and note (R-015 crit. 1)', () => {
+  it.each([
+    ['empty', ''],
+    ['only spaces', '   '],
+    ['200 characters', chars(200)],
+    ['200 x é', chars(200, 'é')],
+    ['200 emoji (1 code point each)', chars(200, '😀')],
+    ['200 characters with spaces around', `  ${chars(200)}  `],
+  ])('source %s is valid', (_n, source) => {
+    expect(errorLeaves(draft({ source }))).toEqual([]);
+  });
+
+  it.each([
+    ['empty', ''],
+    ['only spaces', '   '],
+    ['1000 characters', chars(1000)],
+    ['1000 emoji', chars(1000, '😀')],
+    ['1000 characters with spaces around', `  ${chars(1000)}  `],
+  ])('note %s is valid', (_n, note) => {
+    expect(errorLeaves(draft({ note }))).toEqual([]);
+  });
+
+  it('201 characters source gives sourceTooLong, also for 201 emoji', () => {
+    expect(errorLeaves(draft({ source: chars(201) }))).toEqual([['source', 'sourceTooLong']]);
+    expect(errorLeaves(draft({ source: chars(201, '😀') }))).toEqual([['source', 'sourceTooLong']]);
+  });
+
+  it('1001 characters note gives noteTooLong', () => {
+    expect(errorLeaves(draft({ note: chars(1001) }))).toEqual([['note', 'noteTooLong']]);
+  });
+});
+
+describe('source and note in toRow, draftFromRecord, emptyDraft, pruneDraft (R-015)', () => {
+  const base = { title: 'Soep', ingredients: [{ name: 'Water' }], steps: ['Kook.'], prep_minutes: 1, total_minutes: 2, servings: 4 };
+
+  it('toRow trims source and note', () => {
+    const row = toRow(draft({ source: '  Oma  ', note: '  lekker  ' }) as never) as unknown as Record<string, unknown>;
+    expect(row.source).toBe('Oma');
+    expect(row.note).toBe('lekker');
+  });
+
+  it('toRow turns empty and whitespace-only values into null', () => {
+    const row = toRow(draft({ source: '   ', note: '' }) as never) as unknown as Record<string, unknown>;
+    expect(row.source).toBeNull();
+    expect(row.note).toBeNull();
+  });
+
+  it('draftFromRecord turns null (and a missing column) into "", so a fresh edit form is not dirty', () => {
+    const d = draftFromRecord({ ...base, source: null, note: null } as never) as unknown as Draft;
+    expect(d.source).toBe('');
+    expect(d.note).toBe('');
+    expect((draftFromRecord(base as never) as unknown as Draft).source).toBe('');
+    expect(isDirty(d as never, draftFromRecord({ ...base, source: null, note: null } as never))).toBe(false);
+  });
+
+  it('draftFromRecord keeps stored values', () => {
+    const d = draftFromRecord({ ...base, source: 'Oma', note: 'Lekker' } as never) as unknown as Draft;
+    expect(d.source).toBe('Oma');
+    expect(d.note).toBe('Lekker');
+  });
+
+  it('emptyDraft has empty source and note', () => {
+    const d = emptyDraft() as unknown as Draft;
+    expect(d.source).toBe('');
+    expect(d.note).toBe('');
+  });
+
+  it('pruneDraft keeps source and note', () => {
+    const pruned = pruneDraft(draft({ source: 'Oma', note: 'Lekker' }) as never).draft as unknown as Draft;
+    expect(pruned.source).toBe('Oma');
+    expect(pruned.note).toBe('Lekker');
+  });
+
+  it('isDirty is true after source or note changes', () => {
+    expect(isDirty(draft(), draft({ source: 'Oma' }))).toBe(true);
+    expect(isDirty(draft(), draft({ note: 'x' }))).toBe(true);
+  });
+});
+
+describe('sourceLink (R-015 crit. 3)', () => {
+  it.each([
+    ['https://example.com/soep', 'https://example.com/soep'],
+    ['http://example.com', 'http://example.com'],
+    ['HTTPS://Example.com', 'HTTPS://Example.com'],
+    [' https://x.be ', 'https://x.be'],
+  ])('"%s" is a link', (input, url) => {
+    expect(sourceLink(input)).toBe(url);
+  });
+
+  it.each([
+    'Oma',
+    'Ons Kookboek p. 12',
+    'www.example.com',
+    'ftp://x',
+    'javascript:alert(1)',
+    'data:text/html,<b>x</b>',
+    'mijn https://x',
+    '',
+    '   ',
+  ])('"%s" is plain text', (input) => {
+    expect(sourceLink(input)).toBeNull();
+  });
+
+  it('null is plain text', () => {
+    expect(sourceLink(null)).toBeNull();
   });
 });
