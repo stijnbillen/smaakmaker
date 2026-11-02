@@ -203,3 +203,12 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - `.recipe-list li` werd `.recipe-list > li`, anders kregen de geneste gerieflabels de kaartstijl.
 
 - Overview filters (time, equipment) build URL params from a ref that handlers update immediately: two quick changes otherwise both used the same stale render and the second erased the first.
+
+### T-010 — bouw
+- Migratie `20261102170000_recipe_dish_tags.sql`: tags staan als `text[]` (`dish_tags`) in de receptrij, plus een catalogus `tags` (alleen `select` voor de client) voor de canonieke spelling en de startlijst. Atomair opslaan, één `&&` per groep in het filter, een variant kopieert de rij.
+- `resolve_tags()` (security definer, niet uitvoerbaar voor de client) valideert, voegt nieuwe namen toe via `on conflict do nothing` op `(kind, name_key)` en ontdubbelt; een eigen trigger `recipes_resolve_dish_tags` laat `recipes_normalize()` ongemoeid. `fold_key()` is een immutable wrapper om `unaccent`.
+- De tagknoppen zijn losse `button`s in een `div`, geen lijst: bestaande e2e-tests nemen het eerste `listitem` van het overzicht als het eerste recept.
+- `tagFilter.ts` is per groep opgezet (tabel `GROUPS`); het overzicht bouwt de URL uit een ref die meteen bijgewerkt wordt, zodat twee snelle tikken elkaar niet wissen.
+- Niemand kan een tag verwijderen of hernoemen; verwijderen door een beheerder is geparkeerd en niet gebouwd.
+- Tagfilter: `applyTagFilter` geeft `overlaps` een volledig gequote array-literal (`toArrayLiteral`), want postgrest-js quote de elementen niet en komma's, aanhalingstekens, accolades of backslashes in een naam braken het filter. Het overzicht berekent de nieuwe keuze uit de laatste URL (`paramsRef`); `TagFilter` geeft alleen de getikte naam door.
+- `README.md` en `.env.example` horen niet bij T-010 en zijn niet door deze taak gewijzigd; de eigenaar beslist of ze in een aparte commit komen.
