@@ -269,7 +269,11 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - URL-parameters `met`, `zonder`, `min`. Een ontbrekende `min` betekent "alle" en schuift mee met n; de keuze van de laatste optie wist `min`.
 - Alleen "zonder" (geen zoektermen) geeft alle recepten min de uitgesloten, zonder "k van n".
 - De client sorteert het RPC-resultaat zelf (`match_count`, dan `created_at`), omdat de volgorde na PostgREST-filters niet gegarandeerd is.
-- Als het overzicht later een hoofdfoto toont, moet `search_recipes` ook de foto's teruggeven (kolomlijst bijwerken).
+- Migratie `20261103120000_recipe_search.sql` (na de varianten) geeft ook `photos`, `family_id`, `rating_avg` en `rating_count` terug, zodat zoekresultaten foto, label "Variant" en beoordeling tonen als het gewone overzicht.
+- Volgorde met de sorteerkeuze: `match_count` is altijd de eerste sleutel, daarna (bij "Beoordeling") gemiddelde en aantal reviews, daarna `created_at`. Zo gelden R-009 en R-012 allebei letterlijk.
+- `parseSearch` ontdubbelt URL-termen met dezelfde sleutel als `parseTerms`; bij "alle" (k >= n) stuurt de pagina `p_min = null`, zodat de databank zelf k = n kiest.
+- `IngredientSearch` houdt de getypte tekst lokaal en synchroniseert alleen met de URL als die niet door de component zelf is gezet (link, terug); typen springt dus niet.
+- Bij een andere zoekopdracht wordt de lijst eerst leeg (laden), zodat oude rijen zonder "k van n" of in andere volgorde niet blijven staan; andere filters houden de oude lijst zoals voorheen.
 - Migratie eindigt met `notify pgrst, 'reload schema'` zodat PostgREST de functie direct kent.
 
 ## T-016 — Reviews (bouw)

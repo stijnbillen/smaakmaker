@@ -242,3 +242,25 @@
 - 2026-11-02 19:16 T-014 savepoint: gecommit
 - 2026-11-02 19:18 T-015 tester: BLOKKADE: De T-015-bestanden (tests, `ingredientSearch.ts`, migratie) staan niet in de werkmap maar in `stash@{0}` ("On loop: T-015 niet geslaagd"). Ik mag dat stash niet lezen of terugzetten, dus ik kan de review-bevindingen niet herstellen.
 - 2026-11-02 19:18 T-015 stop: BLOKKADE: De T-015-bestanden (tests, `ingredientSearch.ts`, migratie) staan niet in de werkmap maar in `stash@{0}` ("On loop: T-015 niet geslaagd"). Ik mag dat stash niet lezen of terugzetten, dus ik kan de review-bevindingen niet herstellen.
+- 2026-11-02 19:18 - loop: geen taak meer
+- 2026-11-02 19:21 T-015 analist: KLAAR
+- 2026-11-02 19:26 T-015 tester: KLAAR
+- 2026-11-02 20:14 T-015 ontwikkelaar: BLOKKADE: test `tests/e2e/recipe-search.spec.ts:495` is onbetrouwbaar omdat `page.route` na `goto` de service worker niet onderschept; gebruik `serviceWorkers: 'block'`.
+- 2026-11-02 20:14 T-015 tester: KLAAR
+- 2026-11-02 20:20 T-015 ontwikkelaar: KLAAR
+- 2026-11-02 20:25 T-015 build: geslaagd
+- 2026-11-02 20:27 T-015 reviewer: BEVINDINGEN: 0/2
+- 2026-11-02 21:03 T-015 ontwikkelaar: KLAAR
+- 2026-11-02 21:08 T-015 build: geslaagd
+- 2026-11-02 21:09 T-015 reviewer: BEVINDINGEN: 0/2
+- 2026-11-02 21:10 T-015 tester: KLAAR
+- 2026-11-02 21:10 T-015 ontwikkelaar: KLAAR
+- 2026-11-02 21:15 T-015 build: geslaagd
+- 2026-11-02 21:16 T-015 reviewer: BEVINDINGEN: 0/1
+- 2026-11-02 21:17 T-015 tester: KLAAR
+- 2026-11-02 21:17 T-015 ontwikkelaar: BLOKKADE: test `tests/db/recipe-search.test.ts:117-123` bewijst niet dat ├®├®n term hoogstens ├®├®n keer telt. De ingredi├½nten moeten allebei de term bevatten, bv. `feta${s}` en `feta${s} blokjes` met de termen `[feta${s}, tomaat${s}]`, en dan `match_count = 1` en `term_count = 2`. De tester moet dit herstellen.
+- 2026-11-02 21:17 T-015 tester: KLAAR
+- 2026-11-02 21:23 T-015 ontwikkelaar: KLAAR
+- 2026-11-02 21:24 T-015 build: worker-crash (geen testfout), opnieuw
+- 2026-11-02 21:25 T-015 build: mislukt
+- 2026-11-02 21:25 T-015 stop: review niet goedgekeurd na 2 rondes
