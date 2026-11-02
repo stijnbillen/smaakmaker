@@ -24,6 +24,30 @@ export interface RecipeInput {
   note?: string;
   /** Equipment (T-009 / R-008): tap the choice button when it exists, else type it and press "Toevoegen". */
   equipment?: string[];
+  /** Dish tags (T-010 / R-010): tapped when the button exists, else typed into "Nieuwe tag". */
+  dishTags?: string[];
+}
+
+export const tagGroup = (page: Page): Locator => page.getByRole('group', { name: nl['tags.dish'], exact: true });
+export const tagButton = (page: Page, name: string): Locator =>
+  tagGroup(page).getByRole('button', { name, exact: true });
+// Scoped to the tag group: the equipment picker has its own "Toevoegen" button.
+export const newTagField = (page: Page): Locator =>
+  tagGroup(page).getByRole('textbox', { name: nl['form.tagNew'], exact: true });
+export const addTagButton = (page: Page): Locator =>
+  tagGroup(page).getByRole('button', { name: nl['form.tagAdd'], exact: true });
+
+export async function pickDishTags(page: Page, names: string[]): Promise<void> {
+  for (const name of names) {
+    const button = tagButton(page, name);
+    if ((await button.count()) > 0) {
+      if ((await button.getAttribute('aria-pressed')) !== 'true') await button.click();
+    } else {
+      await newTagField(page).fill(name);
+      await addTagButton(page).click();
+    }
+    await expect(tagButton(page, name)).toHaveAttribute('aria-pressed', 'true');
+  }
 }
 
 export const equipmentGroup = (page: Page): Locator => page.getByRole('group', { name: nl['form.equipment'], exact: true });
@@ -80,6 +104,7 @@ export async function fillRecipe(page: Page, recipe: RecipeInput): Promise<void>
       await equipmentAddButton(page).click();
     }
   }
+  if (recipe.dishTags !== undefined) await pickDishTags(page, recipe.dishTags);
 }
 
 export async function expectIngredientOrder(page: Page, names: string[]): Promise<void> {

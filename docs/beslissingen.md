@@ -212,3 +212,5 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - Niemand kan een tag verwijderen of hernoemen; verwijderen door een beheerder is geparkeerd en niet gebouwd.
 - Tagfilter: `applyTagFilter` geeft `overlaps` een volledig gequote array-literal (`toArrayLiteral`), want postgrest-js quote de elementen niet en komma's, aanhalingstekens, accolades of backslashes in een naam braken het filter. Het overzicht berekent de nieuwe keuze uit de laatste URL (`paramsRef`); `TagFilter` geeft alleen de getikte naam door.
 - `README.md` en `.env.example` horen niet bij T-010 en zijn niet door deze taak gewijzigd; de eigenaar beslist of ze in een aparte commit komen.
+- De knop in `TagPicker` heet "Tag toevoegen" (`form.tagAdd`), niet "Toevoegen": de kookgerief-kiezer heeft al een knop "Toevoegen", en de ongescopete kookgerief-testhulp botste daarop (strict mode).
+- `TagChoices` bepaalt `aria-pressed` en het (de)selecteren op `tagKey`, zodat een naam uit de URL met andere hoofdletters (`?soort=Soep`) de knop "soep" gewoon indrukt en uitzet.

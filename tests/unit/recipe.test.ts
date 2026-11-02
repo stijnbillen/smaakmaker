@@ -555,3 +555,47 @@ describe('sourceLink (R-015 crit. 3)', () => {
     expect(sourceLink(null)).toBeNull();
   });
 });
+
+describe('dish tags in the draft (T-010 / R-010 crit. 2)', () => {
+  const base = { title: 'Soep', ingredients: [{ name: 'Water' }], steps: ['Kook.'], prep_minutes: 1, total_minutes: 2, servings: 4 };
+  const withTags = (dishTags: string[]) => draft({ dishTags } as never) as never;
+  const check = (dishTags: string[]) =>
+    validateRecipe(withTags(dishTags)) as unknown as { ok?: boolean; errors?: Record<string, unknown> };
+  const names = (n: number) => Array.from({ length: n }, (_, i) => `tag${i}`);
+
+  it('accepts zero tags', () => {
+    const r = check([]);
+    expect(r.errors?.dishTags).toBeUndefined();
+    expect(r.ok).toBe(true);
+  });
+
+  it('accepts 20 tags and refuses 21 with tagsTooMany', () => {
+    expect(check(names(20)).errors?.dishTags).toBeUndefined();
+    const over = check(names(21));
+    expect(over.errors?.dishTags).toBe('tagsTooMany');
+    expect(over.ok).toBe(false);
+  });
+
+  it('toRow writes dish_tags as an array of trimmed names', () => {
+    const row = toRow(withTags([' soep ', 'tapas'])) as unknown as Record<string, unknown>;
+    expect(row.dish_tags).toEqual(['soep', 'tapas']);
+  });
+
+  it('draftFromRecord takes the tags over and defaults to []', () => {
+    const tags = (r: unknown) => (draftFromRecord(r as never) as unknown as { dishTags: string[] }).dishTags;
+    expect(tags({ ...base, dishTags: ['soep'] })).toEqual(['soep']);
+    expect(tags(base)).toEqual([]);
+  });
+
+  it('emptyDraft starts without tags', () => {
+    expect((emptyDraft() as unknown as { dishTags: string[] }).dishTags).toEqual([]);
+  });
+
+  it('a fresh edit form with tags is not dirty; removing a tag is (R-003 crit. 8)', () => {
+    const record = { ...base, dishTags: ['soep', 'tapas'] };
+    const fresh = draftFromRecord(record as never);
+    expect(isDirty(draftFromRecord(record as never), fresh)).toBe(false);
+    const changed = { ...(fresh as object), dishTags: ['soep'] } as never;
+    expect(isDirty(changed, fresh)).toBe(true);
+  });
+});

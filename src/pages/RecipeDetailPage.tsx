@@ -120,6 +120,17 @@ export function RecipeDetailPage() {
         </dl>
       )}
 
+      {recipe.dishTags.length > 0 && (
+        <section className="recipe-section">
+          <h2>{t('tags.dish')}</h2>
+          <ul className="equipment-tags" data-testid="recipe-dish-tags">
+            {recipe.dishTags.map((name) => (
+              <li key={name}>{name}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {recipe.equipment.length > 0 && (
         <section className="recipe-section">
           <h2>{t('recipe.equipment')}</h2>

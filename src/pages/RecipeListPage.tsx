@@ -4,6 +4,7 @@ import { AuthorLine } from '../components/AuthorLine';
 import { useConnection } from '../components/ConnectionProvider';
 import { EquipmentFilter } from '../components/EquipmentFilter';
 import { ListState } from '../components/ListState';
+import { TagFilter } from '../components/TagFilter';
 import { TimeFilter } from '../components/TimeFilter';
 import { t } from '../i18n/t';
 import {
@@ -14,6 +15,14 @@ import {
 } from '../lib/equipmentFilter';
 import { formatDuration } from '../lib/format';
 import { supabase } from '../lib/supabase';
+import { tagKey, toggleTag } from '../lib/tags';
+import {
+  applyTagFilter,
+  hasTagFilter,
+  parseTagFilter,
+  toSearchParams as tagsToSearchParams,
+  type TagFilter as TagFilterValue,
+} from '../lib/tagFilter';
 import { applyTimeFilter, hasTimeFilter, parseTimeFilter, toSearchParams, type TimeFilter as TimeFilterValue } from '../lib/timeFilter';
 
 interface RecipeRow {
@@ -45,19 +54,23 @@ export function RecipeListPage() {
   const query = searchParams.toString();
   const filter = useMemo(() => parseTimeFilter(new URLSearchParams(query)), [query]);
   const equipmentNames = useMemo(() => parseEquipmentFilter(new URLSearchParams(query)), [query]);
+  const tagFilter = useMemo(() => parseTagFilter(new URLSearchParams(query)), [query]);
 
   // Fetched on every mount, no client cache: other users' recipes must show after a reload.
   const load = useCallback(async () => {
     const mine = ++requestId.current;
-    const { data, error, status } = await applyEquipmentFilter(
-      applyTimeFilter(
-        supabase
-          .from('recipes')
-          .select('id,title,created_at,prep_minutes,total_minutes,equipment,author:profiles(display_name)')
-          .order('created_at', { ascending: false }),
-        filter,
+    const { data, error, status } = await applyTagFilter(
+      applyEquipmentFilter(
+        applyTimeFilter(
+          supabase
+            .from('recipes')
+            .select('id,title,created_at,prep_minutes,total_minutes,equipment,author:profiles(display_name)')
+            .order('created_at', { ascending: false }),
+          filter,
+        ),
+        equipmentNames,
       ),
-      equipmentNames,
+      tagFilter,
     );
     // A late answer after leaving the page, or for an older filter, must not report, resolve or set state.
     if (!active.current || mine !== requestId.current) return;
@@ -71,7 +84,7 @@ export function RecipeListPage() {
     setFailed(false);
     setErrored(false);
     setRecipes(data as unknown as RecipeRow[]);
-  }, [filter, equipmentNames, report, resolve]);
+  }, [filter, equipmentNames, tagFilter, report, resolve]);
 
   useEffect(() => {
     active.current = true;
@@ -93,11 +106,19 @@ export function RecipeListPage() {
   };
   const changeFilter = (next: TimeFilterValue) => commit(toSearchParams(next, latestParams.current));
   const changeEquipment = (next: string[]) => commit(equipmentToSearchParams(next, latestParams.current));
+  // Read from the ref, not from the render: a quick second tap must build on the first.
+  const toggleDishTag = (name: string) => {
+    const latest = parseTagFilter(latestParams.current);
+    const same = latest.dish.find((n) => tagKey(n) === tagKey(name));
+    const next: TagFilterValue = { ...latest, dish: toggleTag(latest.dish, same ?? name) };
+    commit(tagsToSearchParams(next, latestParams.current));
+  };
 
   return (
     <main className="page">
       <h1>{t('overview.title')}</h1>
       <TimeFilter value={filter} onChange={changeFilter} />
+      <TagFilter kind="dish" label={t('tags.dish')} value={tagFilter.dish} onToggle={toggleDishTag} />
       <EquipmentFilter value={equipmentNames} onChange={changeEquipment} />
       {failed && <p>{t('overview.error')}</p>}
       {/* Loading only while nothing is known yet and no error is shown. */}
@@ -105,7 +126,7 @@ export function RecipeListPage() {
         <ListState
           items={recipes}
           loadingText={t('overview.loading')}
-          emptyText={hasTimeFilter(filter) || hasEquipmentFilter(equipmentNames) ? t('overview.noMatch') : t('overview.empty')}
+          emptyText={hasTimeFilter(filter) || hasEquipmentFilter(equipmentNames) || hasTagFilter(tagFilter) ? t('overview.noMatch') : t('overview.empty')}
         >
           <ul className="recipe-list">
             {recipes?.map((r) => (

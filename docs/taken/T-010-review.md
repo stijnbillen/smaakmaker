@@ -1,33 +1,26 @@
-# T-010 — review (ronde 2)
+# T-010 — review (ronde 3, na blokkade "eindcontrole faalt")
 
-`CLAUDE.md` is niet gewijzigd en geen enkele kernbeslissing wordt geschonden:
-- De rechten staan in de databank. De catalogus `tags` is voor de client alleen leesbaar. Nieuwe tags ontstaan alleen via de trigger met `security definer`. De update-policy op `recipes` blijft ongewijzigd, met een extra kolomrecht `update (dish_tags)`.
-- De zichtbare teksten staan in `nl.json`.
-- Identifiers en commentaar zijn in het Engels.
+`CLAUDE.md` is niet gewijzigd. Geen kernbeslissing geschonden:
+- Rechten in de databank: `tags` alleen `select` voor `authenticated`, schrijven alleen via `resolve_tags()` (`security definer`, `execute` ingetrokken voor de client). Update-policy op `recipes` ongewijzigd, alleen `grant update (dish_tags)`.
+- Validatie in de databank (trimmen, 1–30 tekens, max. 20, hergebruik via `unique (kind, name_key)`), ook bij directe API-aanroep.
+- Teksten in `nl.json`; identifiers en commentaar Engels; stijl hergebruikt bestaande token-klassen (`.choice`, `.inline-add`, `.equipment-tags`).
 
-Criterium 5 (beheerder `[?]`) is niet gebouwd. Dat volgt het parkeerpunt in `REQUIREMENTS.md`.
+Werkkopie staat nu op de basis mét T-009. `fold_key` bestond al in `20261102160000_recipe_equipment.sql`; de nieuwe migratie gebruikt `create or replace` met dezelfde definitie, dus geen botsing. Eigen trigger, `recipes_normalize()` onaangeroerd. Build in de loop-log geslaagd.
 
-## Stand van de bevindingen uit ronde 1
-- **1 (middel), quoting van het `overlaps`-filter:** opgelost. `src/lib/tagFilter.ts:45-54` geeft nu een volledig gequote array-literal mee als string. Postgrest-js zet een string ongewijzigd door (`ov.${value}`).
-  - De unit test `tests/unit/tagFilter.test.ts:86` parset de literal terug en faalt bij de oude aanroep met `string[]`.
-  - De e2e-test `tests/e2e/recipe-tags.spec.ts:248-267` dekt twee gevallen: een komma in een tagnaam, en speciale tekens in `?soort=`.
-- **4 (laag), verouderde keuze in `TagFilter`:** opgelost. `RecipeListPage` berekent de keuze nu uit `paramsRef.current`.
-- **2, 3 en 5 (laag):** staan nog open, zie hieronder. Ze blokkeren niet.
+Criterium 5 (beheerder `[?]`) is niet gebouwd; volgt het parkeerpunt in `REQUIREMENTS.md`. Geen beslissing van de eigenaar nodig voor deze taak.
+
+Alle acceptatiecriteria hebben echte tests (unit, databank, e2e). Bevindingen 1 en 2 uit ronde 2 zijn opgelost: unieke suffix voor de race-test, en opruimen in `afterAll`.
 
 ## Bevindingen
 
-### 1. `tests/db/recipe-tags.test.ts:170-178` — laag — tester
-**Probleem:** de test gebruikt de vaste namen "Brunch" en "brunch". Vanaf de tweede run bestaat de catalogusrij al, dus de race (twee nieuwe inserts tegelijk) wordt niet meer getest en de test slaagt altijd.
-**Voorstel:** gebruik een unieke suffix per run, dezelfde voor beide namen.
+### 1. `tests/db/recipe-tags.test.ts:24-28,46-48` en `tests/e2e/recipe-tags.spec.ts:32-35,43-47` — laag — tester
+**Probleem:** de opruimstap wist met `name_key like '%<suffix>%'`. De suffix bestaat uit de letters van `Math.random().toString(36)`, ingekort tot 6, en kan dus ook 1 of 2 letters lang zijn. Bij suffix `e` of `oe` worden starttags (`dessert`, `soep`, `hoofdgerecht` …) uit de gedeelde lokale catalogus gewist. Daarna faalt crit. 1 bij elke volgende run, tot `supabase db reset`. De kans is klein, maar dat is precies het soort sporadische fout dat de eindcontrole laat falen.
+**Voorstel:** gebruik een suffix met vaste lengte (bijvoorbeeld 8 letters, aangevuld tot de volle lengte). Wis exact op de gebruikte namen (`name_key = public.fold_key(...)`), of minstens met `like '%' || suffix` en een minimumlengte.
 
-### 2. `tests/db/recipe-tags.test.ts`, `tests/e2e/recipe-tags.spec.ts` — laag — tester
-**Probleem:** elke run voegt blijvend tags toe aan de lokale catalogus, en niemand kan ze verwijderen. Daardoor groeit het aantal knoppen in het formulier en in het filter, en worden de e2e-tests trager.
-**Voorstel:** ruim de testtags op in `afterAll` via `sql`, met de suffixen van de run.
+### 2. `src/components/TagChoices.tsx:12,20` met `src/lib/tagFilter.ts:52` — laag — ontwikkelaar
+**Probleem:** de knop wordt nu op `tagKey` ingedrukt, maar het filter zelf vergelijkt exact (`overlaps`). Bij een handgetypte URL `?soort=Soep` staat de knop "soep" ingedrukt, terwijl het overzicht "Niets gevonden." toont, ook als er soeprecepten zijn. Er is geen fout of crash, maar de interface spreekt zichzelf tegen.
+**Voorstel:** zet de URL-waarden om naar de spelling uit de catalogus zodra die geladen is (via `replace`), zodat knop en filter dezelfde waarde gebruiken.
 
-### 3. `src/components/TagChoices.tsx:16,22` — laag — ontwikkelaar
-**Probleem:** een naam uit de URL met andere hoofdletters, zoals `?soort=Soep`, krijgt geen eigen knop, omdat de sleutel gelijk is aan die van "soep". De knop "soep" staat dan ook niet ingedrukt, want `pressed` vergelijkt de exacte naam. De gebruiker kan het filter dus niet uitzetten via de knoppen. Tikt hij op "soep", dan wordt de keuze `["Soep", "soep"]`. Er volgt geen fout en het geval komt alleen voor bij een handgetypte URL.
-**Voorstel:** bepaal `pressed` op `tagKey`. Of normaliseer de URL-waarden naar de spelling uit de catalogus zodra die geladen is.
-
-### 4. `README.md`, `.env.example` (untracked) — laag — ontwikkelaar
-**Probleem:** de twee bestanden staan nog steeds in de werkkopie. Ze horen niet bij T-010, maar gaan mee in de commit van de taak als iemand alles commit.
-**Voorstel:** sluit ze uit van de commit van T-010. De eigenaar beslist of ze in een aparte commit komen.
+### 3. `README.md`, `.env.example` (untracked) — laag — ontwikkelaar
+**Probleem:** deze bestanden staan nog in de werkkopie en horen niet bij T-010. Als alles gecommit wordt, gaan ze mee in de commit van de taak.
+**Voorstel:** laat ze buiten de commit van T-010. De eigenaar beslist over een aparte commit.

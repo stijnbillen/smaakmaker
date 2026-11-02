@@ -1,5 +1,6 @@
 import { toRow, type RecipeDraft, type RecipeRecord } from './recipe';
 import { supabase } from './supabase';
+import type { TagKind } from './tags';
 
 // Database calls for recipes. Each returns the error and HTTP status so the caller can let
 // `report` decide between the connection banner and an own message.
@@ -12,7 +13,7 @@ export interface CallResult {
 /** SQLSTATE for an id that is not a uuid. */
 const INVALID_TEXT_REPRESENTATION = '22P02';
 
-const SELECT = 'id,title,ingredients,steps,prep_minutes,total_minutes,servings,source,note,equipment,author_id,created_at,author:profiles(display_name)';
+const SELECT = 'id,title,ingredients,steps,prep_minutes,total_minutes,servings,source,note,equipment,dish_tags,author_id,created_at,author:profiles(display_name)';
 
 interface FetchedRow {
   id: string;
@@ -25,6 +26,7 @@ interface FetchedRow {
   source: string | null;
   note: string | null;
   equipment: string[] | null;
+  dish_tags: string[] | null;
   author_id: string;
   created_at: string;
   author: { display_name: string | null } | null;
@@ -54,6 +56,7 @@ export async function fetchRecipe(id: string): Promise<FetchResult> {
       source: row.source ?? null,
       note: row.note ?? null,
       equipment: row.equipment ?? [],
+      dishTags: row.dish_tags ?? [],
       authorId: row.author_id,
       authorName: row.author?.display_name ?? null,
       createdAt: row.created_at,
@@ -68,6 +71,12 @@ export async function fetchRecipe(id: string): Promise<FetchResult> {
 export async function fetchEquipmentInUse(): Promise<CallResult & { names: string[] }> {
   const { data, error, status } = await supabase.rpc('equipment_in_use');
   return { names: error ? [] : ((data ?? []) as unknown as string[]), error, status };
+}
+
+/** All names of a tag group, in catalogue order: the choices in the form and the filter. */
+export async function fetchTags(kind: TagKind): Promise<CallResult & { names: string[] }> {
+  const { data, error, status } = await supabase.from('tags').select('name').eq('kind', kind).order('name_key');
+  return { names: error ? [] : (data ?? []).map((row) => row.name as string), error, status };
 }
 
 export type SaveResult = CallResult & { id: string | null };

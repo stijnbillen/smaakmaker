@@ -17,6 +17,7 @@ import {
 import type { SaveResult } from '../lib/recipes';
 import { ConfirmDialog } from './ConfirmDialog';
 import { EquipmentPicker } from './EquipmentPicker';
+import { TagPicker } from './TagPicker';
 import { useConnection } from './ConnectionProvider';
 
 const KEY = 'recipe-form';
@@ -255,6 +256,16 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo }: Recipe
             </FieldError>
           )}
         </div>
+
+        <TagPicker
+          kind="dish"
+          label={t('tags.dish')}
+          hint={t('form.dishTagsHint')}
+          errorId="dish-tags-error"
+          tooMany={Boolean(errors?.dishTags)}
+          selected={draft.dishTags ?? []}
+          onChange={(dishTags) => setDraft((d) => ({ ...d, dishTags }))}
+        />
 
         <EquipmentPicker
           tooMany={Boolean(errors?.equipment)}
