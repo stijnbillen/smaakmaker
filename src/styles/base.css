@@ -336,6 +336,58 @@ textarea[aria-invalid='true'] {
   border-radius: var(--radius-md);
 }
 
+/* Heart: a round tap target of the minimum size, drawn in the colour of the state. */
+.favorite-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-heart);
+  cursor: pointer;
+}
+
+.favorite-button--on svg {
+  transform: scale(1.1);
+}
+
+/* In the card the heart floats top right; the link leaves room for it so the title never runs under it. */
+.recipe-card {
+  position: relative;
+}
+
+.recipe-card .favorite-button {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+}
+
+.recipe-card .recipe-link {
+  padding-right: var(--space-heart-clearance);
+}
+
+.favorite-error {
+  display: block;
+  margin-top: var(--space-2);
+}
+
+.recipe-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.recipe-heading h1 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 /* The whole list item is the link, so the tap target is the full card. */
 .recipe-link {
   display: block;

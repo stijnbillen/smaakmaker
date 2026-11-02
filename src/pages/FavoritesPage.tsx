@@ -1,14 +1,15 @@
-import { ListState } from '../components/ListState';
+import { RecipeBrowser } from '../components/RecipeBrowser';
 import { t } from '../i18n/t';
 
-// No favourites table yet: T-017 fetches them and passes null while loading.
+// Same list, search and filters as the overview, restricted to the signed-in user's favourites.
 export function FavoritesPage() {
   return (
-    <main className="page">
-      <h1>{t('favorites.title')}</h1>
-      <ListState items={[]} loadingText={t('favorites.loading')} emptyText={t('favorites.empty')}>
-        {null}
-      </ListState>
-    </main>
+    <RecipeBrowser
+      favoritesOnly
+      title={t('favorites.title')}
+      loadingText={t('favorites.loading')}
+      emptyText={t('favorites.empty')}
+      connectionKey="favorites-list"
+    />
   );
 }

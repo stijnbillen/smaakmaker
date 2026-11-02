@@ -343,3 +343,4 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - Nieuwe tokens: `--color-text-heart` (valt onder de contrasttest) en `--space-heart-clearance`.
 - `favorites` maakt van `recipes` ↔ `profiles` een tweede (veel-op-veel) relatie; PostgREST weigert dan `profiles(...)` als embed (PGRST201). Alle embeds van de auteur op `recipes` gebruiken nu `profiles!recipes_author_profile_fkey(display_name)`.
 - `FavoriteButton` houdt per recept één gedeelde toestand (`entries`, op moduleniveau) buiten de component: een tik op de detailpagina met meteen "terug" toont op het overzicht de nieuwe toestand, ook als de aanroep nog loopt.
+- `FavoriteButton` houdt zijn gedeelde toestand per gebruiker bij (sleutel `userId:recipeId`), zodat een nog lopende aanroep bij afmelden zijn wens niet doorgeeft aan de volgende gebruiker in hetzelfde tabblad.

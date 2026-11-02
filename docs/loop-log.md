@@ -283,3 +283,15 @@
 - 2026-11-02 23:10 T-017 ontwikkelaar: KLAAR
 - 2026-11-02 23:12 T-017 build: mislukt
 - 2026-11-02 23:12 T-017 stop: build of tests falen na 3 pogingen
+- 2026-11-02 23:28 T-017 ontwikkelaar: KLAAR
+- 2026-11-02 23:29 T-017 build: worker-crash (geen testfout), opnieuw
+- 2026-11-02 23:37 T-017 build: geslaagd
+- 2026-11-02 23:38 T-017 reviewer: BEVINDINGEN: 0/1
+- 2026-11-02 23:39 T-017 tester: KLAAR
+- 2026-11-02 23:39 T-017 ontwikkelaar: BLOKKADE: test tests/e2e/favorites.spec.ts:89-91, 105-106, 333-336 doet `page.reload()` zonder te wachten op het POST/DELETE-antwoord (race); tester moet `waitForResponse` toevoegen.
+- 2026-11-02 23:39 T-017 tester: KLAAR
+- 2026-11-02 23:48 T-017 ontwikkelaar: KLAAR
+- 2026-11-02 23:55 T-017 build: geslaagd
+- 2026-11-02 23:56 T-017 reviewer: GOEDGEKEURD
+- 2026-11-02 23:57 T-017 build: worker-crash (geen testfout), opnieuw
+- 2026-11-03 00:05 T-017 build: geslaagd

@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AuthorLine } from '../components/AuthorLine';
 import { useAuth } from '../components/AuthProvider';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { FavoriteButton } from '../components/FavoriteButton';
 import { ReviewSection } from '../components/ReviewSection';
 import { ServingsStepper } from '../components/ServingsStepper';
 import { useConnection } from '../components/ConnectionProvider';
@@ -143,7 +144,11 @@ export function RecipeDetailPage() {
         </p>
       )}
       {sourceLine === 'verwijderd' && <p className="variant-source">{t('variant.ofDeleted')}</p>}
-      <h1>{recipe.title}</h1>
+      <div className="recipe-heading">
+        <h1>{recipe.title}</h1>
+        {/* Every signed-in user may mark a favourite, also on their own recipe. */}
+        <FavoriteButton recipeId={recipe.id} initial={recipe.isFavorite} />
+      </div>
       {recipe.photos.length > 0 && (
         // The strip scrolls sideways by itself; the page never does. Order is the one the author chose.
         <ul className="photo-strip" data-testid="recipe-photos">

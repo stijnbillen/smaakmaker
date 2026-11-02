@@ -16,7 +16,7 @@ export interface CallResult {
 /** SQLSTATE for an id that is not a uuid. */
 const INVALID_TEXT_REPRESENTATION = '22P02';
 
-const SELECT = 'id,title,ingredients,steps,prep_minutes,total_minutes,servings,source,note,equipment,dish_tags,trait_tags,photos,author_id,created_at,variant_of,family_id,author:profiles(display_name)';
+const SELECT = 'id,title,ingredients,steps,prep_minutes,total_minutes,servings,source,note,equipment,dish_tags,trait_tags,photos,author_id,created_at,variant_of,family_id,is_favorite,author:profiles!recipes_author_profile_fkey(display_name)';
 
 interface FetchedRow {
   id: string;
@@ -36,6 +36,7 @@ interface FetchedRow {
   created_at: string;
   variant_of: string | null;
   family_id: string;
+  is_favorite: boolean;
   author: { display_name: string | null } | null;
 }
 
@@ -79,6 +80,7 @@ export async function fetchRecipe(id: string): Promise<FetchResult> {
       createdAt: row.created_at,
       variantOf: row.variant_of ?? null,
       familyId: row.family_id ?? row.id,
+      isFavorite: row.is_favorite === true,
       sourceTitle,
     },
     notFound: false,
@@ -91,7 +93,7 @@ export async function fetchRecipe(id: string): Promise<FetchResult> {
 export async function fetchFamily(familyId: string): Promise<CallResult & { members: FamilyMember[] }> {
   const { data, error, status } = await supabase
     .from('recipes')
-    .select('id,title,variant_of,created_at,author:profiles(display_name)')
+    .select('id,title,variant_of,created_at,author:profiles!recipes_author_profile_fkey(display_name)')
     .eq('family_id', familyId)
     .order('created_at', { ascending: true })
     .order('id', { ascending: true });

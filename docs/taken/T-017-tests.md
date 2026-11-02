@@ -20,3 +20,6 @@ Extra: gebruiker verwijderd → favorieten weg; ontmarkeren op `/favorieten` laa
 - Dubbeltik op `dblclick` is een benadering van "twee snelle tikken"; exacte wachtrijvolgorde zit niet in een unit-test omdat `FavoriteButton` geen testnaad heeft.
 - Foutmelding "al favoriet" voor 23505 in de UI: alleen via unit-test van `addFavorite`.
 - Geen testnaad gevraagd bij de ontwikkelaar behalve de modulenamen uit het plan. Selectors verwachten: hartknop met naam `favorites.add`/`favorites.remove` binnen `.recipe-list > li`, `.recipe-title`, en `aria-pressed`.
+
+## Review-herstel (bevinding 1)
+In favorites.spec.ts wachten drie tests nu op het POST/DELETE-antwoord vóór `page.reload()` (overzicht, detail, ontmarkeren op /favorieten). Bevinding 2 (laag) niet opgepakt.
