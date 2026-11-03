@@ -1,5 +1,6 @@
 node_modules/
 dist/
+*.tsbuildinfo
 /logs/
 test-results/
 playwright-report/

@@ -55,6 +55,7 @@ Afspraken die voor alle requirements gelden:
   - [ ] Een gebruiker geeft bij het eerste aanmelden een weergavenaam van 2–40 tekens op; 1 of 41 tekens wordt geweigerd.
   - [ ] Een ongeldig e-mailadres wordt geweigerd met een melding bij het veld.
   - [ ] Zonder aanmelding zijn recepten, reviews en foto's niet leesbaar of schrijfbaar (ook niet rechtstreeks via de databank-API).
+  - [ ] De e-mail bevat de inloglink én een code van 6 cijfers; het aanmeldscherm heeft een veld "Code uit de e-mail". Een juiste code meldt aan, een foute of verlopen code geeft "Deze code is niet geldig." en meldt niet aan.
   - [ ] Een gebruiker kan afmelden; daarna toont de app het aanmeldscherm.
   - [ ] Elk recept en elke review toont de weergavenaam van de auteur en de datum.
 - **Buiten scope:** Wachtwoorden, aanmelden met Google/Apple, account verwijderen `[later]`.
@@ -252,7 +253,7 @@ Afspraken die voor alle requirements gelden:
 ## Beslissingen
 Door de eigenaar gekozen (2026-11-01):
 - **Platform (R-001):** web-app (PWA), niet native.
-- **Aanmelden (R-002):** uitnodigingscode + e-mail.
+- **Aanmelden (R-002):** uitnodigingscode + e-mail; inloglink én code van 6 cijfers in dezelfde mail zodat het ook werkt in de geïnstalleerde app op iPhone (2026-11-01).
 - **Grootte (R-004, R-005):** 2 MB per recept, maximaal 3 foto's.
 - **Tags (R-010, R-011):** startlijst, gebruikers voegen toe.
 - **Rechten (R-003, R-017):** alleen eigen recepten wijzigen; beheerder kan alles verwijderen. Wie iets wil aanpassen aan andermans recept, maakt een variant.

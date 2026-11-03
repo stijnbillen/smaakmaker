@@ -1,0 +1,298 @@
+- 2026-11-01 16:22 T-001 analist: KLAAR
+- 2026-11-01 16:24 T-001 tester: KLAAR
+- 2026-11-01 16:33 T-001 ontwikkelaar: KLAAR
+- 2026-11-01 16:34 T-001 build: geslaagd
+- 2026-11-01 16:36 T-001 reviewer: BEVINDINGEN: 0/3
+- 2026-11-01 16:37 T-001 tester: KLAAR
+- 2026-11-01 16:37 T-001 ontwikkelaar: KLAAR
+- 2026-11-01 16:39 T-001 build: mislukt
+- 2026-11-01 16:39 T-001 stop: review niet goedgekeurd na 2 rondes
+- 2026-11-01 16:41 T-001 ontwikkelaar: BLOKKADE: test `tests/e2e/connection.spec.ts:43-64` heeft een race tussen `isVisible()` en `click()`. De banner verdwijnt zodra het overzicht na `unroute` goed laadt, en dan hangt de klik tot de timeout. Gebruik een klik met korte timeout die een verdwenen knop negeert, of wacht eerst tot het overzicht klaar is.
+- 2026-11-01 16:41 T-001 tester: KLAAR
+- 2026-11-01 16:42 T-001 ontwikkelaar: KLAAR
+- 2026-11-01 16:43 T-001 build: geslaagd
+- 2026-11-01 16:44 T-001 reviewer: GOEDGEKEURD
+- 2026-11-01 16:45 T-001 build: geslaagd
+- 2026-11-01 16:45 T-001 savepoint: gecommit
+- 2026-11-01 16:51 T-002 analist: KLAAR
+- 2026-11-01 16:54 T-002 tester: KLAAR
+- 2026-11-01 16:58 T-002 ontwikkelaar: BLOKKADE: test navigation.spec.ts en list-states.spec.ts importeren nl.json zonder `with { type: 'json' }`, waardoor Playwright ze niet kan laden
+- 2026-11-01 16:58 T-002 tester: KLAAR
+- 2026-11-01 17:01 T-002 ontwikkelaar: KLAAR
+- 2026-11-01 17:02 T-002 build: geslaagd
+- 2026-11-01 17:04 T-002 reviewer: BEVINDINGEN: 0/1
+- 2026-11-01 17:04 T-002 tester: KLAAR
+- 2026-11-01 17:06 T-002 ontwikkelaar: KLAAR
+- 2026-11-01 17:07 T-002 build: geslaagd
+- 2026-11-01 17:08 T-002 reviewer: GOEDGEKEURD
+- 2026-11-01 17:09 T-002 build: geslaagd
+- 2026-11-01 17:09 T-002 savepoint: gecommit
+- 2026-11-01 17:10 T-003 analist: VRAAG: Moet aanmelden naast de inloglink ook een overtypbare code van 6 cijfers krijgen, zodat het werkt in de ge├»nstalleerde app op een iPhone?
+- 2026-11-01 17:10 T-003 stop: VRAAG: Moet aanmelden naast de inloglink ook een overtypbare code van 6 cijfers krijgen, zodat het werkt in de ge├»nstalleerde app op een iPhone?
+- 2026-11-01 17:10 - loop: geen taak meer
+- 2026-11-01 17:24 T-003 analist: KLAAR
+- 2026-11-01 17:28 T-003 tester: KLAAR
+- 2026-11-01 17:45 T-003 ontwikkelaar: BLOKKADE: test ÔÇö `pg.ts` `sql()` crasht op uitvoer zonder JSON ("UPDATE n") waardoor `backdateCodes` altijd faalt, en de e2e-test "a user without a name goes to /welkom" hangt af van testvolgorde omdat de gedeelde `unnamed`-gebruiker eerder een naam krijgt.
+- 2026-11-01 17:45 T-003 tester: KLAAR
+- 2026-11-01 17:48 T-003 ontwikkelaar: KLAAR
+- 2026-11-01 17:51 T-003 build: geslaagd
+- 2026-11-01 17:54 T-003 reviewer: BEVINDINGEN: 0/1
+- 2026-11-01 17:54 T-003 tester: KLAAR
+- 2026-11-01 18:00 T-003 ontwikkelaar: KLAAR
+- 2026-11-01 18:02 T-003 build: geslaagd
+- 2026-11-01 18:03 T-003 reviewer: BEVINDINGEN: 0/1
+- 2026-11-01 18:04 T-003 tester: KLAAR
+- 2026-11-01 18:05 T-003 ontwikkelaar: KLAAR
+- 2026-11-01 18:07 T-003 build: geslaagd
+- 2026-11-01 18:08 T-003 reviewer: GOEDGEKEURD
+- 2026-11-01 18:09 T-003 build: mislukt
+- 2026-11-01 18:09 T-003 stop: eindcontrole faalt
+- 2026-11-01 18:09 - loop: geen taak meer
+- 2026-11-01 18:12 T-003 ontwikkelaar: KLAAR
+- 2026-11-01 18:14 T-003 build: geslaagd
+- 2026-11-01 18:15 T-003 reviewer: BEVINDINGEN: 0/1
+- 2026-11-01 18:15 T-003 tester: BLOKKADE: agent gaf geen eindmarkering. Laatste regel: BLOCKADE: `npm install -D pg @types/pg` wordt niet toegestaan, dus de testhulp `sql()` kan niet naar een directe Postgres-verbinding worden omgebouwd.
+- 2026-11-01 18:18 T-003 ontwikkelaar: BLOKKADE: test ÔÇö bevinding D (`tests/helpers/pg.ts` start per query een CLI-proces en laat de worker crashen) en bevindingen 5 en C zijn werk voor de tester; bij mijn rol valt niets te herstellen.
+- 2026-11-01 18:18 T-003 tester: BLOKKADE: bevinding D vraagt `npm install --save-dev pg @types/pg`, en dat commando werd niet toegestaan.
+- 2026-11-01 18:28 T-003 ontwikkelaar: KLAAR
+- 2026-11-01 18:30 T-003 build: geslaagd
+- 2026-11-01 18:31 T-003 reviewer: BLOKKADE: Bevinding D kan alleen worden opgelost als de eigenaar `pg` en `@types/pg` toestaat als ontwikkelpakket of de huidige testhulp met de kans op een crash aanvaardt.
+- 2026-11-01 18:31 T-003 stop: review niet goedgekeurd na 2 rondes
+- 2026-11-02 00:07 T-003 tester: KLAAR
+- 2026-11-02 00:09 T-003 ontwikkelaar: KLAAR
+- 2026-11-02 00:10 T-003 build: geslaagd
+- 2026-11-02 00:11 T-003 reviewer: GOEDGEKEURD
+- 2026-11-02 00:13 T-003 build: geslaagd
+- 2026-11-02 00:13 T-003 savepoint: gecommit
+- 2026-11-02 00:16 T-004 analist: KLAAR
+- 2026-11-02 00:19 T-004 tester: KLAAR
+- 2026-11-02 00:27 T-004 ontwikkelaar: KLAAR
+- 2026-11-02 00:29 T-004 build: geslaagd
+- 2026-11-02 00:31 T-004 reviewer: BEVINDINGEN: 0/1
+- 2026-11-02 00:32 T-004 tester: KLAAR
+- 2026-11-02 00:34 T-004 ontwikkelaar: KLAAR
+- 2026-11-02 00:37 T-004 build: geslaagd
+- 2026-11-02 00:38 T-004 reviewer: GOEDGEKEURD
+- 2026-11-02 00:40 T-004 build: geslaagd
+- 2026-11-02 00:40 T-004 savepoint: gecommit
+- 2026-11-02 00:44 T-005 analist: KLAAR
+- 2026-11-02 00:49 T-005 tester: KLAAR
+- 2026-11-02 01:02 T-005 ontwikkelaar: BLOKKADE: test layout.spec.ts (LONG_TITLE is 150 tekens, grens is 100), recipe-detail.spec.ts (abort v├│├│r het recept geladen is) en discard.spec.ts (page.goto geeft een volledige lading, dus de router-blocker ziet de terugknop niet)
+- 2026-11-02 01:02 T-005 tester: KLAAR
+- 2026-11-02 01:06 T-005 ontwikkelaar: BLOKKADE: test layout.spec.ts en navigation.spec.ts: de describe-titel bevat route.path, dat na beforeAll (prepareRoutes) verandert, dus 12 tests geven "Test not found in the worker process"
+- 2026-11-02 01:06 T-005 tester: KLAAR
+- 2026-11-02 01:09 T-005 ontwikkelaar: KLAAR
+- 2026-11-02 01:12 T-005 build: geslaagd
+- 2026-11-02 01:14 T-005 reviewer: GOEDGEKEURD
+- 2026-11-02 01:17 T-005 build: geslaagd
+- 2026-11-02 01:17 T-005 savepoint: gecommit
+- 2026-11-02 10:00 T-006 analist: KLAAR
+- 2026-11-02 10:02 T-006 tester: KLAAR
+- 2026-11-02 10:10 T-006 ontwikkelaar: BLOKKADE: test `tests/e2e/recipe-times.spec.ts` regel 205ÔÇô208 en 243ÔÇô246 wachten niet op de geladen lijst of het zichtbare filter, dus de tester moet die wachtstappen toevoegen.
+- 2026-11-02 10:10 T-006 tester: KLAAR
+- 2026-11-02 10:13 T-006 ontwikkelaar: KLAAR
+- 2026-11-02 10:16 T-006 build: geslaagd
+- 2026-11-02 10:17 T-006 reviewer: GOEDGEKEURD
+- 2026-11-02 10:20 T-006 build: geslaagd
+- 2026-11-02 10:20 T-006 savepoint: gecommit
+- 2026-11-02 10:23 T-007 analist: KLAAR
+- 2026-11-02 10:25 T-007 tester: KLAAR
+- 2026-11-02 10:33 T-007 ontwikkelaar: BLOKKADE: test `recipe-servings.spec.ts` heeft twee fouten (goBack-race v├│├│r het overzicht rendert; update naar `servings: null` faalt op de `not valid` check), tester moet ze herstellen
+- 2026-11-02 10:34 T-007 tester: KLAAR
+- 2026-11-02 10:38 T-007 ontwikkelaar: KLAAR
+- 2026-11-02 10:40 T-007 build: geslaagd
+- 2026-11-02 10:42 T-007 reviewer: GOEDGEKEURD
+- 2026-11-02 10:45 T-007 build: geslaagd
+- 2026-11-02 10:45 T-007 savepoint: gecommit
+- 2026-11-02 10:46 T-008 analist: KLAAR
+- 2026-11-02 10:48 T-008 tester: KLAAR
+- 2026-11-02 10:54 T-008 ontwikkelaar: KLAAR
+- 2026-11-02 10:57 T-008 build: geslaagd
+- 2026-11-02 10:58 T-008 reviewer: GOEDGEKEURD
+- 2026-11-02 11:01 T-008 build: geslaagd
+- 2026-11-02 11:01 T-008 savepoint: gecommit
+- 2026-11-02 11:03 T-009 analist: KLAAR
+- 2026-11-02 11:06 T-009 tester: KLAAR
+- 2026-11-02 11:15 T-009 ontwikkelaar: KLAAR
+- 2026-11-02 11:18 T-009 build: mislukt
+- 2026-11-02 11:20 T-009 ontwikkelaar: KLAAR
+- 2026-11-02 11:23 T-009 build: geslaagd
+- 2026-11-02 11:24 T-009 reviewer: BEVINDINGEN: 0/1
+- 2026-11-02 11:25 T-009 tester: KLAAR
+- 2026-11-02 11:25 T-009 ontwikkelaar: KLAAR
+- 2026-11-02 11:28 T-009 build: geslaagd
+- 2026-11-02 11:29 T-009 reviewer: GOEDGEKEURD
+- 2026-11-02 11:30 T-009 build: mislukt
+- 2026-11-02 11:30 T-009 stop: eindcontrole faalt
+- 2026-11-02 11:33 T-010 analist: KLAAR
+- 2026-11-02 11:36 T-010 tester: KLAAR
+- 2026-11-02 11:47 T-010 ontwikkelaar: KLAAR
+- 2026-11-02 11:48 T-010 build: mislukt
+- 2026-11-02 12:00 T-010 ontwikkelaar: KLAAR
+- 2026-11-02 12:03 T-010 build: geslaagd
+- 2026-11-02 12:05 T-010 reviewer: BEVINDINGEN: 0/1
+- 2026-11-02 12:06 T-010 tester: KLAAR
+- 2026-11-02 12:07 T-010 ontwikkelaar: KLAAR
+- 2026-11-02 12:10 T-010 build: geslaagd
+- 2026-11-02 12:11 T-010 reviewer: GOEDGEKEURD
+- 2026-11-02 12:12 T-010 build: mislukt
+- 2026-11-02 12:12 T-010 stop: eindcontrole faalt
+- 2026-11-02 12:30 T-009 ontwikkelaar: KLAAR
+- 2026-11-02 12:33 T-009 build: geslaagd
+- 2026-11-02 12:34 T-009 reviewer: GOEDGEKEURD
+- 2026-11-02 12:38 T-009 build: geslaagd
+- 2026-11-02 12:38 T-009 savepoint: gecommit
+- 2026-11-02 12:41 T-010 tester: KLAAR
+- 2026-11-02 12:51 T-010 ontwikkelaar: KLAAR
+- 2026-11-02 12:55 T-010 build: geslaagd
+- 2026-11-02 12:56 T-010 reviewer: GOEDGEKEURD
+- 2026-11-02 13:00 T-010 build: geslaagd
+- 2026-11-02 13:00 T-010 savepoint: gecommit
+- 2026-11-02 13:01 T-011 analist: KLAAR
+- 2026-11-02 13:04 T-011 tester: KLAAR
+- 2026-11-02 13:14 T-011 ontwikkelaar: BLOKKADE: test recipe-trait-tags.spec.ts:82 is instabiel, want de titel "Zonder kenmerken ÔÇª" is zelf een h1 die op `getByRole('heading', { name: 'Kenmerken' })` matcht; de test slaagt alleen als de pagina nog niet geladen is.
+- 2026-11-02 13:15 T-011 tester: KLAAR
+- 2026-11-02 13:21 T-011 ontwikkelaar: KLAAR
+- 2026-11-02 13:24 T-011 build: geslaagd
+- 2026-11-02 13:26 T-011 reviewer: GOEDGEKEURD
+- 2026-11-02 13:26 T-011 build: worker-crash (geen testfout), opnieuw
+- 2026-11-02 13:30 T-011 build: geslaagd
+- 2026-11-02 13:30 T-011 savepoint: gecommit
+- 2026-11-02 13:36 T-012 analist: KLAAR
+- 2026-11-02 13:41 T-012 tester: KLAAR
+- 2026-11-02 13:59 T-012 ontwikkelaar: KLAAR
+- 2026-11-02 14:03 T-012 build: geslaagd
+- 2026-11-02 14:05 T-012 reviewer: BEVINDINGEN: 0/2
+- 2026-11-02 14:06 T-012 tester: KLAAR
+- 2026-11-02 14:11 T-012 ontwikkelaar: KLAAR
+- 2026-11-02 14:15 T-012 build: geslaagd
+- 2026-11-02 14:16 T-012 reviewer: BLOKKADE: De eigenaar moet een echt HEIC-bestand aanleveren in `tests/fixtures/photos/photo.heic`, of uitdrukkelijk aanvaarden dat HEIC voorlopig zonder test van begin tot eind blijft.
+- 2026-11-02 14:16 T-012 stop: review niet goedgekeurd na 2 rondes
+- 2026-11-02 14:18 T-015 analist: KLAAR
+- 2026-11-02 14:20 T-015 tester: limiet bereikt, wacht 10 min (poging 1 van 18)
+- 2026-11-02 14:30 T-015 tester: limiet bereikt, wacht 10 min (poging 2 van 18)
+- 2026-11-02 14:40 T-015 tester: limiet bereikt, wacht 10 min (poging 3 van 18)
+- 2026-11-02 14:53 T-015 tester: KLAAR
+- 2026-11-02 14:57 T-015 ontwikkelaar: BLOKKADE: test tests/db/recipe-search.test.ts ÔÇö `quantity: '1'` moet een getal zijn (check `recipes_ingredients_valid`), en testen delen ├®├®n suffix `s` met gelijke ingredi├½ntnamen over tests heen, waardoor eerdere recepten de resultaten van crit. 4, 5 en 8 vervuilen.
+- 2026-11-02 14:57 T-015 tester: KLAAR
+- 2026-11-02 15:04 T-015 ontwikkelaar: KLAAR
+- 2026-11-02 15:08 T-015 build: geslaagd
+- 2026-11-02 15:10 T-015 reviewer: BEVINDINGEN: 0/1
+- 2026-11-02 15:10 T-015 tester: KLAAR
+- 2026-11-02 15:10 T-015 ontwikkelaar: KLAAR
+- 2026-11-02 15:14 T-015 build: mislukt
+- 2026-11-02 15:14 T-015 stop: review niet goedgekeurd na 2 rondes
+- 2026-11-02 15:17 - loop: geen taak meer
+- 2026-11-02 15:17 - loop: geen taak meer
+- 2026-11-02 15:17 T-016 analist: KLAAR
+- 2026-11-02 15:21 T-016 tester: KLAAR
+- 2026-11-02 15:37 T-016 ontwikkelaar: BLOKKADE: test ÔÇö `reviews.spec.ts` gebruikt `getByRole('dialog')` waar de app `alertdialog` heeft (regels 197/279), het zoekt `getByText('Nieuw', { exact: true })` dat ook het navigatielink raakt (regel 183), en de 23505-test (regel 206) voegt de review in v├│├│r de lijst geladen is. `a11y.spec.ts` ("reachable by Tab") telt elk keuzerondje van ├®├®n groep als eigen tabstop, wat botst met het criterium over pijltjestoetsen.
+- 2026-11-02 15:37 T-016 tester: KLAAR
+- 2026-11-02 15:43 T-016 ontwikkelaar: KLAAR
+- 2026-11-02 15:47 T-016 build: geslaagd
+- 2026-11-02 15:49 T-016 reviewer: GOEDGEKEURD
+- 2026-11-02 15:50 T-016 build: worker-crash (geen testfout), opnieuw
+- 2026-11-02 15:54 T-016 build: geslaagd
+- 2026-11-02 15:54 T-016 savepoint: gecommit
+- 2026-11-02 15:54 - loop: geen taak meer
+- 2026-11-02 15:56 T-012 tester: KLAAR
+- 2026-11-02 15:59 T-012 ontwikkelaar: KLAAR
+- 2026-11-02 16:00 T-012 build: worker-crash (geen testfout), opnieuw
+- 2026-11-02 16:04 T-012 build: geslaagd
+- 2026-11-02 16:06 T-012 reviewer: GOEDGEKEURD
+- 2026-11-02 16:10 T-012 build: geslaagd
+- 2026-11-02 16:10 T-012 savepoint: gecommit
+- 2026-11-02 16:16 T-013 analist: KLAAR
+- 2026-11-02 16:20 T-013 tester: KLAAR
+- 2026-11-02 16:30 T-013 ontwikkelaar: BLOKKADE: test `tests/db/recipe-size.test.ts` leaves tags and equipment in the shared catalogue (`Proeftag`, `Proefkenmerk`, `d00ÔÇª`/`t00ÔÇª`/`g00ÔÇª`), which makes `recipe-trait-tags.test.ts` and the Tab-reach check in `a11y.spec.ts` fail; the tester must clean up or avoid catalogue entries.
+- 2026-11-02 16:31 T-013 tester: KLAAR
+- 2026-11-02 16:42 T-013 ontwikkelaar: KLAAR
+- 2026-11-02 16:47 T-013 build: geslaagd
+- 2026-11-02 16:48 T-013 reviewer: BEVINDINGEN: 0/1
+- 2026-11-02 16:49 T-013 tester: KLAAR
+- 2026-11-02 16:54 T-013 ontwikkelaar: KLAAR
+- 2026-11-02 16:55 T-013 build: worker-crash (geen testfout), opnieuw
+- 2026-11-02 17:00 T-013 build: geslaagd
+- 2026-11-02 17:01 T-013 reviewer: GOEDGEKEURD
+- 2026-11-02 17:06 T-013 build: geslaagd
+- 2026-11-02 17:06 T-013 savepoint: gecommit
+- 2026-11-02 17:11 T-014 analist: KLAAR
+- 2026-11-02 17:15 T-014 tester: KLAAR
+- 2026-11-02 17:53 T-014 ontwikkelaar: BLOKKADE: test `tests/e2e/variants.spec.ts` regels 84, 352 en 373 hebben fouten (tagnaam-hoofdletters `Soep` i.p.v. `soep`, niet-exacte `getByText('Kind ÔÇª')` die ook "Kleinkind" vindt, en een `naturalWidth`-controle op een niet-decodeerbare `fakeJpegBytes`-fixture)
+- 2026-11-02 17:54 T-014 tester: KLAAR
+- 2026-11-02 18:02 T-014 ontwikkelaar: BLOKKADE: test tests/e2e/variants.spec.ts:114 zoekt exact 'vegetarisch', maar de gedeelde tagcatalogus bevat 'Vegetarisch' (hoofdletter) uit andere runs; de app kopieert en selecteert de tag wel correct.
+- 2026-11-02 18:02 T-014 tester: KLAAR
+- 2026-11-02 18:14 T-014 ontwikkelaar: KLAAR
+- 2026-11-02 18:21 T-014 build: mislukt
+- 2026-11-02 18:21 T-014 stop: build of tests falen na 3 pogingen
+- 2026-11-02 18:34 T-014 ontwikkelaar: KLAAR
+- 2026-11-02 18:35 T-014 build: mislukt
+- 2026-11-02 18:36 T-014 ontwikkelaar: BLOKKADE: test tests/e2e/variants.spec.ts zet 'vegetarisch' (een trait-tag) in dish_tags, waardoor de dish-groep vervuild raakt en tests/db/recipe-trait-tags.test.ts faalt.
+- 2026-11-02 18:36 T-014 tester: KLAAR
+- 2026-11-02 18:44 T-014 ontwikkelaar: KLAAR
+- 2026-11-02 18:51 T-014 build: geslaagd
+- 2026-11-02 18:53 T-014 reviewer: BEVINDINGEN: 0/3
+- 2026-11-02 18:53 T-014 tester: KLAAR
+- 2026-11-02 18:54 T-014 ontwikkelaar: BLOKKADE: test `tests/e2e/variants.spec.ts:407-411` verwijdert bij "bron verdwijnt" alleen de rij, niet de bestanden, en de controle op regel 411 staat achter `if (newId)`; de tester moet een geval met `removeRecipeFiles` toevoegen en die controle onvoorwaardelijk maken.
+- 2026-11-02 18:55 T-014 tester: KLAAR
+- 2026-11-02 19:02 T-014 ontwikkelaar: KLAAR
+- 2026-11-02 19:09 T-014 build: geslaagd
+- 2026-11-02 19:10 T-014 reviewer: GOEDGEKEURD
+- 2026-11-02 19:16 T-014 build: geslaagd
+- 2026-11-02 19:16 T-014 savepoint: gecommit
+- 2026-11-02 19:18 T-015 tester: BLOKKADE: De T-015-bestanden (tests, `ingredientSearch.ts`, migratie) staan niet in de werkmap maar in `stash@{0}` ("On loop: T-015 niet geslaagd"). Ik mag dat stash niet lezen of terugzetten, dus ik kan de review-bevindingen niet herstellen.
+- 2026-11-02 19:18 T-015 stop: BLOKKADE: De T-015-bestanden (tests, `ingredientSearch.ts`, migratie) staan niet in de werkmap maar in `stash@{0}` ("On loop: T-015 niet geslaagd"). Ik mag dat stash niet lezen of terugzetten, dus ik kan de review-bevindingen niet herstellen.
+- 2026-11-02 19:18 - loop: geen taak meer
+- 2026-11-02 19:21 T-015 analist: KLAAR
+- 2026-11-02 19:26 T-015 tester: KLAAR
+- 2026-11-02 20:14 T-015 ontwikkelaar: BLOKKADE: test `tests/e2e/recipe-search.spec.ts:495` is onbetrouwbaar omdat `page.route` na `goto` de service worker niet onderschept; gebruik `serviceWorkers: 'block'`.
+- 2026-11-02 20:14 T-015 tester: KLAAR
+- 2026-11-02 20:20 T-015 ontwikkelaar: KLAAR
+- 2026-11-02 20:25 T-015 build: geslaagd
+- 2026-11-02 20:27 T-015 reviewer: BEVINDINGEN: 0/2
+- 2026-11-02 21:03 T-015 ontwikkelaar: KLAAR
+- 2026-11-02 21:08 T-015 build: geslaagd
+- 2026-11-02 21:09 T-015 reviewer: BEVINDINGEN: 0/2
+- 2026-11-02 21:10 T-015 tester: KLAAR
+- 2026-11-02 21:10 T-015 ontwikkelaar: KLAAR
+- 2026-11-02 21:15 T-015 build: geslaagd
+- 2026-11-02 21:16 T-015 reviewer: BEVINDINGEN: 0/1
+- 2026-11-02 21:17 T-015 tester: KLAAR
+- 2026-11-02 21:17 T-015 ontwikkelaar: BLOKKADE: test `tests/db/recipe-search.test.ts:117-123` bewijst niet dat ├®├®n term hoogstens ├®├®n keer telt. De ingredi├½nten moeten allebei de term bevatten, bv. `feta${s}` en `feta${s} blokjes` met de termen `[feta${s}, tomaat${s}]`, en dan `match_count = 1` en `term_count = 2`. De tester moet dit herstellen.
+- 2026-11-02 21:17 T-015 tester: KLAAR
+- 2026-11-02 21:23 T-015 ontwikkelaar: KLAAR
+- 2026-11-02 21:24 T-015 build: worker-crash (geen testfout), opnieuw
+- 2026-11-02 21:25 T-015 build: mislukt
+- 2026-11-02 21:25 T-015 stop: review niet goedgekeurd na 2 rondes
+- 2026-11-02 21:25 - loop: geen taak meer
+- 2026-11-02 21:29 T-015 ontwikkelaar: KLAAR
+- 2026-11-02 21:34 T-015 build: mislukt
+- 2026-11-02 21:41 T-015 ontwikkelaar: KLAAR
+- 2026-11-02 21:42 T-015 build: worker-crash (geen testfout), opnieuw
+- 2026-11-02 21:47 T-015 build: geslaagd
+- 2026-11-02 21:49 T-015 reviewer: GOEDGEKEURD
+- 2026-11-02 21:54 T-015 build: geslaagd
+- 2026-11-02 21:54 T-015 savepoint: gecommit
+- 2026-11-02 21:56 T-017 analist: KLAAR
+- 2026-11-02 21:58 T-017 tester: KLAAR
+- 2026-11-02 22:51 T-017 ontwikkelaar: BLOKKADE: test favorites.spec.ts rij 139, 267 en 297 hebben races (geen wachten op detailpagina of lijst; `expect.poll` op 0 rijen slaagt v├│├│r de insert en de reload doodt het verwijderverzoek), tester moet herstellen
+- 2026-11-02 22:51 T-017 tester: KLAAR
+- 2026-11-02 22:58 T-017 ontwikkelaar: KLAAR
+- 2026-11-02 23:00 T-017 build: worker-crash (geen testfout), opnieuw
+- 2026-11-02 23:02 T-017 build: mislukt
+- 2026-11-02 23:10 T-017 ontwikkelaar: KLAAR
+- 2026-11-02 23:12 T-017 build: mislukt
+- 2026-11-02 23:12 T-017 stop: build of tests falen na 3 pogingen
+- 2026-11-02 23:28 T-017 ontwikkelaar: KLAAR
+- 2026-11-02 23:29 T-017 build: worker-crash (geen testfout), opnieuw
+- 2026-11-02 23:37 T-017 build: geslaagd
+- 2026-11-02 23:38 T-017 reviewer: BEVINDINGEN: 0/1
+- 2026-11-02 23:39 T-017 tester: KLAAR
+- 2026-11-02 23:39 T-017 ontwikkelaar: BLOKKADE: test tests/e2e/favorites.spec.ts:89-91, 105-106, 333-336 doet `page.reload()` zonder te wachten op het POST/DELETE-antwoord (race); tester moet `waitForResponse` toevoegen.
+- 2026-11-02 23:39 T-017 tester: KLAAR
+- 2026-11-02 23:48 T-017 ontwikkelaar: KLAAR
+- 2026-11-02 23:55 T-017 build: geslaagd
+- 2026-11-02 23:56 T-017 reviewer: GOEDGEKEURD
+- 2026-11-02 23:57 T-017 build: worker-crash (geen testfout), opnieuw
+- 2026-11-03 00:05 T-017 build: geslaagd
+- 2026-11-03 00:05 T-017 savepoint: gecommit

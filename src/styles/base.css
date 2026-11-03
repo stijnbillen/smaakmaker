@@ -1,0 +1,1046 @@
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  background: var(--color-bg-page);
+  color: var(--color-text-body);
+  font-family: var(--font-body);
+  font-size: var(--font-size-md);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  /* Padding on body (not on a page) keeps the end of every page above the fixed navigation. */
+  padding-bottom: calc(var(--space-nav-clearance) + env(safe-area-inset-bottom));
+}
+
+h1,
+h2 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: var(--font-size-xl);
+  margin: 0 0 var(--space-4);
+}
+
+a {
+  color: var(--color-text-accent);
+}
+
+/* Visible keyboard focus on everything interactive. */
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.page {
+  padding: var(--space-5) var(--space-4);
+  max-width: 100%;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  color: var(--color-text-body);
+}
+
+input,
+select,
+textarea {
+  display: block;
+  width: 100%;
+  min-height: var(--tap-min);
+  margin-top: var(--space-1);
+  padding: 0 var(--space-3);
+  font: inherit;
+  color: var(--color-text-body);
+  background: var(--color-bg-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--duration-fast);
+}
+
+textarea {
+  min-height: calc(var(--tap-min) * 2);
+  padding: var(--space-2) var(--space-3);
+  resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--color-focus);
+}
+
+/* Minimum tap target for every interactive element. */
+button,
+a[href],
+[role='button'],
+input[type='checkbox'],
+input[type='radio'],
+[data-tap-target] {
+  min-height: var(--tap-min);
+  min-width: var(--tap-min);
+}
+
+button,
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--space-4);
+  margin: var(--space-2) 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  border: 0;
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity var(--duration-fast);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.button-link--quiet,
+.button-quiet {
+  color: var(--color-text-accent);
+  background: transparent;
+  border: 2px solid var(--color-accent);
+}
+
+/* Form fields and their messages */
+.field {
+  margin-bottom: var(--space-4);
+}
+
+.field-error {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-accent);
+}
+
+.field-hint {
+  margin: 0 0 var(--space-1);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* Used recipe size (R-004): one quiet line above "Opslaan"; the accent text colour once over the limit. */
+.recipe-size {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.recipe-size--over {
+  font-weight: 600;
+  color: var(--color-text-accent);
+}
+
+/* Text for screen readers only. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Source line under the author: a long URL breaks instead of widening the page. */
+.recipe-source {
+  margin: var(--space-3) 0 0;
+}
+
+.recipe-source dt {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.recipe-source dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.recipe-source a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  color: var(--color-text-accent);
+  text-decoration: underline;
+}
+
+/* Note: a quiet paper block; line breaks typed by the author stay. */
+.recipe-note {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+input[aria-invalid='true'],
+textarea[aria-invalid='true'] {
+  border-color: var(--color-accent);
+}
+
+/* Sign-in and welcome: the first thing a user sees, so a little warmer than the rest. */
+.auth-page {
+  padding-top: var(--space-6);
+}
+
+.auth-brand {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-accent);
+}
+
+.profile-name {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+}
+
+.recipe-title {
+  display: block;
+  font-weight: 600;
+}
+
+.author-line {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* Two fields side by side (times, filters); minmax(0) lets them shrink so 360 px never scrolls sideways. */
+.field-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: var(--space-3);
+}
+
+.time-filter {
+  margin-top: var(--space-3);
+}
+
+.recipe-times {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-body);
+  overflow-wrap: anywhere;
+}
+
+.recipe-times-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: var(--space-3) 0 0;
+}
+
+.recipe-times-list dt {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.recipe-times-list dd {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+/* Servings stepper on the detail page: two round 44 px buttons around a large number. */
+.servings-stepper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.servings-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.servings-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border-radius: var(--radius-pill);
+}
+
+.servings-value {
+  min-width: 2.5rem;
+  text-align: center;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+}
+
+.servings-note {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.connection-banner {
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-bg-sunken);
+  border-bottom: 2px solid var(--color-accent);
+}
+
+.connection-banner p {
+  margin: 0;
+}
+
+.recipe-list {
+  list-style: none;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.recipe-list > li {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+/* Heart: a round tap target of the minimum size, drawn in the colour of the state. */
+.favorite-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-heart);
+  cursor: pointer;
+}
+
+.favorite-button--on svg {
+  transform: scale(1.1);
+}
+
+/* In the card the heart floats top right; the link leaves room for it so the title never runs under it. */
+.recipe-card {
+  position: relative;
+}
+
+.recipe-card .favorite-button {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+}
+
+.recipe-card .recipe-link {
+  padding-right: var(--space-heart-clearance);
+}
+
+.favorite-error {
+  display: block;
+  margin-top: var(--space-2);
+}
+
+.recipe-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.recipe-heading h1 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The whole list item is the link, so the tap target is the full card. */
+.recipe-link {
+  display: block;
+  padding: var(--space-3) var(--space-4);
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+}
+
+/* Recipe form: groups, rows with their buttons, add buttons */
+.form-group {
+  min-width: 0;
+  margin: 0 0 var(--space-5);
+  padding: 0;
+  border: 0;
+}
+
+.form-group legend {
+  padding: 0;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.row-list {
+  list-style: none;
+  margin: var(--space-3) 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.row {
+  padding: var(--space-3);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+/* Name on its own line; quantity and unit side by side below it, so 360 px needs no sideways scrolling. */
+.row-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: var(--space-3);
+}
+
+.row-name {
+  grid-column: 1 / -1;
+}
+
+.row .field {
+  margin-bottom: var(--space-3);
+}
+
+.row-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.icon-button {
+  padding: 0;
+  margin: 0;
+  color: var(--color-text-body);
+  background: var(--color-bg-sunken);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.icon-button svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.list-add {
+  margin-top: 0;
+}
+
+/* Confirmation dialog */
+.dialog {
+  width: min(100% - var(--space-6), 24rem);
+  padding: var(--space-5);
+  color: var(--color-text-body);
+  background: var(--color-bg-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.dialog::backdrop {
+  background: var(--overlay-backdrop);
+}
+
+.dialog-question {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.dialog-actions button {
+  margin: 0;
+}
+
+/* Detail page */
+.recipe-section h2 {
+  margin: var(--space-5) 0 var(--space-2);
+  font-size: var(--font-size-lg);
+}
+
+.ingredient-list {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+
+.step-list {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+
+.step-list li,
+.ingredient-list li {
+  margin-bottom: var(--space-2);
+}
+
+.recipe-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.recipe-actions > * {
+  margin: 0;
+}
+
+/* Bottom navigation: four equal entries, fixed to the bottom edge. */
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  background: var(--color-bg-surface);
+  border-top: 1px solid var(--color-border);
+  box-shadow: var(--shadow-nav);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-nav ul {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bottom-nav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  height: var(--nav-height);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--duration-fast), background-color var(--duration-fast);
+}
+
+.bottom-nav a[aria-current='page'] {
+  color: var(--color-text-accent);
+  background: var(--color-bg-sunken);
+}
+
+.bottom-nav a:focus-visible {
+  outline-offset: -4px;
+}
+
+.bottom-nav svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Invites screen */
+.invite-list {
+  list-style: none;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.invite-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.invite-code {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.invite-status {
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  background: var(--color-bg-sunken);
+}
+
+.invite-status--open {
+  color: var(--color-text-accent);
+  border-color: var(--color-accent);
+}
+
+.invite-meta {
+  flex-basis: 100%;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.invite-copy {
+  margin-left: auto;
+}
+
+/* List states */
+.list-state {
+  margin: var(--space-4) 0;
+  color: var(--color-text-muted);
+}
+
+.list-state--loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin var(--duration-slow) linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Reduced motion: nothing moves or fades, whatever a component asks for. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Equipment: toggle buttons in the form and filter, small labels on the overview and detail page */
+.choice-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+}
+
+.choice {
+  margin: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: var(--color-text-body);
+  background: transparent;
+  border: 2px solid var(--color-border);
+}
+
+.choice[aria-pressed='true'] {
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.choice:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.inline-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.inline-add input {
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+.inline-add button {
+  margin: 0;
+}
+
+.equipment-filter {
+  margin-top: var(--space-3);
+}
+
+.equipment-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.equipment-tags li {
+  min-width: 0;
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-body);
+  background: var(--color-bg-sunken);
+  border-radius: var(--radius-sm);
+  overflow-wrap: anywhere;
+}
+
+/* Reviews */
+.rating-summary {
+  margin: 0 0 var(--space-3);
+  font-weight: 600;
+}
+
+.recipe-rating {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-star);
+}
+
+.sort-field {
+  margin-top: var(--space-3);
+}
+
+/* Stars: a star drawn under a transparent radio button. Five times 44 px fits 360 px. */
+.star-group {
+  margin-bottom: var(--space-3);
+}
+
+.star-choices {
+  display: flex;
+}
+
+.star-choice {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  color: var(--color-text-star);
+  cursor: pointer;
+}
+
+/* The radio covers the star, transparent but not hidden, so the normal focus ring shows on it. */
+.star-choice input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.star {
+  width: 1.75rem;
+  height: 1.75rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.star--on {
+  fill: currentColor;
+}
+
+.star-display,
+.star-row {
+  display: inline-flex;
+  color: var(--color-text-star);
+}
+
+.star-row .star {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.review-list {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.review-item {
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.review-body {
+  margin: var(--space-2) 0 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.review-new h3 {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: var(--font-size-md);
+}
+
+/* Photos: picker in the form, frame in the overview, strip on the detail page */
+.photo-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.photo-add button {
+  flex: 1 1 auto;
+}
+
+.photo-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.photo-thumb {
+  flex: 0 0 var(--photo-thumb-size);
+  width: var(--photo-thumb-size);
+  height: var(--photo-thumb-size);
+  overflow: hidden;
+  background: var(--color-bg-sunken);
+  border-radius: var(--radius-sm);
+}
+
+.photo-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-controls {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.photo-controls button {
+  margin: 0;
+}
+
+.photo-controls .photo-main {
+  margin-bottom: var(--space-2);
+}
+
+/* The chosen main photo: filled, so the state is not carried by colour alone (it also says "Hoofdfoto"). */
+.photo-main--on {
+  border: 2px solid var(--color-accent);
+}
+
+.recipe-photo {
+  display: block;
+  aspect-ratio: var(--photo-ratio);
+  margin-bottom: var(--space-2);
+  overflow: hidden;
+  color: var(--color-text-muted);
+  background: var(--color-bg-sunken);
+  border-radius: var(--radius-sm);
+}
+
+.recipe-photo img,
+.photo-placeholder {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.recipe-photo img {
+  object-fit: cover;
+}
+
+.photo-placeholder {
+  padding: var(--space-4);
+  box-sizing: border-box;
+}
+
+.photo-strip {
+  display: flex;
+  gap: var(--space-3);
+  margin: var(--space-3) 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+
+.photo-strip li {
+  flex: 0 0 var(--photo-strip-width);
+  scroll-snap-align: start;
+  aspect-ratio: var(--photo-ratio);
+  overflow: hidden;
+  background: var(--color-bg-sunken);
+  border-radius: var(--radius-md);
+}
+
+.photo-strip img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The hidden attribute must win over component display rules (the file inputs behind the photo buttons). */
+[hidden] {
+  display: none !important;
+}
+
+/* Variants: the source line above the title, the label in the overview, the lists of variants */
+.variant-source {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.variant-source a,
+.variant-list a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  color: var(--color-text-accent);
+  text-decoration: underline;
+}
+
+/* Same shape as the tags, but text only: the overview item around it is the tap target. */
+.variant-label {
+  display: inline-block;
+  margin-top: var(--space-1);
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-body);
+  background: var(--color-bg-sunken);
+  border-radius: var(--radius-sm);
+}
+
+.variant-list {
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.variant-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--space-3);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.variant-author {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.variant-family {
+  margin: var(--space-4) 0;
+}
+
+.variant-family summary {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Ingredient search (R-009): fields stacked at full width; the button and the list keep the tap size. */
+.ingredient-search {
+  margin-top: var(--space-3);
+}
+
+.search-submit {
+  min-width: var(--tap-min);
+  margin-bottom: var(--space-4);
+}
+
+.recipe-matches {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-accent);
+  overflow-wrap: anywhere;
+}

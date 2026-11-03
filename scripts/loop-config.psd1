@@ -5,7 +5,7 @@
     ProjectNaam = 'Smaakmaker'
 
     # Bouwt en draait alle tests. Exitcode 0 = geslaagd.
-    BouwCommando = 'npm run build && npm test'
+    BouwCommando = 'npx supabase db reset --local && npm run build && npm test'
 
     # Controle dat de tests compileren (typecheck).
     TestCompileCommando = 'npx tsc --noEmit'

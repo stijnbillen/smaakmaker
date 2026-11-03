@@ -1,0 +1,82 @@
+/*
+ * Design tokens: the only place with literal colours, fonts and spacing.
+ * Direction "warm kitchen": cream paper, espresso ink, tomato accent, a soft serif for headings.
+ * Naming (the contrast test relies on it):
+ *   --color-bg-*       backgrounds
+ *   --color-text-*     text, must reach 4.5:1 on every --color-bg-*
+ *   --color-<x>        fill colour, with --color-on-<x> for text/icons on top of it
+ */
+:root {
+  /* Colours */
+  --color-bg: #fbf5ea;
+  --color-bg-page: var(--color-bg);
+  --color-bg-surface: #fffdf8;
+  --color-bg-sunken: #f1e8d8;
+
+  --color-text-body: #2b1d14;
+  --color-text-muted: #6b5648;
+
+  --color-accent: #a8321a;
+  --color-on-accent: #fffaf0;
+  /* Accent used as text colour: named text-* so the contrast test checks it on every background. */
+  --color-text-accent: var(--color-accent);
+
+  /* The heart of a favourite: named text-* so the contrast test checks it on every background. */
+  --color-text-heart: var(--color-accent);
+
+  /* Stars: named text-* so the contrast test checks them on every background. */
+  --color-text-star: #8a5300;
+
+  --color-focus: #1d4e89;
+  --color-border: #d9ccb6;
+  --color-theme: var(--color-accent);
+
+  /* Fonts (self-hosted via @fontsource, Latin subset) */
+  --font-heading: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.75rem;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  /* Shape and depth */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.75rem;
+  --radius-pill: 999px;
+  --overlay-backdrop: rgb(43 29 20 / 0.55);
+  --shadow-nav: 0 -2px 8px rgb(43 29 20 / 0.12);
+
+  /* Motion */
+  --duration-fast: 150ms;
+  --duration-slow: 900ms;
+
+  /* Layout */
+  --nav-height: 4rem;
+  --tap-min: 44px;
+  /* Photos: frame ratio in the overview, thumbnail in the form, width of a photo in the detail strip */
+  --photo-ratio: 4 / 3;
+  --photo-thumb-size: 5rem;
+  --photo-strip-width: 80%;
+  /* Room at the bottom of the page so the fixed navigation never covers content. */
+  --space-nav-clearance: calc(var(--nav-height) + var(--space-4));
+  /* Room at the right of a recipe card for the heart. */
+  --space-heart-clearance: calc(var(--tap-min) + var(--space-2));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-slow: 0ms;
+  }
+}
