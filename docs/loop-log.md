@@ -295,3 +295,4 @@
 - 2026-11-02 23:56 T-017 reviewer: GOEDGEKEURD
 - 2026-11-02 23:57 T-017 build: worker-crash (geen testfout), opnieuw
 - 2026-11-03 00:05 T-017 build: geslaagd
+- 2026-11-03 00:05 T-017 savepoint: gecommit
