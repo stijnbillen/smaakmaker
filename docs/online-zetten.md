@@ -29,14 +29,15 @@ npx supabase db push
    - Afzender: een adres op je geverifieerde domein, naam "Smaakmaker"
 4. Verhoog onder Authentication > Rate Limits het aantal mails per uur naar wat je nodig hebt.
 
-## 5. Hosting op Cloudflare Pages
-1. https://dash.cloudflare.com > Workers & Pages > Create > Pages > Connect to Git > repo `stijnbillen/smaakmaker`.
-2. Productietak: `master`. Build command `npm run build`, output directory `dist`.
-3. Environment variables (productie):
+## 5. Hosting op Cloudflare (Workers & Pages)
+Cloudflare maakt nieuwe projecten als Worker met statische bestanden. `wrangler.jsonc` in de repo zegt dat `dist` de site is en dat onbekende paden `index.html` krijgen (nodig voor routes zoals `/recepten`).
+1. Workers & Pages > Create > koppel de repo `stijnbillen/smaakmaker`, projectnaam `smaakmaker` (zelfde naam als in `wrangler.jsonc`).
+2. Productietak `master`. Build command `npm run build`. Deploy command `npx wrangler deploy`.
+3. Zet de twee variabelen als **build-variabelen**, niet als runtime-variabelen: Settings > Build > Variables and secrets. Vite stopt ze tijdens het bouwen in de app; runtime-variabelen (Settings > Variables and secrets) bereiken de app niet.
    - `VITE_SUPABASE_URL` = Project URL uit stap 1
    - `VITE_SUPABASE_ANON_KEY` = publishable key uit stap 1
-4. Deploy. Cloudflare Pages geeft bij onbekende paden `index.html` terug, dus routes zoals `/recepten` werken zonder extra bestand.
-5. Zet het adres dat Cloudflare geeft in de Supabase URL Configuration (stap 3).
+4. Start een nieuwe build (na het toevoegen van variabelen is een nieuwe build nodig).
+5. Zet het adres van de site (`https://smaakmaker.<account>.workers.dev`, zie Domains) in de Supabase URL Configuration (stap 3).
 
 ## 6. Eerste beheerder
 Zie `docs/beheer.md`. Draai de SQL in de SQL-editor van het Supabase-dashboard:
