@@ -325,3 +325,12 @@
 - 2026-11-06 19:19 T-020 build: geslaagd
 - 2026-11-06 19:20 T-020 reviewer: GOEDGEKEURD
 - 2026-11-06 19:27 T-020 build: geslaagd
+- 2026-11-06 19:27 T-020 savepoint: gecommit
+- 2026-11-06 19:32 T-021 analist: KLAAR
+- 2026-11-06 19:36 T-021 tester: KLAAR
+- 2026-11-06 20:02 T-021 ontwikkelaar: BLOKKADE: test ÔÇö the eight test mistakes above (db bytes-test title lengths, picker e2e English `titleField`, same-text `fill`, `role="alert"` and language-switch location, plus `recipe-catalog`, `language` and `connection` specs expecting the old textbox or stored-name behaviour) must be fixed by the tester.
+- 2026-11-06 20:05 T-021 tester: KLAAR
+- 2026-11-06 20:15 T-021 ontwikkelaar: BLOKKADE: test `tests/helpers/recipe-form.ts` `ingredientNameFields` zoekt `combobox` met naam `/^Ingredi├½nt/`, maar in het Engels is het label "Ingredient"; daardoor falen `ingredient-picker.spec.ts:85` en `:186` (tester moet de regex taalonafhankelijk maken, bv. `/^Ingredi[e├½]nt/`).
+- 2026-11-06 20:16 T-021 tester: KLAAR
+- 2026-11-06 20:25 T-021 ontwikkelaar: BLOKKADE: test `tests/e2e/ingredient-picker.spec.ts:88` gebruikt `/potato/`, dat twee opties vindt, en `tests/helpers/recipe-form.ts` `quantityFields`, `unitFields` en `sizeFields` zoeken alleen op Nederlandse labels, waardoor `ingredient-picker.spec.ts:186` in het Engels faalt.
+- 2026-11-06 20:25 T-021 stop: BLOKKADE: test `tests/e2e/ingredient-picker.spec.ts:88` gebruikt `/potato/`, dat twee opties vindt, en `tests/helpers/recipe-form.ts` `quantityFields`, `unitFields` en `sizeFields` zoeken alleen op Nederlandse labels, waardoor `ingredient-picker.spec.ts:186` in het Engels faalt.

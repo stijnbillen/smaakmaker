@@ -367,3 +367,12 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - Lengtegrens (termen < 4 tekens) geldt voor afstand én trigram; exact vanaf 1 teken, begint-met vanaf 2 (zonder `LIKE`, dus `%`/`_` zijn gewone tekens).
 - Wrappers en `catalog_suggest` zijn `security definer` (afwijking van de brief: invoker): zo hoeft `authenticated` geen `execute` op `catalog_suggest`/`dl_*` te hebben en zijn die niet via `/rpc` aan te roepen. De wrappers weigeren zonder aanmelding (42501); de catalogus is voor elke aangemelde gebruiker leesbaar, dus er lekt niets.
 - Client: `src/lib/suggest.ts` (zonder Supabase) met loader op `createDebouncer` + volgnummer, debounce 250 ms; `fetchSuggestions` staat in `recipes.ts`.
+
+## T-021 — Ingrediënten en eenheden kiezen
+- De naam blijft als momentopname in de regel (`name`/`unit`, in de interfacetaal bij opslaan) naast `ingredient_id`/`unit_id`: zoeken, de groottetelling en de terugval blijven werken. Detailpagina en formulier lezen de actuele naam via de verwijzing (`RecipeRecord.catalog`, geladen in `fetchRecipe`).
+- Een gekoppelde regel in de draft hangt aan `ingredient`/`unitItem` (een `CatalogItem`); typen wist de koppeling. Een koppeling zonder geladen item blijft bestaan als item met de opgeslagen tekst als enige naam, zodat een mislukte lading niets wist.
+- Het item ontstaat bij "Ja" (`add_ingredient`/`add_unit`), niet bij "Opslaan". Een leeg of leeg gemaakt `size` (null, "") wordt door `recipes_normalize()` weggelaten, net als een lege eenheid; andere ongeldige waarden (bv. `true`, 1, "huge") geeft `23514`.
+- `CatalogField` houdt per veld bij of de tekst nog gecontroleerd moet worden (`unsettled`) en meldt zich aan in een register van het formulier. "Opslaan" controleert eerst alle niet-gecontroleerde velden en weigert bij een open vraag (melding bij de regel, focus op de vraag). Het formulier zet een patch ook meteen in `draftRef`, zodat "Opslaan" na zo'n controle het resultaat leest en niet de vorige render.
+- Rijen hebben een stabiele `uid` (niet in `isDirty`, niet opgeslagen); antwoorden landen via de `uid`, niet via de index.
+- Opties van de suggestielijst vangen `mousedown`/`pointerdown` op (`preventDefault`), zodat het veld niet blurt en de controle bij verlaten een gekozen suggestie niet overschrijft.
+- `ingredientLine(ingredient, original, desired, item?, lang?, unitItem?)`: het formaat staat als laatste in haakjes; de eenheid wordt ook uit het item gelezen.
