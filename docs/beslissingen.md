@@ -19,7 +19,7 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **Geen stille retries van de client:** `db.retry: false` en `cache: 'no-store'` in de Supabase-client. postgrest-js herhaalt anders GET's met backoff (seconden), waardoor de melding te laat komt; de gebruiker herhaalt zelf via "Opnieuw proberen".
 - **Playwright bouwt zelf:** de `webServer` draait `npm run build` met de lokale publieke sleutels en daarna `vite preview`, zodat de e2e-bundel altijd naar de lokale Supabase wijst.
 - **Supabase CLI als devDependency:** `supabase` staat in `package.json` zodat `supabase status` (testhulp) via npm-scripts werkt zonder losse installatie.
-- **Voorlopige iconen:** effen vlakken, gemaakt met `scripts/make-icons.mjs`; de stijltaak vervangt ze.
+- **Voorlopige iconen:** effen vlakken, gemaakt met `scripts/make-icons.mjs`; de stijltaak vervangt ze. Vervangen door T-026.
 - **Sessie in e2e-tests vóór R-002:** de test meldt zich via de API aan met een testgebruiker en zet de sessie in de browseropslag. De versie van `supabase-js` ligt vast in de lockfile.
 - **Retry-registratie volgt de levensduur van het scherm:** pagina's roepen bij unmount `resolve(KEY)` aan en negeren late antwoorden (vlag `active`/`mounted`), zodat "Opnieuw proberen" nooit een verlaten actie uitvoert. Het formulier negeert dubbel tikken zolang `save` loopt.
 - **Geen `overflow-x: hidden`:** overloop wordt niet verborgen maar door de lay-outtest gevangen; lange tekst wordt met `overflow-wrap: anywhere` opgevangen.
@@ -43,7 +43,7 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **Lay-out per route:** `AppLayout` (banner, `Outlet`, `BottomNav`) is een layout-route, zodat T-003 het aanmeldscherm erbuiten kan zetten.
 - **Link "Nieuw recept" op het overzicht weggehaald:** "Nieuw" staat al in de navigatie. De terugknop op `/nieuw` is een rustige omlijnde variant.
 - **Favorieten:** gebruikt `ListState` met een lege lijst; T-017 geeft `null` door tijdens het laden.
-- **Iconen (PWA):** `scripts/make-icons.mjs` tekent tomaatrood met een crème ring; zelfde bestandsnamen en afmetingen.
+- **Iconen (PWA):** `scripts/make-icons.mjs` tekent tomaatrood met een crème ring; zelfde bestandsnamen en afmetingen. Vervangen door T-026.
 - **Laadtoestand stopt bij elke fout:** `RecipeListPage` houdt `errored` bij; bij een verbindingsfout verschijnt de banner en verdwijnt de laadindicator, zodat er geen eeuwige "laden…" naast de melding staat.
 
 ## T-003 — Aanmelden met uitnodigingscode (2026-11-01, analyse)
@@ -384,3 +384,8 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - Een opgeslagen `smaakmaker.lang = "en"` wordt niet gewist: `loadLanguage` negeert elke ongeldige waarde en volgt dan de browsertaal; de volgende expliciete keuze overschrijft ze.
 - Het decimaalteken is in beide talen een komma, vast in `formatQuantity` en `formatRecipeSize`; geen taalvergelijking meer voor notatie.
 - Startlijst: Belgisch Frans (chicon, fromage blanc, cassonade). Een doos is "carton", want "boîte" hoort bij blik (een sleutel hoort bij één item); bol is "boule" (niet gelijk aan de Nederlandse sleutel "bol" van een ander item). Waar de Franse schrijfwijze in het Nederlands gangbaar is (brocoli, courgette) is die de naam van hetzelfde item; Engelse synoniemen zijn weg.
+
+## T-026 — App-icoon koksmuts
+- **Eén tekening, Chromium als rasterizer:** `scripts/make-icons.mjs` definieert de muts één keer (512-raster) en rasteriseert via Playwright-Chromium; geen nieuwe pakketten en geen tweede weergave van de tekening.
+- **Kleuren uit `tokens.css`:** muts = `--color-bg` (= `background_color`), achtergrond = `--color-accent` (= `theme_color`); het manifest blijft qua kleur ongewijzigd.
+- **Varianten per schaal:** alleen `icon.svg` staat als bron in de repo; maskable (schaal 0,82, binnen de veilige cirkel) en favicon (schaal 1,2) zijn dezelfde tekening met een andere schaal.

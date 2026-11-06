@@ -363,3 +363,13 @@
 - 2026-11-06 22:51 T-022 tester: KLAAR
 - 2026-11-06 23:07 T-022 ontwikkelaar: BLOKKADE: agent gaf geen eindmarkering. Laatste regel: Playwright e2e still running in the background (the Vitest unit suite passes: 751 tests). Waiting for the result before I report.
 - 2026-11-06 23:07 T-022 stop: BLOKKADE: agent gaf geen eindmarkering. Laatste regel: Playwright e2e still running in the background (the Vitest unit suite passes: 751 tests). Waiting for the result before I report.
+- 2026-11-06 23:09 T-026 analist: KLAAR
+- 2026-11-06 23:11 T-026 tester: KLAAR
+- 2026-11-06 23:12 T-026 ontwikkelaar: KLAAR
+- 2026-11-06 23:14 T-026 build: mislukt
+- 2026-11-06 23:27 T-026 ontwikkelaar: KLAAR
+- 2026-11-06 23:41 T-026 build: mislukt
+- 2026-11-06 23:42 T-026 ontwikkelaar: KLAAR
+- 2026-11-06 23:44 T-026 build: worker-crash (geen testfout), opnieuw
+- 2026-11-06 23:47 T-026 build: mislukt
+- 2026-11-06 23:47 T-026 stop: build of tests falen na 3 pogingen

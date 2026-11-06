@@ -51,7 +51,7 @@ Nieuw project: er zijn geen requirements met status "Bestaand", dus er is geen f
 - [ ] **T-023** — R-024: Tweetalige gegevens (afhankelijk van T-009, T-010, T-011, T-018, T-019, T-021, T-022)
 - [ ] **T-024** — R-021: Zoeken met synoniemen (afhankelijk van T-015, T-019, T-020, T-021, T-022)
 - [ ] **T-025** — R-022: Beheer van de databank (afhankelijk van T-004, T-019, T-021, T-022)
-- [ ] **T-026** — R-025: App-icoon, koksmuts (afhankelijk van T-002)
+- [!] **T-026** — R-025: App-icoon, koksmuts (afhankelijk van T-002) — reden: build of tests falen na 3 pogingen
 
 ---
 
