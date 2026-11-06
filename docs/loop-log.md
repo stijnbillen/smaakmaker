@@ -355,3 +355,11 @@
 - 2026-11-06 21:49 T-021 savepoint: gecommit
 - 2026-11-06 21:50 T-022 analist: VRAAG: Krijgt kookgerief een startlijst met Nederlandse en Engelse namen, aangezien R-024 crit. 2 er een veronderstelt maar R-008 en de databank er geen hebben?
 - 2026-11-06 21:50 T-022 stop: VRAAG: Krijgt kookgerief een startlijst met Nederlandse en Engelse namen, aangezien R-024 crit. 2 er een veronderstelt maar R-008 en de databank er geen hebben?
+- 2026-11-06 21:58 T-022 analist: KLAAR
+- 2026-11-06 22:04 T-022 tester: KLAAR
+- 2026-11-06 22:16 T-022 ontwikkelaar: BLOKKADE: test ÔÇö `tests/helpers/language.ts` (vitest/src in Playwright), regex `Ingredi[e├½]nt` in `tests/helpers/recipe-form.ts`, en `SAME_ALLOWED` en commentaar "piece" in `i18n.test.ts` en `english-terms.ts`
+- 2026-11-06 22:17 T-022 tester: KLAAR
+- 2026-11-06 22:51 T-022 ontwikkelaar: BLOKKADE: test `tests/helpers/recipe-form.ts:80` ÔÇö regex `/^Ingr[e├®]di[e├®]nt/` mist `├½`, dus het Nederlandse label "Ingredi├½nt" wordt niet gevonden en veel e2e-tests time-outen (fix: `[e├®├½]`)
+- 2026-11-06 22:51 T-022 tester: KLAAR
+- 2026-11-06 23:07 T-022 ontwikkelaar: BLOKKADE: agent gaf geen eindmarkering. Laatste regel: Playwright e2e still running in the background (the Vitest unit suite passes: 751 tests). Waiting for the result before I report.
+- 2026-11-06 23:07 T-022 stop: BLOKKADE: agent gaf geen eindmarkering. Laatste regel: Playwright e2e still running in the background (the Vitest unit suite passes: 751 tests). Waiting for the result before I report.

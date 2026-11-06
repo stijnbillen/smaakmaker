@@ -348,9 +348,9 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 ## T-018 — Tweetalige interface (bouw)
 - Taalstatus in `src/i18n/language.ts` als kleine externe store (`subscribe`/`getLanguage`); `useLanguage()` in `t.ts` (`useSyncExternalStore`) staat bovenaan elke component die `t` gebruikt. Zo wisselt de taal live zonder `key`-wissel, en blijft formulierstatus staan. Geen provider nodig: de route-elementen zijn stabiel en zouden anders niet opnieuw renderen.
 - Standaardtaal is `nl` tot `initLanguage()` (in `main.tsx`, vóór de eerste render) loopt; `initLanguage` bewaart niets, alleen een expliciete keuze gaat naar `localStorage['smaakmaker.lang']`.
-- `en.json` wordt in `t.ts` als `Record<TextKey, string>` getypt, zodat een ontbrekende Engelse sleutel al in `tsc -b` faalt.
+- `en.json` wordt in `t.ts` als `Record<TextKey, string>` getypt, zodat een ontbrekende Engelse sleutel al in `tsc -b` faalt. (Vervangen door T-022: nu `fr.json`.)
 - Foutmeldingen in de status (`ReviewSection`, `ReviewForm`) zijn `TextKey`s en worden pas bij het renderen vertaald.
-- Getalnotatie: hoeveelheid en receptgrootte gebruiken het decimaalteken van de taal zonder duizendtalscheiding; datum, tijd en score gebruiken `Intl` per locale (`nl-BE`/`en-GB`, tijdzone Europe/Brussels), met een cache per locale.
+- Getalnotatie: hoeveelheid en receptgrootte gebruiken het decimaalteken van de taal zonder duizendtalscheiding; datum, tijd en score gebruiken `Intl` per locale (`nl-BE`/`en-GB`, tijdzone Europe/Brussels), met een cache per locale. (Vervangen door T-022: `nl-BE`/`fr-BE` en een komma in beide talen.)
 - `LanguageSwitch` hergebruikt de bestaande `.choice`-knoppen (`aria-pressed`, ≥ 44 px) in een `role="group"`.
 - `scripts/make-email-templates.mjs` schrijft een Nederlands en daarna een Engels blok (elk met link en code) en herschrijft alleen de twee `subject`-regels van `config.toml`. Na een wijziging van `config.toml` moet de lokale Supabase herstart worden (`supabase stop` en `start`), anders gebruikt de mailserver het oude onderwerp.
 
@@ -378,3 +378,9 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - `ingredientLine(ingredient, original, desired, item?, lang?, unitItem?)`: het formaat staat als laatste in haakjes; de eenheid wordt ook uit het item gelezen.
 - Het formaat in `ingredientLine` wordt vertaald met de parameter `lang` (nieuwe `tIn` in `src/i18n/t.ts`), zodat naam, eenheid en formaat altijd in dezelfde taal staan.
 - `REQUIREMENTS.md` (R-025) is niet door deze taak gewijzigd; laat de eigenaar dat apart committen.
+
+## T-022 — Frans in plaats van Engels
+- De migraties van T-019/T-020 zijn ter plaatse aangepast (`name_en` → `name_fr`, `'nl' | 'fr'`), want ze stonden nog niet online; lokaal is `supabase db reset` nodig.
+- Een opgeslagen `smaakmaker.lang = "en"` wordt niet gewist: `loadLanguage` negeert elke ongeldige waarde en volgt dan de browsertaal; de volgende expliciete keuze overschrijft ze.
+- Het decimaalteken is in beide talen een komma, vast in `formatQuantity` en `formatRecipeSize`; geen taalvergelijking meer voor notatie.
+- Startlijst: Belgisch Frans (chicon, fromage blanc, cassonade). Een doos is "carton", want "boîte" hoort bij blik (een sleutel hoort bij één item); bol is "boule" (niet gelijk aan de Nederlandse sleutel "bol" van een ander item). Waar de Franse schrijfwijze in het Nederlands gangbaar is (brocoli, courgette) is die de naam van hetzelfde item; Engelse synoniemen zijn weg.
