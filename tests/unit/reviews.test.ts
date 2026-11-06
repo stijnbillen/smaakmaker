@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import en from '../../src/i18n/en.json';
 import nlJson from '../../src/i18n/nl.json';
+import { resetLanguage, useLanguage } from '../helpers/language';
 import { canDeleteReview, canEditReview } from '../../src/lib/permissions';
 import { formatRating, MAX_REVIEW_LENGTH, parseSort, reviewCountText, toSearchParams, validateReview } from '../../src/lib/reviews';
 
@@ -29,6 +31,28 @@ describe('validateReview (crit. 1 and 2)', () => {
   });
   it('treats an empty or blank body as valid (optional)', () => {
     expect(validateReview({ rating: 3, body: '   ' }).body).toBeUndefined();
+  });
+});
+
+// T-018 / R-023 crit. 6: rating "4,3" in Dutch, "4.3" in English.
+describe('formatRating per language (R-023 crit. 6)', () => {
+  afterEach(resetLanguage);
+
+  it.each([
+    [4.25, '4,3', '4.3'],
+    [4, '4,0', '4.0'],
+    [3.04, '3,0', '3.0'],
+  ])('formatRating(%s) is "%s" (nl) and "%s" (en)', (n, nlText, enText) => {
+    useLanguage('nl');
+    expect(formatRating(n)).toBe(nlText);
+    useLanguage('en');
+    expect(formatRating(n)).toBe(enText);
+  });
+
+  it('reviewCountText follows the language', () => {
+    useLanguage('en');
+    expect(reviewCountText(1)).toBe(en['reviews.countOne']);
+    expect(reviewCountText(3)).toBe(en['reviews.countMany'].replace('{n}', '3'));
   });
 });
 

@@ -9,7 +9,7 @@ import { ListState } from './ListState';
 import { TagFilter } from './TagFilter';
 import { RecipePhotoPlaceholder } from './RecipePhotoPlaceholder';
 import { TimeFilter } from './TimeFilter';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import {
   applyEquipmentFilter,
   hasEquipmentFilter,
@@ -98,6 +98,7 @@ interface RecipeBrowserProps {
 
 /** The recipe list with search, filters and sort. Shared by the overview and the favourites page. */
 export function RecipeBrowser({ favoritesOnly = false, title, loadingText, emptyText, connectionKey: KEY }: RecipeBrowserProps) {
+  useLanguage();
   const { report, resolve } = useConnection();
   const [searchParams, setSearchParams] = useSearchParams();
   const [recipes, setRecipes] = useState<RecipeRow[] | null>(null);

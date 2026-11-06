@@ -2,7 +2,180 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import nl from '../../src/i18n/nl.json';
-import { t } from '../../src/i18n/t';
+import ts from 'typescript';
+import en from '../../src/i18n/en.json';
+import { t, type TextKey } from '../../src/i18n/t';
+import nlBefore from './fixtures/nl-before-T-018.json';
+
+// T-018 / R-023: the Dutch and English text files must be interchangeable.
+type TextMap = Record<string, string>;
+
+const PLACEHOLDER = /\{(\w+)\}/g;
+const placeholders = (s: string): string[] => [...s.matchAll(PLACEHOLDER)].map((m) => m[1]).sort();
+
+/** Differences between two text files; an empty list means they are in line. */
+function compareTexts(a: TextMap, b: TextMap): string[] {
+  const problems: string[] = [];
+  for (const k of Object.keys(a)) if (!(k in b)) problems.push(`missing in second: ${k}`);
+  for (const k of Object.keys(b)) if (!(k in a)) problems.push(`missing in first: ${k}`);
+  for (const k of Object.keys(a)) {
+    if (!(k in b)) continue;
+    if (typeof a[k] !== 'string' || a[k].trim() === '') problems.push(`empty in first: ${k}`);
+    if (typeof b[k] !== 'string' || b[k].trim() === '') problems.push(`empty in second: ${k}`);
+    if (typeof a[k] === 'string' && typeof b[k] === 'string' && placeholders(a[k]).join() !== placeholders(b[k]).join()) {
+      problems.push(`placeholders differ: ${k}`);
+    }
+  }
+  return problems;
+}
+
+describe('nl.json and en.json are in line (R-023 crit. 1)', () => {
+  const nlMap = nl as TextMap;
+  const enMap = en as TextMap;
+
+  it('have the same keys, both directions', () => {
+    const nlKeys = new Set(Object.keys(nlMap));
+    const enKeys = new Set(Object.keys(enMap));
+    expect([...nlKeys].filter((k) => !enKeys.has(k))).toEqual([]);
+    expect([...enKeys].filter((k) => !nlKeys.has(k))).toEqual([]);
+  });
+
+  it('have no empty values', () => {
+    for (const [name, map] of [['nl', nlMap], ['en', enMap]] as const) {
+      for (const [k, v] of Object.entries(map)) {
+        expect(typeof v === 'string' && v.trim().length > 0, `${name}:${k}`).toBe(true);
+      }
+    }
+  });
+
+  it('have the same {placeholders} per key', () => {
+    const wrong = Object.keys(nlMap).filter((k) => k in enMap && placeholders(nlMap[k]).join() !== placeholders(enMap[k]).join());
+    expect(wrong).toEqual([]);
+  });
+
+  it('compareTexts finds a deliberately different file (negative control)', () => {
+    expect(compareTexts({ a: 'x {n}' }, { a: 'x {n}' })).toEqual([]);
+    expect(compareTexts({ a: 'x', b: 'y' }, { a: 'x' }).length).toBeGreaterThan(0);
+    expect(compareTexts({ a: 'x' }, { a: 'x', c: 'z' }).length).toBeGreaterThan(0);
+    expect(compareTexts({ a: 'x' }, { a: '  ' }).length).toBeGreaterThan(0);
+    expect(compareTexts({ a: 'x {n}' }, { a: 'x {m}' }).length).toBeGreaterThan(0);
+  });
+
+  it('TextKey stays keyof typeof nl and en.json is typed Record<TextKey, string> (missing key fails tsc)', () => {
+    const t_ts = readFileSync('src/i18n/t.ts', 'utf8');
+    expect(t_ts).toMatch(/type TextKey\s*=\s*keyof typeof nl\b/);
+    const typed = files('src/i18n')
+      .filter((f) => /\.tsx?$/.test(f))
+      .some((f) => /Record<TextKey,\s*string>/.test(readFileSync(f, 'utf8')));
+    expect(typed).toBe(true);
+    // Compile-time proof that the English file covers every key.
+    const check: Record<TextKey, string> = en;
+    expect(Object.keys(check).length).toBeGreaterThan(0);
+  });
+
+  it('has the new keys of T-018 in both files', () => {
+    for (const k of ['language.label', 'language.nl', 'language.en', 'app.title', 'format.dateTime']) {
+      expect(nlMap[k], `nl:${k}`).toBeTruthy();
+      expect(enMap[k], `en:${k}`).toBeTruthy();
+    }
+    // Each language is named in its own language, whatever the interface language is.
+    expect(nlMap['language.nl']).toBe('Nederlands');
+    expect(nlMap['language.en']).toBe('English');
+    expect(enMap['language.nl']).toBe('Nederlands');
+    expect(enMap['language.en']).toBe('English');
+  });
+
+  it('has the English units and brand the requirement names', () => {
+    expect(enMap['time.hours']).toBe('{h} h');
+    expect(enMap['time.minutes']).toBe('{m} min');
+    expect(enMap['app.name']).toBe('Smaakmaker');
+  });
+});
+
+describe('nl.json stays as before T-018 (R-023 crit. 8)', () => {
+  it('every existing key has exactly the same value; new keys are allowed', () => {
+    const now = nl as TextMap;
+    const changed = Object.entries(nlBefore as TextMap)
+      .filter(([k, v]) => now[k] !== v)
+      .map(([k]) => k);
+    expect(changed).toEqual([]);
+  });
+});
+
+// Source scan with the TypeScript parser, so comments never count and JSX is read as JSX.
+const SRC = files('src').filter((f) => /\.tsx?$/.test(f));
+const parse = (f: string) =>
+  ts.createSourceFile(f, readFileSync(f, 'utf8'), ts.ScriptTarget.Latest, true, f.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+function walk(node: ts.Node, visit: (n: ts.Node) => void) {
+  visit(node);
+  node.forEachChild((c) => walk(c, visit));
+}
+
+// Allowed literal texts: the brand, the language names (always in their own language) and symbols.
+const ALLOWED_LITERALS = new Set(['Smaakmaker', 'Nederlands', 'English']);
+const LITERAL_ATTRIBUTES = new Set(['aria-label', 'placeholder', 'title', 'alt']);
+const hasLetters = (s: string) => /\p{L}/u.test(s);
+
+describe('no literal visible text in components (R-023 crit. 5)', () => {
+  it('finds no letters in JSX text nodes and no literal aria-label, placeholder, title or alt', () => {
+    const found: string[] = [];
+    for (const f of SRC.filter((p) => p.endsWith('.tsx'))) {
+      walk(parse(f), (n) => {
+        if (ts.isJsxText(n)) {
+          const text = n.getText().trim();
+          if (text && hasLetters(text) && !ALLOWED_LITERALS.has(text)) found.push(`${f}: text "${text}"`);
+        }
+        if (ts.isJsxAttribute(n) && LITERAL_ATTRIBUTES.has(n.name.getText()) && n.initializer && ts.isStringLiteral(n.initializer)) {
+          const v = n.initializer.text;
+          if (hasLetters(v) && !ALLOWED_LITERALS.has(v)) found.push(`${f}: ${n.name.getText()}="${v}"`);
+        }
+      });
+    }
+    expect(found).toEqual([]);
+  });
+
+  it('the scan sees a literal text (negative control)', () => {
+    const sf = ts.createSourceFile('x.tsx', '<p aria-label="Sluiten">Hallo wereld</p>', ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const hits: string[] = [];
+    walk(sf, (n) => {
+      if (ts.isJsxText(n) && hasLetters(n.getText())) hits.push('text');
+      if (ts.isJsxAttribute(n) && LITERAL_ATTRIBUTES.has(n.name.getText())) hits.push('attr');
+    });
+    // Visit order (attributes before child text) is a parser detail; only both hits matter.
+    expect([...hits].sort()).toEqual(['attr', 'text']);
+  });
+
+  it('no Dutch text of 2 or more words from nl.json appears as a string in src (comments excluded)', () => {
+    const strings: Array<{ f: string; s: string }> = [];
+    for (const f of SRC) {
+      walk(parse(f), (n) => {
+        if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n) || ts.isTemplateHead(n) || ts.isTemplateMiddle(n) || ts.isTemplateTail(n)) {
+          strings.push({ f, s: n.text });
+        }
+        if (ts.isJsxText(n)) strings.push({ f, s: n.getText() });
+      });
+    }
+    const multiWord = Object.entries(nl as TextMap).filter(
+      ([, v]) => v.replace(PLACEHOLDER, ' ').split(/\s+/).filter(hasLetters).length >= 2,
+    );
+    expect(multiWord.length).toBeGreaterThan(10);
+    const leaked = multiWord.filter(([, v]) => strings.some(({ s }) => s.includes(v))).map(([k]) => k);
+    expect(leaked).toEqual([]);
+  });
+
+  it('invite status from the database is shown only through invites.status.* keys', () => {
+    // The status words come from the database ("open"/"gebruikt"/"verlopen"); they must never be rendered as they are.
+    for (const f of SRC.filter((p) => /[\\/](pages|components)[\\/]/.test(p))) {
+      const code = readFileSync(f, 'utf8');
+      expect(code, f).not.toMatch(/\{\s*invite\.status\s*\}/);
+      expect(code, f).not.toMatch(/\{\s*status\s*\}/);
+    }
+    for (const k of ['open', 'used', 'expired']) {
+      expect((nl as TextMap)[`invites.status.${k}`], k).toBeTruthy();
+      expect((en as TextMap)[`invites.status.${k}`], k).toBeTruthy();
+    }
+  });
+});
 
 // Resolves "a.b" against flat ("a.b": ...) or nested ({a:{b:...}}) JSON.
 function lookup(key: string): unknown {

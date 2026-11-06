@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import {
   SEARCH_DEBOUNCE_MS,
   createDebouncer,
@@ -24,6 +24,7 @@ const joinTerms = (terms: string[]) => terms.join(', ');
  * only the parsed terms go up, after a pause in typing or at once on submit. Reusable for the favourites list.
  */
 export function IngredientSearch({ value, onChange }: IngredientSearchProps) {
+  useLanguage();
   const [withText, setWithText] = useState(() => joinTerms(value.with));
   const [withoutText, setWithoutText] = useState(() => joinTerms(value.without));
   const withId = useId();

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import { fetchTags } from '../lib/recipes';
 import { tagKey, type TagKind } from '../lib/tags';
 import { useConnection } from './ConnectionProvider';
@@ -16,6 +16,7 @@ interface TagFilterProps {
 
 /** Tag choices of one group in the overview; the page keeps the value in the URL. */
 export function TagFilter({ kind, label, value, onToggle }: TagFilterProps) {
+  useLanguage();
   const { report, resolve } = useConnection();
   const [names, setNames] = useState<string[]>([]);
   const key = `tag-filter-${kind}`;

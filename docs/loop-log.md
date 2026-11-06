@@ -296,3 +296,13 @@
 - 2026-11-02 23:57 T-017 build: worker-crash (geen testfout), opnieuw
 - 2026-11-03 00:05 T-017 build: geslaagd
 - 2026-11-03 00:05 T-017 savepoint: gecommit
+- 2026-11-06 17:27 T-018 analist: KLAAR
+- 2026-11-06 17:33 T-018 tester: KLAAR
+- 2026-11-06 17:48 T-018 ontwikkelaar: BLOKKADE: test ÔÇö `tests/e2e/language.spec.ts` mist `with { type: 'json' }` bij de JSON-imports, `byPrefix` matcht "Step {n}" niet, de "Jan"-controle met `exact: true` mist de auteurregel; `tests/db/auth-invites.test.ts` verwacht precies ├®├®n code terwijl de tweetalige mail dezelfde code twee keer bevat.
+- 2026-11-06 17:49 T-018 tester: KLAAR
+- 2026-11-06 17:50 T-018 ontwikkelaar: BLOKKADE: test `tests/unit/i18n.test.ts` regel 144, tegenproef "the scan sees a literal text" verwacht `['text','attr']`, maar de AST-doorloop geeft `['attr','text']` (attributen v├│├│r kindtekst).
+- 2026-11-06 17:50 T-018 tester: KLAAR
+- 2026-11-06 17:58 T-018 ontwikkelaar: KLAAR
+- 2026-11-06 18:05 T-018 build: geslaagd
+- 2026-11-06 18:07 T-018 reviewer: GOEDGEKEURD
+- 2026-11-06 18:13 T-018 build: geslaagd

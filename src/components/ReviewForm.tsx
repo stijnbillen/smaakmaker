@@ -1,5 +1,5 @@
 import { useId, useRef, useState, type FormEvent } from 'react';
-import { t } from '../i18n/t';
+import { t, type TextKey, useLanguage } from '../i18n/t';
 import { validateReview, type ReviewDraft } from '../lib/reviews';
 import { StarRating } from './StarRating';
 
@@ -10,10 +10,11 @@ interface ReviewFormProps {
   /** Only when editing. */
   onCancel?: () => void;
   /** Section-level message for a failed save. */
-  error?: string | null;
+  error?: TextKey | null;
 }
 
 export function ReviewForm({ initial, onSubmit, onCancel, error }: ReviewFormProps) {
+  useLanguage();
   const [rating, setRating] = useState<number | null>(initial?.rating ?? null);
   const [body, setBody] = useState(initial?.body ?? '');
   // Errors show after the first try to save, and then follow the input live.
@@ -77,7 +78,7 @@ export function ReviewForm({ initial, onSubmit, onCancel, error }: ReviewFormPro
       </div>
       {error && (
         <p role="alert" className="field-error">
-          {error}
+          {t(error)}
         </p>
       )}
       <div className="review-actions">

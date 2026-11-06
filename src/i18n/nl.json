@@ -211,5 +211,10 @@
   "search.minAll": "alle {n}",
   "search.submit": "Zoeken",
   "search.tooMany": "Maximaal 10 ingrediënten.",
-  "search.matches": "{count} van {total}"
+  "search.matches": "{count} van {total}",
+  "language.label": "Taal",
+  "language.nl": "Nederlands",
+  "language.en": "English",
+  "app.title": "Smaakmaker",
+  "format.dateTime": "{date} om {time}"
 }

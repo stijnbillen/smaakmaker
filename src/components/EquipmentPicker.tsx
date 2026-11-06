@@ -1,5 +1,5 @@
 import { useEffect, useId, useState, type KeyboardEvent } from 'react';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import { addEquipment, EQUIPMENT_MAX_ITEMS, toggleEquipment, validateEquipmentName } from '../lib/equipment';
 import { fetchEquipmentInUse } from '../lib/recipes';
 import { useConnection } from './ConnectionProvider';
@@ -16,6 +16,7 @@ interface EquipmentPickerProps {
 
 /** Choose equipment from the shared list or add a new name. No maxlength: a long paste shows the message. */
 export function EquipmentPicker({ selected, onChange, tooMany }: EquipmentPickerProps) {
+  useLanguage();
   const { report, resolve } = useConnection();
   const base = useId();
   const [catalog, setCatalog] = useState<string[]>([]);

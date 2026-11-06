@@ -1,10 +1,11 @@
 import { useId, type ReactNode } from 'react';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 
 // One five-point star, drawn with currentColor so the colour comes from a token in the stylesheet.
 const STAR_PATH = 'M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z';
 
 function Star({ on }: { on: boolean }) {
+  useLanguage();
   return (
     <svg className={on ? 'star star--on' : 'star'} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d={STAR_PATH} />
@@ -30,6 +31,7 @@ interface StarRatingProps {
  * `children` (the error message) renders inside the fieldset.
  */
 export function StarRating({ value, onChange, describedBy, invalid, children }: StarRatingProps) {
+  useLanguage();
   const name = useId();
   return (
     <fieldset className="form-group star-group" aria-describedby={describedBy} aria-invalid={invalid || undefined}>
@@ -50,6 +52,7 @@ export function StarRating({ value, onChange, describedBy, invalid, children }: 
 
 /** Display: decorative stars plus a text for screen readers ("4 van 5 sterren"). */
 export function StarDisplay({ value }: { value: number }) {
+  useLanguage();
   return (
     <span className="star-display">
       <span className="star-row" aria-hidden="true">

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useBlocker } from 'react-router-dom';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import {
   emptyIngredient,
   isDirty,
@@ -77,6 +77,7 @@ function FieldError({ id, children }: { id: string; children: ReactNode }) {
 
 /** The one form for a new recipe and for editing. */
 export function RecipeForm({ heading, initial, submit, onSaved, backTo, photoSizes }: RecipeFormProps) {
+  useLanguage();
   const { report, resolve } = useConnection();
   const base = useId();
   const [draft, setDraft] = useState<RecipeDraft>(initial);

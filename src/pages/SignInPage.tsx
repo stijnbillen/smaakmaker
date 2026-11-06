@@ -3,7 +3,8 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../components/AuthProvider';
 import { ConnectionBanner } from '../components/ConnectionBanner';
 import { useConnection } from '../components/ConnectionProvider';
-import { t, type TextKey } from '../i18n/t';
+import { LanguageSwitch } from '../components/LanguageSwitch';
+import { t, type TextKey, useLanguage } from '../i18n/t';
 import { requestCode, verifyCode, type AuthField, type AuthResult } from '../lib/auth';
 import { isSixDigitCode, isValidEmail } from '../lib/validation';
 
@@ -13,6 +14,7 @@ type Errors = Partial<Record<AuthField, TextKey>>;
 
 /** Sign-in screen, without navigation bar: step 1 asks for the mail, step 2 for the code from the mail. */
 export function SignInPage() {
+  useLanguage();
   const { session, loading } = useAuth();
   const { report, resolve } = useConnection();
   const [step, setStep] = useState<'email' | 'code'>('email');
@@ -188,6 +190,7 @@ export function SignInPage() {
             </>
           )}
         </form>
+        <LanguageSwitch />
       </main>
     </>
   );

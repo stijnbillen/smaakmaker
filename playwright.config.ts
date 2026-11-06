@@ -12,6 +12,8 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:4173',
     // Service worker is part of what we test; keep it enabled.
     serviceWorkers: 'allow',
+    // T-018 (R-023 crit. 8): the app starts in the browser language; existing tests expect Dutch.
+    locale: 'nl-BE',
   },
   projects: [
     {

@@ -344,3 +344,12 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - `favorites` maakt van `recipes` ↔ `profiles` een tweede (veel-op-veel) relatie; PostgREST weigert dan `profiles(...)` als embed (PGRST201). Alle embeds van de auteur op `recipes` gebruiken nu `profiles!recipes_author_profile_fkey(display_name)`.
 - `FavoriteButton` houdt per recept één gedeelde toestand (`entries`, op moduleniveau) buiten de component: een tik op de detailpagina met meteen "terug" toont op het overzicht de nieuwe toestand, ook als de aanroep nog loopt.
 - `FavoriteButton` houdt zijn gedeelde toestand per gebruiker bij (sleutel `userId:recipeId`), zodat een nog lopende aanroep bij afmelden zijn wens niet doorgeeft aan de volgende gebruiker in hetzelfde tabblad.
+
+## T-018 — Tweetalige interface (bouw)
+- Taalstatus in `src/i18n/language.ts` als kleine externe store (`subscribe`/`getLanguage`); `useLanguage()` in `t.ts` (`useSyncExternalStore`) staat bovenaan elke component die `t` gebruikt. Zo wisselt de taal live zonder `key`-wissel, en blijft formulierstatus staan. Geen provider nodig: de route-elementen zijn stabiel en zouden anders niet opnieuw renderen.
+- Standaardtaal is `nl` tot `initLanguage()` (in `main.tsx`, vóór de eerste render) loopt; `initLanguage` bewaart niets, alleen een expliciete keuze gaat naar `localStorage['smaakmaker.lang']`.
+- `en.json` wordt in `t.ts` als `Record<TextKey, string>` getypt, zodat een ontbrekende Engelse sleutel al in `tsc -b` faalt.
+- Foutmeldingen in de status (`ReviewSection`, `ReviewForm`) zijn `TextKey`s en worden pas bij het renderen vertaald.
+- Getalnotatie: hoeveelheid en receptgrootte gebruiken het decimaalteken van de taal zonder duizendtalscheiding; datum, tijd en score gebruiken `Intl` per locale (`nl-BE`/`en-GB`, tijdzone Europe/Brussels), met een cache per locale.
+- `LanguageSwitch` hergebruikt de bestaande `.choice`-knoppen (`aria-pressed`, ≥ 44 px) in een `role="group"`.
+- `scripts/make-email-templates.mjs` schrijft een Nederlands en daarna een Engels blok (elk met link en code) en herschrijft alleen de twee `subject`-regels van `config.toml`. Na een wijziging van `config.toml` moet de lokale Supabase herstart worden (`supabase stop` en `start`), anders gebruikt de mailserver het oude onderwerp.

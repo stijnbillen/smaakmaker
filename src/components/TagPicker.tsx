@@ -1,5 +1,5 @@
 import { useEffect, useId, useState, type KeyboardEvent } from 'react';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import { fetchTags } from '../lib/recipes';
 import { addTag, TAGS_MAX_ITEMS, tagKey, toggleTag, validateTagName, type TagKind } from '../lib/tags';
 import { useConnection } from './ConnectionProvider';
@@ -20,6 +20,7 @@ interface TagPickerProps {
 
 /** Choose tags from the shared catalogue of a group or add a new name. No maxlength: a long paste shows the message. */
 export function TagPicker({ kind, label, hint, selected, onChange, tooMany, errorId }: TagPickerProps) {
+  useLanguage();
   const { report, resolve } = useConnection();
   const base = useId();
   const [catalog, setCatalog] = useState<string[]>([]);

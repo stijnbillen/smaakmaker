@@ -1,7 +1,8 @@
 // Recipe rules shared by the form and the detail page. The database enforces the same limits (checks in
 // the recipe_content migration); the client validates first for a clear message at the field.
 
-import { t } from '../i18n/t';
+import { getLanguage } from '../i18n/language';
+import { format } from '../i18n/t';
 
 export const TITLE_MAX = 100;
 export const INGREDIENT_NAME_MAX = 80;
@@ -138,9 +139,10 @@ export function parseQuantity(input: string): QuantityResult {
   return { ok: true, value };
 }
 
-/** Decimal comma, no superfluous zeros: 0.25 -> "0,25", 2 -> "2". */
+/** Decimal sign of the language, no superfluous zeros, no thousands separator: 0.25 -> "0,25" / "0.25", 2 -> "2". */
 export function formatQuantity(value: number): string {
-  return String(Number(value.toFixed(2))).replace('.', ',');
+  const plain = String(Number(value.toFixed(2)));
+  return getLanguage() === 'nl' ? plain.replace('.', ',') : plain;
 }
 
 export type MinutesResult = { ok: true; value: number } | { ok: false; reason: 'required' | 'invalid' };
@@ -181,7 +183,7 @@ export function ingredientLine(ingredient: Ingredient, original: number, desired
   if (ingredient.quantity !== undefined) {
     const scaled = scaleQuantity(ingredient.quantity, original, desired);
     // A result that rounds to 0 would read as "none"; say it is below the smallest amount shown.
-    quantity = scaled > 0 ? formatQuantity(scaled) : t('servings.belowMinimum').replace('{q}', formatQuantity(0.01));
+    quantity = scaled > 0 ? formatQuantity(scaled) : format('servings.belowMinimum', { q: formatQuantity(0.01) });
   }
   return [quantity, ingredient.unit ?? '', ingredient.name].filter(Boolean).join(' ');
 }

@@ -1,7 +1,8 @@
 import { RecipeBrowser } from '../components/RecipeBrowser';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 
 export function RecipeListPage() {
+  useLanguage();
   return (
     <RecipeBrowser
       title={t('overview.title')}

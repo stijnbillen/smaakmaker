@@ -7,7 +7,7 @@ import { FavoriteButton } from '../components/FavoriteButton';
 import { ReviewSection } from '../components/ReviewSection';
 import { ServingsStepper } from '../components/ServingsStepper';
 import { useConnection } from '../components/ConnectionProvider';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import { canDelete, canEdit } from '../lib/permissions';
 import { formatDuration } from '../lib/format';
 import { ingredientLine, sourceLink } from '../lib/recipe';
@@ -20,6 +20,7 @@ const DELETE_KEY = 'recipe-delete';
 const FAMILY_KEY = 'recipe-family';
 
 export function RecipeDetailPage() {
+  useLanguage();
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const { session, isAdmin } = useAuth();

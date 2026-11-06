@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { t, type TextKey } from '../i18n/t';
+import { t, type TextKey, useLanguage } from '../i18n/t';
 
 // Icons are decorative (aria-hidden); the visible label carries the meaning. currentColor follows the link colour.
 const icons = {
@@ -23,6 +23,7 @@ const entries: { to: string; label: TextKey; icon: keyof typeof icons }[] = [
 ];
 
 export function BottomNav() {
+  useLanguage();
   const { pathname } = useLocation();
   const isActive = (to: string) => pathname === to || (to === '/profiel' && pathname === '/uitnodigingen');
   return (

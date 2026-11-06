@@ -1,4 +1,5 @@
-import { t } from '../i18n/t';
+import { getLanguage } from '../i18n/language';
+import { format } from '../i18n/t';
 import { pruneDraft, type RecipeDraft } from './recipe';
 import { PHOTO_MAX_BYTES } from './photoResize';
 
@@ -41,10 +42,11 @@ export function checkRecipeSize(textBytes: number, photoBytes: readonly number[]
   return textBytes > RECIPE_MAX_BYTES ? 'textTooLarge' : 'photosTooLarge';
 }
 
-/** "1,3 van 2 MB": rounded up to one decimal, so a size over the limit never shows as "2,0". */
+/** "1,3 van 2 MB" / "1.3 of 2 MB": rounded up to one decimal, so a size over the limit never shows as "2,0". */
 export function formatRecipeSize(bytes: number): string {
   // Whole tenths via integer maths: floating point could turn 1,3 MB exactly into 1,3000000000000003.
   const tenths = Math.ceil((bytes * 10) / MB);
-  const used = `${Math.floor(tenths / 10)},${tenths % 10}`;
-  return t('size.used').replace('{used}', used);
+  const sign = getLanguage() === 'nl' ? ',' : '.';
+  const used = `${Math.floor(tenths / 10)}${sign}${tenths % 10}`;
+  return format('size.used', { used });
 }

@@ -29,3 +29,6 @@ Op dezelfde manier: `select public.grant_admin('…');`. In de app is er geen sc
 ## Nieuwe codes
 
 Een beheerder maakt codes aan op Profiel > Uitnodigingen.
+
+## Tweetalige inlogmail (bij uitrol)
+`supabase/config.toml` geldt alleen lokaal. Zet in het cloud-project (Authentication → Email Templates) voor **Confirm signup** en **Magic Link** het onderwerp uit `config.toml` (`Je code om aan te melden bij Smaakmaker / Your code to sign in to Smaakmaker`) en de inhoud van `supabase/templates/confirmation.html` en `magic_link.html`. Genereer ze na een tekstwijziging met `node scripts/make-email-templates.mjs`.

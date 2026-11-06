@@ -4,7 +4,7 @@ import { useAuth } from '../components/AuthProvider';
 import { AuthLoading } from '../components/AuthLoading';
 import { ConnectionBanner } from '../components/ConnectionBanner';
 import { useConnection } from '../components/ConnectionProvider';
-import { t, type TextKey } from '../i18n/t';
+import { t, type TextKey, useLanguage } from '../i18n/t';
 import { supabase } from '../lib/supabase';
 import { isValidDisplayName } from '../lib/validation';
 
@@ -12,6 +12,7 @@ const KEY = 'welcome';
 
 /** First sign-in: the user picks the display name shown with their recipes and reviews. */
 export function WelcomePage() {
+  useLanguage();
   const { session, loading, displayName, setDisplayName } = useAuth();
   const { report, resolve } = useConnection();
   const [name, setName] = useState('');

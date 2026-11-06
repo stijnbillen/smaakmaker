@@ -1,4 +1,4 @@
-import { t, type TextKey } from '../i18n/t';
+import { t, type TextKey, useLanguage } from '../i18n/t';
 
 // Decorative icons (aria-hidden); the buttons carry their meaning in aria-label.
 const icons = {
@@ -17,6 +17,7 @@ interface RowButtonsProps {
 
 /** Up, down and remove for one row of a list ("Stap 2 omhoog"); up and down are off at the ends. */
 export function RowButtons({ label, index, count, onMove, onRemove }: RowButtonsProps) {
+  useLanguage();
   const item = label;
   const fill = (key: TextKey) => t(key).replace('{item}', item);
   const button = (key: TextKey, icon: keyof typeof icons, disabled: boolean, onClick: () => void) => (

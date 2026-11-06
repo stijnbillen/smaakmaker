@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import { toggleEquipment } from '../lib/equipment';
 import { fetchEquipmentInUse } from '../lib/recipes';
 import { useConnection } from './ConnectionProvider';
@@ -14,6 +14,7 @@ interface EquipmentFilterProps {
 
 /** Equipment choices of the overview; the page keeps the value in the URL. Nothing shows without any equipment. */
 export function EquipmentFilter({ value, onChange }: EquipmentFilterProps) {
+  useLanguage();
   const { report, resolve } = useConnection();
   const [names, setNames] = useState<string[]>([]);
 

@@ -1,8 +1,9 @@
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import { useConnection } from './ConnectionProvider';
 
 /** Shown above the page content; never replaces the route tree, so form state survives. */
 export function ConnectionBanner() {
+  useLanguage();
   const { failed, retryAll } = useConnection();
   if (!failed) return null;
   return (

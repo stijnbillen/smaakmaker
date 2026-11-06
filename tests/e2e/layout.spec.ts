@@ -81,10 +81,34 @@ test('overflow check detects a 500 px wide element (R-001 crit. 4, negative cont
   await expect(expectNoHorizontalScroll(page)).rejects.toThrow();
 });
 
+// T-018 / R-023 crit. 9: English texts are longer; every `button`, link and [role=button] must show its whole text.
+async function expectNoClippedText(page: Page) {
+  const clipped = await page.evaluate(() => {
+    const out: string[] = [];
+    for (const el of Array.from(document.querySelectorAll<HTMLElement>('button, a[href], [role=button]'))) {
+      if (el.getClientRects().length === 0) continue;
+      const style = getComputedStyle(el);
+      if (el.scrollWidth > el.clientWidth + 1) out.push(`scrollWidth ${el.scrollWidth} > ${el.clientWidth}: ${(el.textContent ?? '').trim().slice(0, 40)}`);
+      if (style.textOverflow === 'ellipsis' && el.scrollWidth > el.clientWidth) out.push(`ellipsis: ${(el.textContent ?? '').trim().slice(0, 40)}`);
+    }
+    return out;
+  });
+  expect(clipped, 'clipped button or link text').toEqual([]);
+}
+
+for (const lang of ['nl', 'en'] as const) {
 for (const route of routes) {
-  test.describe(`scherm ${route.name}` /* no route.path: it changes after beforeAll (prepareRoutes) */, () => {
+  test.describe(`scherm ${route.name} [${lang}]` /* no route.path: it changes after beforeAll (prepareRoutes) */, () => {
     test.beforeEach(async ({ page }) => {
       await signInForRoute(page, route.auth, { full: user.session, unnamed: unnamed.session, admin: admin.session });
+      await page.addInitScript((l) => window.localStorage.setItem('smaakmaker.lang', l), lang);
+    });
+
+    test('no clipped button text (R-023 crit. 9)', async ({ page }) => {
+      await page.goto(route.path);
+      await page.waitForLoadState('networkidle');
+      await expect(page.locator('html')).toHaveAttribute('lang', lang);
+      await expectNoClippedText(page);
     });
 
     test('no horizontal scroll at 360 px (R-001 crit. 4)', async ({ page }) => {
@@ -110,4 +134,5 @@ for (const route of routes) {
       await expectTapTargets(page);
     });
   });
+}
 }

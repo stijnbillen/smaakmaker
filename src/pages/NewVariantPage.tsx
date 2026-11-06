@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useConnection } from '../components/ConnectionProvider';
 import { RecipeForm } from '../components/RecipeForm';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import { fetchPhotoSizes } from '../lib/photos';
 import { createRecipe, newSaveSession } from '../lib/recipes';
 import { useRecipe } from '../lib/useRecipe';
@@ -12,6 +12,7 @@ const SIZES_KEY = 'variant-photo-sizes';
 
 /** The variant form: a copy of the source, saved (and its photos copied) only at "Opslaan". */
 export function NewVariantPage() {
+  useLanguage();
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const { report, resolve } = useConnection();

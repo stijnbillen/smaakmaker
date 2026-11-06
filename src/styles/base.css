@@ -706,6 +706,23 @@ textarea[aria-invalid='true'] {
   outline-offset: 2px;
 }
 
+/* Language choice (sign-in and profile): a small labelled pair of toggle buttons */
+.language-switch {
+  margin: var(--space-5) 0 var(--space-3);
+}
+
+.language-switch-label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.language-switch .choice-list {
+  margin-bottom: 0;
+}
+
 .inline-add {
   display: flex;
   flex-wrap: wrap;
