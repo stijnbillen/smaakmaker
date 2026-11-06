@@ -76,10 +76,33 @@ export const sourceField = (page: Page): Locator => page.getByRole('textbox', { 
 export const noteField = (page: Page): Locator => page.getByRole('textbox', { name: nl['form.note'], exact: true });
 
 export const titleField = (page: Page): Locator => page.getByRole('textbox', { name: nl['form.titleLabel'], exact: true });
-export const ingredientNameFields = (page: Page): Locator => page.getByRole('textbox', { name: /^Ingrediënt/ });
-export const quantityFields = (page: Page): Locator => page.getByRole('textbox', { name: /^Hoeveelheid/ });
-export const unitFields = (page: Page): Locator => page.getByRole('textbox', { name: /^Eenheid/ });
-export const stepFields = (page: Page): Locator => page.getByRole('textbox', { name: /^Stap/ });
+// T-021: the name and unit fields are comboboxes (suggestion list), no longer plain textboxes.
+export const ingredientNameFields = (page: Page): Locator => page.getByRole('combobox', { name: /^Ingredi[eë]nt/ });
+export const quantityFields = (page: Page): Locator => page.getByRole('textbox', { name: /^(Hoeveelheid|Quantity)/ });
+export const unitFields = (page: Page): Locator => page.getByRole('combobox', { name: /^(Eenheid|Unit)/ });
+export const sizeFields = (page: Page): Locator => page.getByLabel(/^(Formaat|Size)/);
+
+/** The inline question of a catalogue field ("Bedoelde u …?" / "Nieuw ingrediënt …" / "Nieuwe eenheid …"). */
+export const catalogQuestion = (page: Page): Locator =>
+  page.getByRole('group', { name: /^(Bedoelde u|Nieuw ingrediënt|Nieuwe eenheid|Did you mean|New ingredient|New unit)/ });
+
+/**
+ * T-021: answers every open catalogue question with "No" (free text), so a typed name that is not in the
+ * catalogue does not block "Opslaan". Waits briefly for a question to appear after the last blur.
+ */
+export async function answerQuestionsNo(page: Page): Promise<void> {
+  for (let guard = 0; guard < 130; guard++) {
+    const question = catalogQuestion(page).first();
+    try {
+      await question.waitFor({ state: 'visible', timeout: 1000 });
+    } catch {
+      return;
+    }
+    await question.getByRole('button', { name: /^(Nee|No)/ }).click();
+    await expect(question).toBeHidden().catch(() => undefined);
+  }
+}
+export const stepFields = (page: Page): Locator => page.getByRole('textbox', { name: /^(Stap|Step)/ });
 export const saveButton = (page: Page): Locator => page.getByRole('button', { name: nl['form.save'], exact: true });
 export const addIngredientButton = (page: Page): Locator =>
   page.getByRole('button', { name: nl['form.addIngredient'], exact: true });
@@ -98,6 +121,9 @@ export async function fillRecipe(page: Page, recipe: RecipeInput): Promise<void>
     if (ing.quantity !== undefined) await quantityFields(page).nth(i).fill(ing.quantity);
     if (ing.unit !== undefined) await unitFields(page).nth(i).fill(ing.unit);
   }
+  // Leave the last catalogue field (blur), then answer the questions that this raised.
+  await titleField(page).focus();
+  await answerQuestionsNo(page);
   for (let i = 0; i < recipe.steps.length; i++) {
     if ((await stepFields(page).count()) <= i) await addStepButton(page).click();
     await stepFields(page).nth(i).fill(recipe.steps[i]);

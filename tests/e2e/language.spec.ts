@@ -366,7 +366,11 @@ test.describe('English interface has no Dutch left (crit. 5)', () => {
 // ---------------------------------------------------------------------------------------------
 test.describe('numbers in English (crit. 6)', () => {
   const field = (page: Page, key: string) => page.getByRole('textbox', { name: EN[key], exact: true });
-  const byPrefix = (page: Page, key: string) => page.getByRole('textbox', { name: new RegExp(`^${EN[key].split('{')[0].trim()}`) });
+  // T-021: the ingredient name and unit fields are comboboxes (suggestion list); the others stay textboxes.
+  const byPrefix = (page: Page, key: string) =>
+    page.getByRole(key === 'form.ingredientName' || key === 'form.unit' ? 'combobox' : 'textbox', {
+      name: new RegExp(`^${EN[key].split('{')[0].trim()}`),
+    });
 
   test('quantity "1,5" is saved and shown as 1.5 on the detail page and in the edit form', async ({ page }) => {
     const title = unique('Komma');

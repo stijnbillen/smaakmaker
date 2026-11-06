@@ -376,3 +376,5 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - Rijen hebben een stabiele `uid` (niet in `isDirty`, niet opgeslagen); antwoorden landen via de `uid`, niet via de index.
 - Opties van de suggestielijst vangen `mousedown`/`pointerdown` op (`preventDefault`), zodat het veld niet blurt en de controle bij verlaten een gekozen suggestie niet overschrijft.
 - `ingredientLine(ingredient, original, desired, item?, lang?, unitItem?)`: het formaat staat als laatste in haakjes; de eenheid wordt ook uit het item gelezen.
+- Het formaat in `ingredientLine` wordt vertaald met de parameter `lang` (nieuwe `tIn` in `src/i18n/t.ts`), zodat naam, eenheid en formaat altijd in dezelfde taal staan.
+- `REQUIREMENTS.md` (R-025) is niet door deze taak gewijzigd; laat de eigenaar dat apart committen.

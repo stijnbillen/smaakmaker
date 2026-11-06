@@ -46,7 +46,7 @@ export function EditRecipePage() {
     };
     // Once per loaded recipe; the photo list of the form itself may change without a new lookup.
   }, [id, recipe, hasPhotos, report, resolve]);
-  const initial = useMemo(() => (recipe ? draftFromRecord(recipe) : null), [recipe]);
+  const initial = useMemo(() => (recipe ? draftFromRecord(recipe, undefined, recipe.catalog) : null), [recipe]);
   // Uploaded files survive a failed attempt, so "try again" does not upload them twice.
   const saveSession = useRef(newSaveSession(id));
 

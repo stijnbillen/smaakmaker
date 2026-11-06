@@ -1,5 +1,6 @@
 import { getLanguage } from '../i18n/language';
 import { format } from '../i18n/t';
+import { displayName } from './catalog';
 import { pruneDraft, type RecipeDraft } from './recipe';
 import { PHOTO_MAX_BYTES } from './photoResize';
 
@@ -25,7 +26,13 @@ const bytesOf = (s: string | null | undefined): number => utf8Bytes((s ?? '').tr
 export function recipeTextBytes(draft: RecipeDraft): number {
   const { draft: d } = pruneDraft(draft);
   let total = bytesOf(d.title) + bytesOf(d.source) + bytesOf(d.note);
-  for (const ing of d.ingredients) total += bytesOf(ing.name) + bytesOf(ing.unit);
+  // The text of a linked line is the item's shown name, the same text toRow writes and the database counts.
+  const lang = getLanguage();
+  for (const ing of d.ingredients) {
+    const name = ing.ingredient ? displayName(ing.ingredient, lang) || ing.name : ing.name;
+    const unit = ing.unitItem ? displayName(ing.unitItem, lang) || ing.unit : ing.unit;
+    total += bytesOf(name) + bytesOf(unit) + bytesOf(ing.size);
+  }
   for (const step of d.steps) total += bytesOf(step);
   for (const list of [d.dishTags, d.traitTags, d.equipment]) for (const name of list ?? []) total += bytesOf(name);
   return total;

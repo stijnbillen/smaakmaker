@@ -347,3 +347,8 @@
 - 2026-11-06 21:03 T-021 ontwikkelaar: KLAAR
 - 2026-11-06 21:12 T-021 build: mislukt
 - 2026-11-06 21:12 T-021 stop: review niet goedgekeurd na 2 rondes
+- 2026-11-06 21:12 - loop: geen taak meer
+- 2026-11-06 21:25 T-021 ontwikkelaar: KLAAR
+- 2026-11-06 21:35 T-021 build: geslaagd
+- 2026-11-06 21:39 T-021 reviewer: GOEDGEKEURD
+- 2026-11-06 21:49 T-021 build: geslaagd

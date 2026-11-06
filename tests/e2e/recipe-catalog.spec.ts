@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ingredientNameFields, quantityFields, saveButton } from '../helpers/recipe-form';
+import { answerQuestionsNo, ingredientNameFields, quantityFields, saveButton } from '../helpers/recipe-form';
 import { signInViaStorage } from '../helpers/session';
 import { adminClient, assertSupabaseUp, createTestUser, deleteTestUser, insertRecipe, type TestUser } from '../helpers/supabase-admin';
 import { sql } from '../helpers/pg';
@@ -45,17 +45,21 @@ test('editing a linked recipe without renaming keeps the link; renaming to anoth
   await expect(page).toHaveURL(new RegExp(`/recept/${row.id}$`));
 
   let stored = await adminClient().from('recipes').select('ingredients').eq('id', row.id).single();
-  expect(stored.data?.ingredients[0]).toMatchObject({ name: 'Brocolli', quantity: 300, ingredient_id: broccoli });
+  // T-021: the form shows the item's name, so the stored snapshot becomes that name (not the old typed text).
+  expect(stored.data?.ingredients[0]).toMatchObject({ name: 'broccoli', quantity: 300, ingredient_id: broccoli });
 
   // The page text is the same, apart from the changed quantity.
   const textAfter = await stableMainText(page);
   expect(textAfter).toBe(textBefore.replace('200', '300'));
 
   await page.goto(`/recept/${row.id}/bewerken`);
-  await ingredientNameFields(page).first().fill('Bloemkool');
+  // T-021: a changed field is free text again; an unknown name raises the question, answered "No".
+  await ingredientNameFields(page).first().fill(`Zelfgemaakt-${Date.now()}`);
+  await quantityFields(page).first().focus();
+  await answerQuestionsNo(page);
   await saveButton(page).click();
   await expect(page).toHaveURL(new RegExp(`/recept/${row.id}$`));
   stored = await adminClient().from('recipes').select('ingredients').eq('id', row.id).single();
-  expect(stored.data?.ingredients[0].name).toBe('Bloemkool');
+  expect(stored.data?.ingredients[0].name).toMatch(/^Zelfgemaakt-/);
   expect(stored.data?.ingredients[0].ingredient_id).toBeUndefined();
 });

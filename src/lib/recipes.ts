@@ -1,3 +1,4 @@
+import type { CatalogItem, CatalogLang } from './catalog';
 import { isConnectionError } from './connection';
 import { copyPhoto, removePhotos, uploadPhoto } from './photos';
 import { toRow, type PhotoDraft, type RecipeDraft, type RecipeRecord, type StoredPhoto } from './recipe';
@@ -60,8 +61,10 @@ export async function fetchRecipe(id: string): Promise<FetchResult> {
     if (src.error) return { recipe: null, notFound: false, error: src.error, status: src.status };
     sourceTitle = (src.data as { title: string } | null)?.title ?? null;
   }
+  const catalog = await fetchCatalogForLines(row.ingredients);
   return {
     recipe: {
+      catalog,
       id: row.id,
       title: row.title,
       ingredients: row.ingredients,
@@ -88,6 +91,56 @@ export async function fetchRecipe(id: string): Promise<FetchResult> {
     error: null,
     status,
   };
+}
+
+interface CatalogRow {
+  id: string;
+  name_nl: string | null;
+  name_en: string | null;
+}
+
+/** Items by id for the ingredient lines of a recipe (R-020). Empty lists make no call. */
+export async function fetchCatalogItems(
+  ingredientIds: readonly string[],
+  unitIds: readonly string[],
+): Promise<CallResult & { items: Map<string, CatalogItem> }> {
+  const items = new Map<string, CatalogItem>();
+  let failure: CallResult = { error: null, status: 200 };
+  for (const [table, ids] of [['ingredients', ingredientIds], ['units', unitIds]] as const) {
+    if (ids.length === 0) continue;
+    const { data, error, status } = await supabase.from(table).select('id,name_nl,name_en').in('id', [...ids]);
+    if (error) {
+      failure = { error, status };
+      continue;
+    }
+    for (const r of (data ?? []) as CatalogRow[]) items.set(r.id, { id: r.id, nameNl: r.name_nl, nameEn: r.name_en });
+  }
+  return { items, ...failure };
+}
+
+/** The items of a recipe's lines. A failed lookup gives what was found: the lines fall back to their stored text. */
+async function fetchCatalogForLines(lines: RecipeRecord['ingredients']): Promise<Map<string, CatalogItem>> {
+  const ing = new Set<string>();
+  const unit = new Set<string>();
+  for (const line of lines ?? []) {
+    if (line.ingredient_id) ing.add(line.ingredient_id);
+    if (line.unit_id) unit.add(line.unit_id);
+  }
+  return (await fetchCatalogItems([...ing], [...unit])).items;
+}
+
+/** Adds an item to the shared catalogue; a known key returns the existing item (`created` false). */
+export async function addCatalogItem(
+  kind: SuggestKind,
+  name: string,
+  lang: CatalogLang,
+): Promise<CallResult & { id: string | null; created: boolean }> {
+  const { data, error, status } = await supabase.rpc(kind === 'ingredient' ? 'add_ingredient' : 'add_unit', {
+    p_name: name,
+    p_lang: lang,
+  });
+  const row = ((data ?? []) as unknown as Array<{ id: string; created: boolean }>)[0];
+  return { id: error || !row ? null : row.id, created: !error && row?.created === true, error, status };
 }
 
 /** All recipes of one family, oldest first: one query gives the direct variants and the whole family list. */

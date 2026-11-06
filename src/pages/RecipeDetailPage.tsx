@@ -20,7 +20,7 @@ const DELETE_KEY = 'recipe-delete';
 const FAMILY_KEY = 'recipe-family';
 
 export function RecipeDetailPage() {
-  useLanguage();
+  const lang = useLanguage();
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const { session, isAdmin } = useAuth();
@@ -240,9 +240,13 @@ export function RecipeDetailPage() {
             <p className="servings-note">{t('servings.original').replace('{n}', String(stored))}</p>
           )}
           <ul className="ingredient-list">
-            {recipe.ingredients.map((ing, i) => (
-              <li key={i}>{stored === null ? ingredientLine(ing, 1, 1) : ingredientLine(ing, stored, desired)}</li>
-            ))}
+            {recipe.ingredients.map((ing, i) => {
+              // The names come from the items (current, in the interface language); the stored text is the fallback.
+              const item = ing.ingredient_id ? recipe.catalog?.get(ing.ingredient_id) : undefined;
+              const unitItem = ing.unit_id ? recipe.catalog?.get(ing.unit_id) : undefined;
+              const [from, to] = stored === null ? [1, 1] : [stored, desired];
+              return <li key={i}>{ingredientLine(ing, from, to, item, lang, unitItem)}</li>;
+            })}
           </ul>
         </section>
       )}

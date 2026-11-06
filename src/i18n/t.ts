@@ -13,6 +13,11 @@ export function t(key: TextKey): string {
   return texts[getLanguage()][key];
 }
 
+/** Like t(), but in an explicit language (for text that must follow a parameter, not the global language). */
+export function tIn(lang: 'nl' | 'en', key: TextKey): string {
+  return texts[lang][key];
+}
+
 /** Like t(), with {name} placeholders filled in (all occurrences). */
 export function format(key: TextKey, vars: Record<string, string | number>): string {
   return t(key).replace(/\{(\w+)\}/g, (whole, name: string) => (name in vars ? String(vars[name]) : whole));

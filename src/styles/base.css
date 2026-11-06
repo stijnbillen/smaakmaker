@@ -442,6 +442,73 @@ textarea[aria-invalid='true'] {
   margin-bottom: var(--space-3);
 }
 
+/* Size sits on its own line below quantity and unit, the question of a field on a full line of its own. */
+.row-size {
+  grid-column: 1 / -1;
+}
+
+.row-fields > [role='alert'],
+.row-fields > .field-error {
+  grid-column: 1 / -1;
+  margin-top: 0;
+  margin-bottom: var(--space-3);
+}
+
+/* Suggestions (R-020): a plain list under the field, in the flow of the page, so nothing is clipped at 360 px. */
+.suggestion-list {
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  list-style: none;
+  background: var(--color-bg-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.suggestion-option {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
+  color: var(--color-text-body);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.suggestion-option + .suggestion-option {
+  border-top: 1px solid var(--color-border);
+}
+
+.suggestion-option:hover {
+  background: var(--color-bg-sunken);
+}
+
+/* The inline question: set apart by an accent bar, buttons that wrap on a narrow screen. */
+.catalog-question {
+  grid-column: 1 / -1;
+  margin-bottom: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-bg-sunken);
+  border-left: 4px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+}
+
+.catalog-question-text {
+  margin: 0 0 var(--space-2);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.catalog-question-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.catalog-question-buttons button {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
 .row-buttons {
   display: flex;
   justify-content: flex-end;
