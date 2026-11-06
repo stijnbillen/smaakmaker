@@ -332,6 +332,9 @@ test.describe('crit. 7: pause, button, Enter, late answers', () => {
     await expect(withField(page)).toBeVisible();
     await withField(page).fill(`feta${s}`);
     await withField(page).press('Enter');
+    // Wait until the first request is really held back; a second search that follows within the same render
+    // would otherwise cancel it before it is sent, and the test would prove nothing.
+    await expect.poll(() => first).toBe(false);
     await withField(page).fill(`tomaat${s}`);
     await withField(page).press('Enter');
     await withField(page).fill(`ui${s}`);
