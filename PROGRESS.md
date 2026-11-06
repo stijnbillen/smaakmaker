@@ -47,9 +47,11 @@ Nieuw project: er zijn geen requirements met status "Bestaand", dus er is geen f
 - [x] **T-019** — R-018: Ingrediënten- en eenhedendatabank (afhankelijk van T-004, T-005)
 - [x] **T-020** — R-019: Woordnabijheid en suggesties (afhankelijk van T-019)
 - [x] **T-021** — R-020: Ingrediënten en eenheden kiezen in het formulier (afhankelijk van T-005, T-014, T-018, T-019, T-020)
-- [!] **T-022** — R-024: Tweetalige gegevens (afhankelijk van T-009, T-010, T-011, T-018, T-019, T-021) — reden: VRAAG: Krijgt kookgerief een startlijst met Nederlandse en Engelse namen, aangezien R-024 crit. 2 er een veronderstelt maar R-008 en de databank er geen hebben?
-- [ ] **T-023** — R-021: Zoeken met synoniemen (afhankelijk van T-015, T-019, T-020, T-021)
-- [ ] **T-024** — R-022: Beheer van de databank (afhankelijk van T-004, T-019, T-021)
+- [ ] **T-022** — R-026: Frans in plaats van Engels (afhankelijk van T-018, T-019, T-020, T-021)
+- [ ] **T-023** — R-024: Tweetalige gegevens (afhankelijk van T-009, T-010, T-011, T-018, T-019, T-021, T-022)
+- [ ] **T-024** — R-021: Zoeken met synoniemen (afhankelijk van T-015, T-019, T-020, T-021, T-022)
+- [ ] **T-025** — R-022: Beheer van de databank (afhankelijk van T-004, T-019, T-021, T-022)
+- [ ] **T-026** — R-025: App-icoon, koksmuts (afhankelijk van T-002)
 
 ---
 

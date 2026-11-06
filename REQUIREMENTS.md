@@ -46,6 +46,19 @@ Afspraken die voor alle requirements gelden:
   - [ ] Elke lijst heeft een lege toestand met een Nederlandse tekst (bv. "Nog geen recepten.") en een laadtoestand.
 - **Buiten scope:** Donkere modus, meerdere talen.
 
+### R-025 — App-icoon: koksmuts
+- **Status:** Goedgekeurd
+- **Beschrijving:** Het icoon van Smaakmaker is een koksmuts (zonder snor), op het beginscherm van de gsm, in het browsertabblad en bij het installeren van de app.
+- **Acceptatiecriteria:**
+  - [ ] Het icoon is een zelf getekende, vlakke koksmuts als vectorbestand (SVG) in de repo; geen overgenomen of auteursrechtelijk beschermde afbeelding.
+  - [ ] Kleuren komen uit de tokens: een muts in de kleur van `--color-bg` (crème) op een achtergrond in de kleur van `--color-accent` (tomaatrood), gelijk aan `theme_color` en `background_color` van het manifest.
+  - [ ] Uit de SVG zijn gemaakt: PNG van 192×192 en 512×512 (manifest), een "maskable" PNG van 512×512 waarvan alle mutspixels binnen een cirkel met een straal van 40% van de breedte liggen, een `apple-touch-icon` van 180×180 en een favicon van 32×32 plus de SVG.
+  - [ ] Het manifest (`icons` met `purpose: "any"` en `purpose: "maskable"`) en `index.html` (`rel="icon"`, `rel="apple-touch-icon"`) verwijzen naar deze bestanden; elk verwezen bestand bestaat en heeft precies de opgegeven afmetingen.
+  - [ ] Een test leest de PNG's: de middelste pixel heeft de mutskleur, een hoekpixel de achtergrondkleur, en in het favicon van 32×32 heeft minstens 20% van de pixels de mutskleur (leesbaar op klein formaat).
+  - [ ] De bestanden worden gemaakt door `scripts/make-icons.mjs` zonder nieuwe pakketten; de gegenereerde bestanden staan in de repo.
+  - [ ] De naam van de app in het manifest en op het beginscherm blijft "Smaakmaker".
+- **Buiten scope:** Een snor of tekst in het icoon, een logo in het hoofdscherm, een animatie, een splash-scherm.
+
 ### R-002 — Aanmelden met uitnodigingscode
 - **Status:** Goedgekeurd
 - **Beschrijving:** Alleen wie een uitnodigingscode heeft, kan een account maken. Aanmelden gaat met e-mailadres (inloglink per e-mail, geen wachtwoord).
@@ -127,7 +140,7 @@ Afspraken die voor alle requirements gelden:
   - [ ] De gebruiker kiest uit bestaande items of voegt een nieuw item toe; een nieuwe naam die (hoofdletter- en accentongevoelig) al bestaat, hergebruikt het bestaande item.
   - [ ] Kookgerief staat zichtbaar op de detailpagina en in het overzicht.
   - [ ] Het overzicht filtert op kookgerief: een recept moet minstens één van de gekozen items vereisen; zonder keuze geen filter.
-- **Wijziging:** namen in twee talen en vergelijken over talen heen (R-024).
+- **Wijziging:** een startlijst met namen in twee talen en vergelijken over talen heen (R-024).
 - **Buiten scope:** Aankooplinks, instellingen per toestel, "alleen recepten zonder gerief".
 
 ### R-010 — Tags voor soort gerecht
@@ -203,11 +216,11 @@ Een gedeelde databank van ingrediënten en eenheden, zodat "broccoli", "brocoli"
 
 ### R-018 — Ingrediënten- en eenhedendatabank
 - **Status:** Goedgekeurd
-- **Beschrijving:** De databank bevat ingrediënten en eenheden, elk met een Nederlandse en een Engelse naam en synoniemen (bijnamen en andere schrijfwijzen). Alle aangemelde gebruikers lezen en voegen toe; alleen een beheerder wijzigt of verwijdert (R-022).
+- **Beschrijving:** De databank bevat ingrediënten en eenheden, elk met een Nederlandse en een Franse naam en synoniemen (bijnamen en andere schrijfwijzen). Alle aangemelde gebruikers lezen en voegen toe; alleen een beheerder wijzigt of verwijdert (R-022).
 - **Acceptatiecriteria:**
-  - [ ] Een ingrediënt heeft een Nederlandse naam en een Engelse naam (1–80 tekens) en 0 tot 20 synoniemen (1–80 tekens); minstens één van beide namen is ingevuld. Een eenheid werkt hetzelfde, met namen en synoniemen van 1–20 tekens.
+  - [ ] Een ingrediënt heeft een Nederlandse naam en een Franse naam (1–80 tekens) en 0 tot 20 synoniemen (1–80 tekens); minstens één van beide namen is ingevuld. Een eenheid werkt hetzelfde, met namen en synoniemen van 1–20 tekens.
   - [ ] Elke sleutel (van een naam of een synoniem, in beide talen) hoort bij hoogstens één ingrediënt, en apart bij hoogstens één eenheid. Een directe aanroep van de databank die een tweede item met een bestaande sleutel maakt, wordt geweigerd; twee gebruikers die tegelijk "tempeh" toevoegen, leveren één item op.
-  - [ ] De startlijst staat bij de eerste installatie in de databank: minstens 150 ingrediënten en 25 eenheden, elk met een Nederlandse en een Engelse naam. Voorbeelden die erin moeten staan: ingrediënt broccoli / broccoli met synoniemen "brocoli", "brocolli" en "broccolli"; aardappel / potato; tomaat / tomato; eenheden g, kg, ml, dl, l, el (eetlepel), tl (theelepel), stuk, snuf, teentje, takje, blik, bosje.
+  - [ ] De startlijst staat bij de eerste installatie in de databank: minstens 150 ingrediënten en 25 eenheden, elk met een Nederlandse en een Franse naam. Voorbeelden die erin moeten staan: ingrediënt broccoli / brocoli met synoniemen "broccolli" en "brocolli"; aardappel / pomme de terre; tomaat / tomate; eenheden g, kg, ml, dl, l, el / c. à soupe (eetlepel), tl / c. à café (theelepel), stuk / pièce, snuf / pincée, teentje / gousse, takje / brin, blik / boîte, bosje / botte.
   - [ ] Aangemelde gebruikers kunnen alle items lezen; niet-aangemelde bezoekers niet.
   - [ ] Een aangemelde gebruiker kan een nieuw item toevoegen met één naam (in zijn interfacetaal); de andere taal blijft leeg en het item is meteen voor iedereen zichtbaar. Een gewone gebruiker kan een bestaand item via de databank-API niet wijzigen of verwijderen; die aanroep wordt geweigerd.
   - [ ] Bestaande recepten blijven ongewijzigd na de migratie: een ingrediëntregel waarvan de sleutel gelijk is aan een naam of synoniem van een item wordt gekoppeld aan dat item (idem voor eenheden); alle andere regels blijven vrije tekst. Geen recept, hoeveelheid of tekst gaat verloren.
@@ -223,7 +236,7 @@ Een gedeelde databank van ingrediënten en eenheden, zodat "broccoli", "brocoli"
   - [ ] Daarnaast komt een item in aanmerking als de trigramgelijkenis (Jaccard van de 3-lettergroepen met spaties als opvulling) minstens 0,35 is; bv. "tomaten" stelt "tomaat" voor (0,36).
   - [ ] Voor het typen met automatisch aanvullen (vanaf 2 tekens) komen ook items in aanmerking waarvan een sleutel met de term begint ("bro" toont broccoli); dit telt niet als "Bedoelde u"-suggestie.
   - [ ] De suggesties staan op volgorde: exacte overeenkomst, begint-met, dan oplopende afstand, dan aflopende gelijkenis, dan alfabetisch; hoogstens 5.
-  - [ ] Voorbeelden: "brocolli" → broccoli; "paprica" → paprika; "tomaaat" → tomaat; "tomato" → tomaat (via de Engelse naam); "xqzv" → geen suggestie; "zout" (bestaat) → geen suggestie.
+  - [ ] Voorbeelden: "brocolli" → broccoli; "paprica" → paprika; "tomaaat" → tomaat; "tomate" → tomaat (via de Franse naam); "xqzv" → geen suggestie; "zout" (bestaat) → geen suggestie.
   - [ ] Dezelfde regels gelden voor eenheden. Tags en kookgerief behouden hun bestaande exacte vergelijking (R-008, R-010).
   - [ ] Het ophalen van suggesties gebeurt na een korte pauze in het typen (hoogstens 300 ms); bij snel opeenvolgende invoer toont het scherm de suggesties voor de laatste invoer.
 - **Buiten scope:** Klankgelijkenis (Soundex/Metaphone, niet geschikt voor Nederlands), betekenisverwantschap ("zuivel" → kaas), leren van gebruik.
@@ -238,9 +251,9 @@ Een gedeelde databank van ingrediënten en eenheden, zodat "broccoli", "brocoli"
   - [ ] Is de invoer nieuw, dan vraagt de app "Nieuw ingrediënt '<invoer>'. Opslaan in de databank zodat iedereen het kan kiezen?". "Ja" maakt het item (naam in de interfacetaal; R-018) en kiest het; "Nee" laat de regel als vrije tekst staan, zonder item in de databank.
   - [ ] Een regel als vrije tekst blijft geldig (naam 1–80 tekens, eenheid hoogstens 20 tekens).
   - [ ] Het eenheidsveld werkt op dezelfde manier (suggesties, "Bedoelde u", de vraag om op te slaan); een lege eenheid blijft toegelaten.
-  - [ ] Een regel heeft een optioneel formaat: Klein, Middelgroot of Groot (vaste keuze, vertaald). Het formaat is geen apart ingrediënt: "aardappel" met formaat groot is nog steeds het item aardappel. Weergave: "2 aardappel (groot)" in het Nederlands, "2 potato (large)" in het Engels.
+  - [ ] Een regel heeft een optioneel formaat: Klein, Middelgroot of Groot (vaste keuze, vertaald). Het formaat is geen apart ingrediënt: "aardappel" met formaat groot is nog steeds het item aardappel. Weergave: "2 aardappel (groot)" in het Nederlands, "2 pomme de terre (grande taille)" in het Frans (formaten: petite taille, taille moyenne, grande taille).
   - [ ] Omrekenen van porties (R-013) en de groottelimiet (R-004) blijven werken: het formaat verandert niet bij omrekenen en telt mee in de grootte van het recept.
-  - [ ] Het recept bewaart de verwijzing, niet een kopie van de naam: hernoemt een beheerder het item of vult hij de Engelse naam in, dan toont het recept dat meteen. Een recept verwijderen laat de items bestaan.
+  - [ ] Het recept bewaart de verwijzing, niet een kopie van de naam: hernoemt een beheerder het item of vult hij de Franse naam in, dan toont het recept dat meteen. Een recept verwijderen laat de items bestaan.
   - [ ] Een variant (R-006) kopieert verwijzingen, vrije tekst en formaten.
   - [ ] Opslaan weigert een ongeldige nieuwe naam (leeg, te lang) met een melding bij het veld en maakt geen item aan.
 - **Buiten scope:** Meerdere formaten of bereidingswijzen als apart veld ("in blokjes"), foto's van ingrediënten, ingrediëntgroepen.
@@ -250,7 +263,7 @@ Een gedeelde databank van ingrediënten en eenheden, zodat "broccoli", "brocoli"
 - **Beschrijving:** Een beheerder houdt de databank netjes: namen en synoniemen aanpassen, dubbele items samenvoegen en ongebruikte items verwijderen.
 - **Acceptatiecriteria:**
   - [ ] Een pagina "Ingrediënten en eenheden", bereikbaar vanaf Profiel, alleen voor beheerders; een gewone gebruiker die de route opent, gaat naar Profiel (zoals R-017).
-  - [ ] De pagina toont een doorzoekbare lijst (zoeken volgens R-019) met Nederlandse naam, Engelse naam, synoniemen en het aantal recepten dat het item gebruikt; een apart tabblad voor eenheden.
+  - [ ] De pagina toont een doorzoekbare lijst (zoeken volgens R-019) met Nederlandse naam, Franse naam, synoniemen en het aantal recepten dat het item gebruikt; een apart tabblad voor eenheden.
   - [ ] Een beheerder past beide namen aan en voegt synoniemen toe of verwijdert ze; een naam of synoniem waarvan de sleutel al bij een ander item hoort, wordt geweigerd met "Bestaat al bij <item>.".
   - [ ] Samenvoegen van item A in item B (na bevestiging): alle recepten die naar A verwijzen verwijzen naar B; de namen en synoniemen van A worden synoniemen van B; A verdwijnt; dit gebeurt in één transactie (bij een fout blijft alles zoals het was). Een item met zichzelf samenvoegen kan niet.
   - [ ] Verwijderen kan alleen als geen recept het item gebruikt; anders staat er "In gebruik door <n> recepten; voeg het samen met een ander item.".
@@ -283,12 +296,12 @@ Een gedeelde databank van ingrediënten en eenheden, zodat "broccoli", "brocoli"
 - **Beschrijving:** Zoeken op ingrediënten (R-009) herkent synoniemen en vertalingen en stelt bij een tikfout een juiste term voor.
 - **Wijziging:** breidt R-009 uit; alle criteria van R-009 blijven gelden.
 - **Acceptatiecriteria:**
-  - [ ] Een term die exact (volgens de sleutel, in beide talen) een naam of synoniem van een item is, vindt alle recepten die dat item bevatten, ongeacht formaat: "brocoli" vindt een recept met broccoli, "tomato" vindt een recept met tomaat. Het formaat speelt geen rol.
+  - [ ] Een term die exact (volgens de sleutel, in beide talen) een naam of synoniem van een item is, vindt alle recepten die dat item bevatten, ongeacht formaat: "brocoli" vindt een recept met broccoli, "tomate" vindt een recept met tomaat. Het formaat speelt geen rol.
   - [ ] Ook het oude gedrag blijft: een term die als deel in de naam van een ingrediënt voorkomt (ook in vrije tekst) vindt het recept; "feta" vindt "fetakaas".
   - [ ] Is de term geen exact item maar zijn er suggesties volgens R-019 (zonder "begint met"), dan staat er onder het zoekveld "Bedoelde u <naam>?"; tikken erop vervangt de term en zoekt opnieuw. De resultaten van de term zoals getypt blijven ondertussen zichtbaar ("Niets gevonden" als er niets is).
   - [ ] "Zonder" gebruikt dezelfde herkenning: zonder "brocoli" laat recepten met broccoli weg.
   - [ ] Twee termen die hetzelfde item aanduiden (bv. "broccoli" en "brocoli") tellen als één: de tweede wordt niet toegevoegd en de app meldt "Al toegevoegd.".
-  - [ ] De zoekresultaten zijn onafhankelijk van de interfacetaal: dezelfde term geeft in Nederlands en Engels dezelfde recepten.
+  - [ ] De zoekresultaten zijn onafhankelijk van de interfacetaal: dezelfde term geeft in Nederlands en Frans dezelfde recepten.
   - [ ] Zoeken combineert nog steeds met alle filters (tijd, gerief, tags, favorieten).
 - **Buiten scope:** Automatische meervoudsherkenning ("tomaten" vindt "tomaat" alleen via een synoniem of als deel van de naam), betekenisverwantschap, zoeken in stappen.
 
@@ -328,16 +341,16 @@ Een gedeelde databank van ingrediënten en eenheden, zodat "broccoli", "brocoli"
 
 ### R-023 — Tweetalige interface
 - **Status:** Goedgekeurd
-- **Beschrijving:** De hele interface is beschikbaar in het Nederlands en het Engels. De gebruiker kiest zelf.
-- **Wijziging:** vervangt de eis "interface Nederlands" (CLAUDE.md, Niet-functionele eisen) door "Nederlands en Engels".
+- **Beschrijving:** De hele interface is beschikbaar in het Nederlands en het Frans. De gebruiker kiest zelf.
+- **Wijziging:** vervangt de eis "interface Nederlands" (CLAUDE.md, Niet-functionele eisen) door "Nederlands en Frans".
 - **Acceptatiecriteria:**
-  - [ ] Alle zichtbare teksten staan in `nl.json` en `en.json`. Beide bestanden hebben exact dezelfde sleutels, geen lege waarden en dezelfde plaatsaanduidingen (bv. `{n}`); een test controleert dat.
-  - [ ] Een taalkeuze (Nederlands / English) staat op het aanmeldscherm en op Profiel. De keuze blijft bewaard op het toestel, ook na herladen en opnieuw openen.
-  - [ ] Bij het eerste bezoek zonder keuze: de browsertaal begint met "nl" → Nederlands, anders Engels.
+  - [ ] Alle zichtbare teksten staan in `nl.json` en `fr.json`. Beide bestanden hebben exact dezelfde sleutels, geen lege waarden en dezelfde plaatsaanduidingen (bv. `{n}`); een test controleert dat.
+  - [ ] Een taalkeuze (Nederlands / Français) staat op het aanmeldscherm en op Profiel. De keuze blijft bewaard op het toestel, ook na herladen en opnieuw openen.
+  - [ ] Bij het eerste bezoek zonder keuze: de browsertaal begint met "fr" → Frans, anders Nederlands.
   - [ ] Wisselen werkt meteen zonder herladen, ook op een open pagina; `<html lang>` en de paginatitel volgen de taal.
   - [ ] Onder de teksten vallen ook melding- en foutteksten, bevestigingsvragen, labels voor schermlezers (`aria-label`) en plaatsaanduidingen in velden; er wordt geen tekst rechtstreeks uit de databank of uit code getoond.
-  - [ ] Getalnotatie volgt de taal: 0,25 in het Nederlands, 0.25 in het Engels; tijd "1 u 30 min" in het Nederlands, "1 h 30 min" in het Engels; datums in de notatie van de taal (nl-BE / en-GB). Een hoeveelheid invoeren accepteert zowel komma als punt, in beide talen.
-  - [ ] De inlogmail (onderwerp en tekst) bevat Nederlands en Engels, Nederlands eerst; ze wordt gegenereerd uit beide tekstbestanden door `scripts/make-email-templates.mjs`.
+  - [ ] Getalnotatie volgt de taal: 0,25 in het Nederlands en in het Frans; tijd "1 u 30 min" in het Nederlands, "1 h 30 min" in het Frans; datums in de notatie van de taal (nl-BE / fr-BE). Een hoeveelheid invoeren accepteert zowel komma als punt, in beide talen.
+  - [ ] De inlogmail (onderwerp en tekst) bevat Nederlands en Frans, Nederlands eerst; ze wordt gegenereerd uit beide tekstbestanden door `scripts/make-email-templates.mjs`.
   - [ ] In het Nederlands blijven alle teksten letterlijk zoals nu, zodat bestaande tests slagen.
   - [ ] In beide talen past elk scherm op 360 px breed zonder horizontaal scrollen en zonder afgesneden knoptekst.
   - [ ] Teksten van gebruikers (titel, stappen, bron, opmerking, review, namen) worden niet vertaald.
@@ -345,15 +358,31 @@ Een gedeelde databank van ingrediënten en eenheden, zodat "broccoli", "brocoli"
 
 ### R-024 — Tweetalige gegevens
 - **Status:** Goedgekeurd
-- **Beschrijving:** Ingrediënten, eenheden, tags en kookgerief uit de databank tonen zich in de taal van de lezer, zodat een Engelstalige gebruiker "soup" en "potato" ziet waar een Nederlandstalige "soep" en "aardappel" ziet.
+- **Beschrijving:** Ingrediënten, eenheden, tags en kookgerief uit de databank tonen zich in de taal van de lezer, zodat een Franstalige gebruiker "soupe" en "pomme de terre" ziet waar een Nederlandstalige "soep" en "aardappel" ziet.
 - **Acceptatiecriteria:**
-  - [ ] Ingrediënt- en eenhedennamen (R-018) worden getoond in de interfacetaal: de Nederlandse naam in het Nederlands, de Engelse naam in het Engels; ontbreekt die taal, dan de andere naam. Dit geldt op de detailpagina, in het formulier, in suggesties en in het overzicht van zoekresultaten.
-  - [ ] De startlijst-tags van R-010 en R-011 en het startlijst-kookgerief van R-008 hebben een Nederlandse en een Engelse naam (bv. soep / soup, vegetarisch / vegetarian, winter / winter) en tonen zich in de taal van de lezer.
+  - [ ] Ingrediënt- en eenhedennamen (R-018) worden getoond in de interfacetaal: de Nederlandse naam in het Nederlands, de Franse naam in het Frans; ontbreekt die taal, dan de andere naam. Dit geldt op de detailpagina, in het formulier, in suggesties en in het overzicht van zoekresultaten.
+  - [ ] De startlijst-tags van R-010 en R-011 hebben een Nederlandse en een Franse naam (bv. soep / soupe, vegetarisch / végétarien, winter / hiver) en tonen zich in de taal van de lezer.
+  - [ ] Kookgerief krijgt een startlijst (R-008 had er geen): oven / four, kookplaat / plaque de cuisson, microgolfoven / micro-ondes, airfryer / friteuse à air chaud, Thermomix / Thermomix, staafmixer / mixeur plongeant, blender / blender, keukenrobot / robot de cuisine, slowcooker / mijoteuse, barbecue / barbecue. Deze items staan altijd als keuze in het formulier en in het filter, ook als nog geen recept ze gebruikt. Bestaand kookgerief waarvan de sleutel gelijk is aan een naam uit de startlijst (bv. "Oven") wordt dat startlijst-item.
   - [ ] Door gebruikers toegevoegde tags en kookgerief hebben één naam, die in beide talen getoond wordt.
-  - [ ] Filteren op een tag of kookgerief werkt over talen heen: een recept met tag soep komt in het overzicht bij het filter "soup".
-  - [ ] De controle "bestaat al" bij een nieuwe tag of nieuw kookgerief (R-008, R-010, R-011) vergelijkt met de namen in beide talen: een Engelstalige gebruiker die "soup" toevoegt, krijgt de bestaande tag soep.
+  - [ ] Filteren op een tag of kookgerief werkt over talen heen: een recept met tag soep komt in het overzicht bij het filter "soupe".
+  - [ ] De controle "bestaat al" bij een nieuwe tag of nieuw kookgerief (R-008, R-010, R-011) vergelijkt met de namen in beide talen: een Franstalige gebruiker die "soupe" toevoegt, krijgt de bestaande tag soep.
   - [ ] Sorteren en alfabetische lijsten gebruiken de getoonde naam in de taal van de lezer.
 - **Buiten scope:** Vertalingen van door gebruikers toegevoegde tags en kookgerief (geparkeerd), vertalen van tekst van auteurs.
+
+### R-026 — Frans in plaats van Engels
+- **Status:** Goedgekeurd
+- **Beschrijving:** De tweede taal van de app is Frans, niet Engels. Wat al met Engels als tweede taal is gebouwd (R-018 t/m R-023), wordt omgezet; alles wat daarna komt, gebruikt meteen Frans.
+- **Wijziging:** vervangt "Engels" door "Frans" in R-018, R-019, R-020, R-021, R-022, R-023 en R-024; de criteria daar zijn al aangepast.
+- **Acceptatiecriteria:**
+  - [ ] `en.json` bestaat niet meer. `fr.json` heeft exact dezelfde sleutels als `nl.json`, geen lege waarden en dezelfde plaatsaanduidingen, en is een volledige Franse vertaling (Belgisch Frans waar dat uitmaakt).
+  - [ ] De taalcode "en" bestaat nergens meer; de keuze is "nl" of "fr". Een eerder opgeslagen keuze "en" op een toestel veroorzaakt geen fout: de app valt terug op de browsertaal (fr → Frans, anders Nederlands).
+  - [ ] De kolommen en velden met de Engelse naam in de databank, de API en de client heten nu "Franse naam" (`name_fr`). De nog niet online gezette migraties van de catalogus worden daarvoor rechtstreeks aangepast; er blijft geen kolom of veld met "en" achter.
+  - [ ] De startlijsten (minstens 150 ingrediënten, 25 eenheden) hebben Franse in plaats van Engelse namen, met de voorbeelden uit R-018 (aardappel / pomme de terre, tomaat / tomate, el / c. à soupe, enzovoort) en de Franse spelling die in het Nederlands gangbaar is als synoniem.
+  - [ ] De formaten tonen "petite taille", "taille moyenne" en "grande taille" in het Frans; "2 aardappel (groot)" in het Nederlands blijft.
+  - [ ] De inlogmail bevat Nederlands en Frans; getal-, tijd- en datumnotatie volgen R-023.
+  - [ ] Alle bestaande tests slagen na de omzetting: tests die de tweede taal gebruiken, draaien met "fr" en Franse zoektermen (bv. "tomate", "pomme de terre"); geen test of bronbestand bevat nog Engelse gebruikerstermen als testgegevens of een verwijzing naar "en.json".
+  - [ ] Elk scherm past in beide talen op 360 px zonder horizontaal scrollen (Franse teksten zijn vaak langer).
+- **Buiten scope:** Engels als derde taal, vertalen van recepttekst.
 
 ---
 
@@ -361,7 +390,7 @@ Een gedeelde databank van ingrediënten en eenheden, zodat "broccoli", "brocoli"
 - **Techniek:** React + TypeScript (PWA), Supabase (Postgres, aanmelden, bestandsopslag, rij-niveau-regels). Tests: Vitest (logica) en Playwright (interface). Toegestane Postgres-extensies voor R-019: pg_trgm, fuzzystrmatch en unaccent.
 - **Platform:** moderne mobiele browsers (iOS Safari en Android Chrome, laatste twee hoofdversies); ook bruikbaar op desktop.
 - **Distributie:** gehost als web-app; installeren via "Toevoegen aan beginscherm".
-- **Taal:** interface Nederlands en Engels (R-023); code, identifiers en commentaar Engels.
+- **Taal:** interface Nederlands en Frans (R-023); code, identifiers en commentaar Engels.
 - **Offline/online:** alleen online.
 - **Veiligheid:** geen geheime sleutels in de client; rechten via rij-niveau-regels in de databank; elke invoer wordt ook in de databank gevalideerd.
 - **Kernbeslissingen:** zie `CLAUDE.md`. Die wijzig je niet zonder overleg.
@@ -386,9 +415,11 @@ Door de eigenaar gekozen (2026-11-06, tweede ronde):
 - **Ingrediënten en eenheden (R-018, R-020):** uit een gedeelde databank met synoniemen; bij een nieuw item vraagt de app of het mag worden opgeslagen; wat de gebruiker opslaat is meteen voor iedereen beschikbaar, een beheerder voegt achteraf samen of verwijdert (R-022).
 - **Eenheden (R-018):** startlijst plus toevoegen door gebruikers, zoals ingrediënten.
 - **Woordnabijheid (R-019):** Levenshtein-afstand en andere gangbare algoritmen; de app stelt voor ("Bedoelde u broccoli?").
-- **Tweetalig (R-023, R-024):** interface én namen van ingrediënten en eenheden in Nederlands en Engels; recepttekst blijft zoals de auteur ze schreef.
+- **Tweetalig (R-023, R-024):** interface én namen van ingrediënten, eenheden, tags en kookgerief in Nederlands en Frans (de eigenaar koos Frans als tweede taal, niet Engels); recepttekst blijft zoals de auteur ze schreef.
 - **Formaat (R-020):** vaste keuze klein / middelgroot / groot bij een ingrediëntregel, terwijl het ingrediënt hetzelfde blijft ("aardappel").
 - **Bewerken van een recept:** bestond al (R-003); geen nieuwe requirement.
+- **Tweede taal (R-026, 2026-11-06):** Frans in plaats van Engels, voor de hele app; kookgerief krijgt een startlijst met Nederlandse en Franse namen (R-024).
+- **Icoon (R-025):** een koksmuts, zonder snor (2026-11-06).
 
 Standaardkeuzes die ik zelf invulde (niet apart besproken; pas aan als ze niet kloppen):
 - Aanmelden zonder wachtwoord via inloglink; code eenmalig, 7 dagen geldig; weergavenaam 2–40 tekens (R-002).
@@ -399,9 +430,10 @@ Standaardkeuzes die ik zelf invulde (niet apart besproken; pas aan als ze niet k
 - Porties verplicht, 1–99; omrekenen alleen in het scherm, niet opgeslagen (R-013).
 - Vier ingangen in de navigatie: Recepten, Favorieten, Nieuw, Profiel (R-016).
 - Drempels voor "Bedoelde u": afstand 1 bij 4–5 tekens, 2 bij 6–9, 3 bij 10 of meer; trigramgelijkenis minstens 0,35; hoogstens 5 suggesties; Soundex/Metaphone niet gebruikt (R-019).
-- Eerste taal volgt de browser (nl → Nederlands, anders Engels); de keuze wordt op het toestel bewaard, niet in het account (R-023).
+- Eerste taal volgt de browser (fr → Frans, anders Nederlands); de keuze wordt op het toestel bewaard, niet in het account (R-023).
 - Tags en kookgerief van gebruikers hebben één naam die in beide talen getoond wordt (R-024).
 - Een nieuw item heeft één naam (in de taal van de gebruiker); de beheerder vult de andere taal later aan (R-018, R-022).
+- Icoon: crème muts op tomaatrood, zelf getekend als SVG, zonder snor en zonder tekst (R-025).
 - Een formaat telt als eigenschap van de regel, niet als eigen ingrediënt; het blijft bij omrekenen gelijk (R-020).
 
 ## Geparkeerd (nog geen requirement)
@@ -414,5 +446,5 @@ Standaardkeuzes die ik zelf invulde (niet apart besproken; pas aan als ze niet k
 - Offline lezen van recent bekeken recepten.
 - Boodschappenlijst op basis van een recept.
 - Delen van een recept met iemand zonder account.
-- Meer talen dan Nederlands en Engels; automatisch vertalen van recepttekst.
+- Meer talen dan Nederlands en Frans (bv. Engels); automatisch vertalen van recepttekst.
 - Eenheden omzetten (g ↔ kg, el ↔ ml) nu de eenheden in een databank staan.
