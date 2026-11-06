@@ -44,7 +44,7 @@ Nieuw project: er zijn geen requirements met status "Bestaand", dus er is geen f
 ## Fase 5 — Ingrediënten, eenheden en tweetaligheid
 
 - [x] **T-018** — R-023: Tweetalige interface (afhankelijk van T-002, T-003)
-- [ ] **T-019** — R-018: Ingrediënten- en eenhedendatabank (afhankelijk van T-004, T-005)
+- [x] **T-019** — R-018: Ingrediënten- en eenhedendatabank (afhankelijk van T-004, T-005)
 - [ ] **T-020** — R-019: Woordnabijheid en suggesties (afhankelijk van T-019)
 - [ ] **T-021** — R-020: Ingrediënten en eenheden kiezen in het formulier (afhankelijk van T-005, T-014, T-018, T-019, T-020)
 - [ ] **T-022** — R-024: Tweetalige gegevens (afhankelijk van T-009, T-010, T-011, T-018, T-019, T-021)

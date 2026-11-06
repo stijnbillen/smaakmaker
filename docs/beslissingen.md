@@ -353,3 +353,10 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - Getalnotatie: hoeveelheid en receptgrootte gebruiken het decimaalteken van de taal zonder duizendtalscheiding; datum, tijd en score gebruiken `Intl` per locale (`nl-BE`/`en-GB`, tijdzone Europe/Brussels), met een cache per locale.
 - `LanguageSwitch` hergebruikt de bestaande `.choice`-knoppen (`aria-pressed`, ≥ 44 px) in een `role="group"`.
 - `scripts/make-email-templates.mjs` schrijft een Nederlands en daarna een Engels blok (elk met link en code) en herschrijft alleen de twee `subject`-regels van `config.toml`. Na een wijziging van `config.toml` moet de lokale Supabase herstart worden (`supabase stop` en `start`), anders gebruikt de mailserver het oude onderwerp.
+
+## T-019 — Ingrediënten- en eenhedendatabank (bouw)
+- Twee tabellen (`ingredients`, `units`) met elk een sleuteltabel (`ingredient_keys`, `unit_keys`, `primary key (key)`): zo is een sleutel uniek over beide talen en alle synoniemen, wat een `unique` op kolommen niet kan. Een `after`-trigger (`security definer`) bouwt de sleutels opnieuw op; een conflict geeft `23505` en rolt alles terug.
+- `item_key()` = `fold_key()` plus witruimte samenvoegen; `fold_key` blijft ongewijzigd voor tags en kookgerief.
+- Gewone gebruikers hebben alleen `select` en `insert (name_nl, name_en)`; geen update/delete-grants of -policies (beheer is R-022). `add_ingredient`/`add_unit` zijn `security invoker` en idempotent: bij een bekende sleutel (ook na een race) komt het bestaande id terug met `created = false`.
+- Koppeling zit als `ingredient_id`/`unit_id` in de bestaande jsonb-regel; een trigger controleert dat het item bestaat (`23503`). `link_recipes_to_catalog()` vangt per rij elke fout op en laat die rij dan ongemoeid.
+- Client: `IngredientDraft` bewaart de koppeling met de sleutel van de tekst bij het laden (`ingredientRef`/`unitRef`); `toRow` neemt hem alleen mee als de sleutel gelijk bleef.

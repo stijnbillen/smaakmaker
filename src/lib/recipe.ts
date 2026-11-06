@@ -3,6 +3,7 @@
 
 import { getLanguage } from '../i18n/language';
 import { format } from '../i18n/t';
+import { itemKey, keepRef, type IngredientRef, type UnitRef } from './catalog';
 
 export const TITLE_MAX = 100;
 export const INGREDIENT_NAME_MAX = 80;
@@ -55,6 +56,9 @@ export interface IngredientDraft {
   name: string;
   quantity: string;
   unit: string;
+  /** Link to the catalogue as loaded (R-018). Kept only while the text keeps its key; the form never shows it. */
+  ingredientRef?: IngredientRef;
+  unitRef?: UnitRef;
 }
 
 export interface RecipeDraft {
@@ -83,6 +87,9 @@ export interface Ingredient {
   name: string;
   quantity?: number;
   unit?: string;
+  /** Optional pointers to the catalogues (R-018); the text above always stays. */
+  ingredient_id?: string;
+  unit_id?: string;
 }
 
 /** What is written to the database. */
@@ -363,6 +370,10 @@ export function toRow(draft: RecipeDraft): RecipeRow {
       if (quantity.ok && quantity.value !== null) row.quantity = quantity.value;
       const unit = ing.unit.trim();
       if (unit !== '') row.unit = unit;
+      const ingredientId = keepRef(ing.ingredientRef, row.name);
+      if (ingredientId) row.ingredient_id = ingredientId;
+      const unitId = unit !== '' ? keepRef(ing.unitRef, unit) : undefined;
+      if (unitId) row.unit_id = unitId;
       return row;
     }),
     steps: draft.steps.map((step) => step.trim()),
@@ -425,6 +436,8 @@ export function draftFromRecord(record: StoredRecipe, sizes?: ReadonlyMap<string
             name: ing.name,
             quantity: ing.quantity === undefined ? '' : formatQuantity(ing.quantity),
             unit: ing.unit ?? '',
+            ...(ing.ingredient_id ? { ingredientRef: { id: ing.ingredient_id, key: itemKey(ing.name) } } : {}),
+            ...(ing.unit_id && ing.unit ? { unitRef: { id: ing.unit_id, key: itemKey(ing.unit) } } : {}),
           }))
         : [emptyIngredient()],
     steps: record.steps.length > 0 ? [...record.steps] : [''],

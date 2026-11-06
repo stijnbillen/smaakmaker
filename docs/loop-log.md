@@ -306,3 +306,15 @@
 - 2026-11-06 18:05 T-018 build: geslaagd
 - 2026-11-06 18:07 T-018 reviewer: GOEDGEKEURD
 - 2026-11-06 18:13 T-018 build: geslaagd
+- 2026-11-06 18:13 T-018 savepoint: gecommit
+- 2026-11-06 18:17 T-019 analist: KLAAR
+- 2026-11-06 18:19 T-019 tester: KLAAR
+- 2026-11-06 18:24 T-019 ontwikkelaar: BLOKKADE: test `tests/db/catalog-links.test.ts` verwacht dat `'  aardappel '` na insert ongetrimd terugkomt, maar `recipes_normalize` trimt namen al bij insert, dus de test moet de getrimde naam verwachten.
+- 2026-11-06 18:25 T-019 tester: KLAAR
+- 2026-11-06 18:32 T-019 ontwikkelaar: BLOKKADE: test `tests/e2e/recipe-catalog.spec.ts:33,44` vergelijkt `main.innerText()` terwijl de reviewsectie nog laadt ("Reviews ladenÔÇª" tegenover "Nog geen reviews"); de tester moet wachten tot de reviews geladen zijn of alleen de receptinhoud vergelijken.
+- 2026-11-06 18:32 T-019 tester: KLAAR
+- 2026-11-06 18:39 T-019 ontwikkelaar: KLAAR
+- 2026-11-06 18:40 T-019 build: worker-crash (geen testfout), opnieuw
+- 2026-11-06 18:47 T-019 build: geslaagd
+- 2026-11-06 18:50 T-019 reviewer: GOEDGEKEURD
+- 2026-11-06 18:56 T-019 build: geslaagd
