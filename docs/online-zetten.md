@@ -1,6 +1,6 @@
 # Online zetten
 
-Volgorde: Supabase-project, databank, e-mail (stap 4, vóór de sjablonen in stap 3), hosting, eerste beheerder. Gebruik nooit de `service_role`- of secret-sleutel in de app of in Cloudflare. De app krijgt alleen de project-URL en de publishable (anon) sleutel.
+Volgorde: Supabase-project, databank, e-mail via Gmail (stap 4, vóór de sjablonen in stap 3), hosting, eerste beheerder. Gebruik nooit de `service_role`- of secret-sleutel in de app of in Cloudflare. De app krijgt alleen de project-URL en de publishable (anon) sleutel.
 
 ## 1. Supabase-cloudproject
 1. Maak een account op https://supabase.com en kies "New project". Kies een regio in de EU (bv. Frankfurt) en bewaar het databankwachtwoord.
@@ -20,18 +20,17 @@ npx supabase db push
 - Providers > Email: "Confirm email" aan, OTP-lengte **6**.
 - Email Templates: plak de inhoud van `supabase/templates/confirmation.html` (onderwerp "Je code om aan te melden bij Smaakmaker") en `supabase/templates/magic_link.html` (zelfde onderwerp).
 
-## 4. E-mail via Brevo
-Doe deze stap vóór het sjabloon-deel van stap 3: Supabase Cloud laat je de mailsjablonen pas aanpassen na het instellen van eigen SMTP.
-1. Account op https://www.brevo.com (gratis: 300 mails per dag).
-2. Voeg je Gmail-adres toe als afzender (Senders, Domains & Dedicated IPs > Senders) en bevestig het met de mail die Brevo stuurt.
-3. Maak een SMTP-sleutel: SMTP & API > SMTP > Generate a new SMTP key. Bewaar de sleutel; hij wordt maar één keer getoond.
-4. Supabase > Project Settings > Authentication > SMTP Settings, zet "Custom SMTP" aan:
-   - Host `smtp-relay.brevo.com`, poort `587`
-   - Gebruiker = de **SMTP-login** uit Brevo (staat op de SMTP-pagina, ziet eruit als `…@smtp-brevo.com`; niet je Gmail-adres)
-   - Wachtwoord = de SMTP-sleutel uit stap 3 (niet je Brevo-wachtwoord)
-   - Afzender: je geverifieerde Gmail-adres, naam "Smaakmaker"
-5. Verhoog onder Authentication > Rate Limits het aantal mails per uur naar wat je nodig hebt.
-6. Test: vraag in de app een code aan met een tweede adres. Komt de mail in de spam of niet aan, dan accepteren mailservers een Gmail-adres als afzender via Brevo niet altijd; een eigen domein met Resend of Brevo lost dat op.
+## 4. E-mail via Gmail
+Doe deze stap vóór het sjabloon-deel van stap 3: Supabase Cloud laat je de mailsjablonen pas aanpassen na het instellen van eigen SMTP. Gmail verstuurt zelf en ondertekent de mails, dus ze komen aan (Brevo met een Gmail-adres als afzender wordt geweigerd door Google, Yahoo en Microsoft).
+1. Zet tweestapsverificatie aan op het Google-account.
+2. Maak een app-wachtwoord op https://myaccount.google.com/apppasswords, noem het "Smaakmaker" en bewaar de code van 16 tekens. Dit is een geheim: zet het alleen in Supabase, nooit in de repo of in Cloudflare.
+3. Supabase > Project Settings > Authentication > SMTP Settings, zet "Custom SMTP" aan:
+   - Host `smtp.gmail.com`, poort `465`
+   - Gebruiker = het Gmail-adres, wachtwoord = het app-wachtwoord (niet het gewone wachtwoord)
+   - Afzender = hetzelfde Gmail-adres, naam "Smaakmaker"
+4. Verhoog onder Authentication > Rate Limits het aantal mails per uur naar wat je nodig hebt. Gmail laat ongeveer 500 mails per dag toe.
+5. Test: vraag in de app een code aan met een tweede adres en controleer dat de mail aankomt.
+6. Groeit de app, dan is een eigen domein met Resend of Brevo de nettere oplossing.
 
 ## 5. Hosting op Cloudflare (Workers & Pages)
 Cloudflare maakt nieuwe projecten als Worker met statische bestanden. `wrangler.jsonc` in de repo zegt dat `dist` de site is en dat onbekende paden `index.html` krijgen (nodig voor routes zoals `/recepten`).
