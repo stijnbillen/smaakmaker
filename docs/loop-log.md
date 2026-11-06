@@ -334,3 +334,16 @@
 - 2026-11-06 20:16 T-021 tester: KLAAR
 - 2026-11-06 20:25 T-021 ontwikkelaar: BLOKKADE: test `tests/e2e/ingredient-picker.spec.ts:88` gebruikt `/potato/`, dat twee opties vindt, en `tests/helpers/recipe-form.ts` `quantityFields`, `unitFields` en `sizeFields` zoeken alleen op Nederlandse labels, waardoor `ingredient-picker.spec.ts:186` in het Engels faalt.
 - 2026-11-06 20:25 T-021 stop: BLOKKADE: test `tests/e2e/ingredient-picker.spec.ts:88` gebruikt `/potato/`, dat twee opties vindt, en `tests/helpers/recipe-form.ts` `quantityFields`, `unitFields` en `sizeFields` zoeken alleen op Nederlandse labels, waardoor `ingredient-picker.spec.ts:186` in het Engels faalt.
+- 2026-11-06 20:25 - loop: geen taak meer
+- 2026-11-06 20:26 T-021 ontwikkelaar: BLOKKADE: test `tests/e2e/ingredient-picker.spec.ts:88` gebruikt `/potato/` (matcht "potato" en "sweet potato"), en `tests/helpers/recipe-form.ts` `quantityFields`, `unitFields`, `sizeFields` (en `catalogQuestion`/`answerQuestionsNo`) zoeken alleen op Nederlandse labels, waardoor `ingredient-picker.spec.ts:186` in het Engels faalt.
+- 2026-11-06 20:27 T-021 tester: KLAAR
+- 2026-11-06 20:39 T-021 ontwikkelaar: BLOKKADE: test `tests/e2e/ingredient-picker.spec.ts:88` verwacht optie `/^potato$/` terwijl het label terecht "aardappel ÔåÆ potato" is, en `:186` faalt in de volledige run omdat items `tempeh-e2e-ÔÇª` van eerdere tests blijven staan en een "Bedoelde u"-vraag in plaats van "Yes" geven.
+- 2026-11-06 20:40 T-021 tester: KLAAR
+- 2026-11-06 20:49 T-021 ontwikkelaar: KLAAR
+- 2026-11-06 20:50 T-021 build: worker-crash (geen testfout), opnieuw
+- 2026-11-06 20:59 T-021 build: geslaagd
+- 2026-11-06 21:02 T-021 reviewer: BEVINDINGEN: 0/2
+- 2026-11-06 21:03 T-021 tester: KLAAR
+- 2026-11-06 21:03 T-021 ontwikkelaar: KLAAR
+- 2026-11-06 21:12 T-021 build: mislukt
+- 2026-11-06 21:12 T-021 stop: review niet goedgekeurd na 2 rondes

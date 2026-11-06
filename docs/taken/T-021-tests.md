@@ -44,8 +44,27 @@ Alleen tests aangepast, gedrag onveranderd. Niet kunnen draaien (geen toestemmin
 - `language.spec.ts`: naam- en eenheidsveld zijn `combobox`.
 - `connection.spec.ts`: "Zout" koppelt aan het item, veldwaarde `/^zout$/i`.
 
+## Herstelronde 2 (testfouten na BLOKKADE ontwikkelaar)
+Alleen tests aangepast, gedrag onveranderd.
+- `ingredient-picker.spec.ts`: optie-selector `/potato/` -> `/^potato$/` (matchte ook "sweet potato", strict-mode-fout).
+- `tests/helpers/recipe-form.ts`: `quantityFields`, `unitFields`, `sizeFields`, `catalogQuestion`, `answerQuestionsNo` en `stepFields` herkennen nu ook Engelse labels (Quantity, Unit, Size, Did you mean, New ingredient, New unit, No, Step).
+
+## Herstelronde 3 (testfouten na BLOKKADE ontwikkelaar)
+Alleen tests aangepast, gedrag onveranderd.
+- `ingredient-picker.spec.ts` "in English aardap offers potato": optie gezocht op het volledige label `aardappel → potato` (exact), niet `/^potato$/` (crit. 1).
+- Nieuw-item-tests (Ja nl/en, race): itemnamen zijn nu 12 willekeurige letters (`rnd()`), zonder gedeeld voorvoegsel `tempeh-e2e-`. Anders gaf een eerder achtergebleven item een "Bedoelde u"-vraag in plaats van de nieuw-item-vraag (crit. 4, 6).
+- `beforeAll` verwijdert achtergebleven `tempeh-e2e-%`-items van oudere runs.
+- Helpers (`quantityFields`, `unitFields`, `sizeFields`) herkennen al Engelse labels (herstelronde 2).
+
 ## Gewijzigde bestaande tests
 - `tests/helpers/recipe-form.ts`: naam- en eenheidsveld zijn nu `combobox`; `fillRecipe` verlaat het laatste veld en beantwoordt open vragen met "Nee" (`answerQuestionsNo`); nieuwe helpers `sizeFields`, `catalogQuestion`.
 - `tests/unit/recipe-catalog.test.ts`: herschreven. De R-018-sleutelvergelijking (`keepRef`) verdwijnt volgens het plan; de koppeling hangt nu aan "veld niet aangeraakt".
 - `tests/e2e/recipe-catalog.spec.ts`: een andere naam typen beantwoordt de vraag met "Nee".
 - Let op voor de ontwikkelaar: andere specs gebruiken `fillRecipe`; namen die niet in de startlijst staan krijgen automatisch "Nee". Specs die zelf op `textbox` zoeken naar Ingrediënt/Eenheid bestaan niet (gecontroleerd).
+
+## Review-ronde (bevindingen 1, 2, 4)
+- Crit. 9: rename-test controleert nu ook de Engelse naam op detailpagina en in het bewerkformulier (`smaakmaker.lang = 'en'`).
+- Crit. 3: nieuwe e2e met twee gelijkende items; controleert één knop per suggestie in de volgorde van `suggest_ingredients(…, false)`, de vraagtekst met " / " en de knop "Nee, … is nieuw". Items worden in `afterAll` opgeruimd.
+- 360 px: lijst/vraag-test loopt nu in `nl` en `en`.
+- `npx tsc --noEmit` slaagt. De Playwright-run kon ik in deze sessie niet starten (geen toestemming); de nieuwe tests zijn dus niet uitgevoerd.
+- Bevindingen 3 en 5 horen bij de ontwikkelaar; niet aangeraakt.
