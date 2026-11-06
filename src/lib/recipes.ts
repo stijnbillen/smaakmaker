@@ -2,6 +2,7 @@ import { isConnectionError } from './connection';
 import { copyPhoto, removePhotos, uploadPhoto } from './photos';
 import { toRow, type PhotoDraft, type RecipeDraft, type RecipeRecord, type StoredPhoto } from './recipe';
 import { supabase } from './supabase';
+import type { MatchKind, SuggestKind, SuggestMode, Suggestion } from './suggest';
 import type { TagKind } from './tags';
 import type { FamilyMember } from './variant';
 
@@ -104,6 +105,42 @@ export async function fetchFamily(familyId: string): Promise<CallResult & { memb
 export async function fetchEquipmentInUse(): Promise<CallResult & { names: string[] }> {
   const { data, error, status } = await supabase.rpc('equipment_in_use');
   return { names: error ? [] : ((data ?? []) as unknown as string[]), error, status };
+}
+
+interface SuggestRow {
+  id: string;
+  name_nl: string | null;
+  name_en: string | null;
+  matched: string;
+  match_kind: MatchKind;
+  distance: number | null;
+  similarity: number;
+}
+
+/** Closest catalogue items for a typed term (R-019); the unit tests of the loader never load this file. */
+export async function fetchSuggestions(
+  kind: SuggestKind,
+  term: string,
+  mode: SuggestMode,
+  lang: 'nl' | 'en',
+): Promise<CallResult & { rows: Suggestion[] }> {
+  const { data, error, status } = await supabase.rpc(kind === 'ingredient' ? 'suggest_ingredients' : 'suggest_units', {
+    p_term: term,
+    p_autocomplete: mode === 'autocomplete',
+    p_lang: lang,
+  });
+  const rows = error
+    ? []
+    : ((data ?? []) as unknown as SuggestRow[]).map((r) => ({
+        id: r.id,
+        nameNl: r.name_nl,
+        nameEn: r.name_en,
+        matched: r.matched,
+        matchKind: r.match_kind,
+        distance: r.distance,
+        similarity: r.similarity,
+      }));
+  return { rows, error, status };
 }
 
 /** All names of a tag group, in catalogue order: the choices in the form and the filter. */

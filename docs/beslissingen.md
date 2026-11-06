@@ -360,3 +360,10 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - Gewone gebruikers hebben alleen `select` en `insert (name_nl, name_en)`; geen update/delete-grants of -policies (beheer is R-022). `add_ingredient`/`add_unit` zijn `security invoker` en idempotent: bij een bekende sleutel (ook na een race) komt het bestaande id terug met `created = false`.
 - Koppeling zit als `ingredient_id`/`unit_id` in de bestaande jsonb-regel; een trigger controleert dat het item bestaat (`23503`). `link_recipes_to_catalog()` vangt per rij elke fout op en laat die rij dan ongemoeid.
 - Client: `IngredientDraft` bewaart de koppeling met de sleutel van de tekst bij het laden (`ingredientRef`/`unitRef`); `toRow` neemt hem alleen mee als de sleutel gelijk bleef.
+
+## T-020 — Woordnabijheid en suggesties
+- Berekenen in de databank (`suggest_ingredients`/`suggest_units`), niet in de client: één bron voor sleutels (`item_key`), geen sleutellijst naar de gsm.
+- Trigram via `pg_trgm.similarity()` (drempel 0,35, vergeleken als `real`); afstand via eigen `dl_distance` (beperkte Damerau-Levenshtein, per teken) omdat `fuzzystrmatch` geen verwisseling kent.
+- Lengtegrens (termen < 4 tekens) geldt voor afstand én trigram; exact vanaf 1 teken, begint-met vanaf 2 (zonder `LIKE`, dus `%`/`_` zijn gewone tekens).
+- Wrappers en `catalog_suggest` zijn `security definer` (afwijking van de brief: invoker): zo hoeft `authenticated` geen `execute` op `catalog_suggest`/`dl_*` te hebben en zijn die niet via `/rpc` aan te roepen. De wrappers weigeren zonder aanmelding (42501); de catalogus is voor elke aangemelde gebruiker leesbaar, dus er lekt niets.
+- Client: `src/lib/suggest.ts` (zonder Supabase) met loader op `createDebouncer` + volgnummer, debounce 250 ms; `fetchSuggestions` staat in `recipes.ts`.
