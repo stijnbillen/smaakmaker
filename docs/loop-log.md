@@ -352,3 +352,6 @@
 - 2026-11-06 21:35 T-021 build: geslaagd
 - 2026-11-06 21:39 T-021 reviewer: GOEDGEKEURD
 - 2026-11-06 21:49 T-021 build: geslaagd
+- 2026-11-06 21:49 T-021 savepoint: gecommit
+- 2026-11-06 21:50 T-022 analist: VRAAG: Krijgt kookgerief een startlijst met Nederlandse en Engelse namen, aangezien R-024 crit. 2 er een veronderstelt maar R-008 en de databank er geen hebben?
+- 2026-11-06 21:50 T-022 stop: VRAAG: Krijgt kookgerief een startlijst met Nederlandse en Engelse namen, aangezien R-024 crit. 2 er een veronderstelt maar R-008 en de databank er geen hebben?
