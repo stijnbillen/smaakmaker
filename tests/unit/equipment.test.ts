@@ -9,6 +9,9 @@ import {
 } from '../../src/lib/equipment';
 import { draftFromRecord, emptyDraft, isDirty, pruneDraft, toRow, validateRecipe } from '../../src/lib/recipe';
 
+// T-023: the catalogue is a list of NamedItem ({ name, nameFr }), not plain strings.
+const item = (name: string, nameFr: string | null = null) => ({ name, nameFr });
+
 // T-009 / R-008. The brief fixes names and boundaries, not the exact result shape of validateEquipmentName,
 // so "invalid" is read tolerantly: a string, `{ ok: false }`, `{ valid: false }`, `{ error }` or `false`.
 function invalid(result: unknown): boolean {
@@ -63,20 +66,20 @@ describe('equipmentKey (R-008 crit. 2: case and accent insensitive)', () => {
 
 describe('addEquipment (R-008 crit. 2: reuse an existing item)', () => {
   it('returns the catalogue spelling for a name that exists in another case', () => {
-    expect(addEquipment([], ['Thermomix'], 'thermomix')).toEqual(['Thermomix']);
+    expect(addEquipment([], [item('Thermomix')], 'thermomix')).toEqual(['Thermomix']);
   });
 
   it('reuses the catalogue spelling for an accent difference', () => {
-    expect(addEquipment([], ['Airfryer'], 'airfrýer')).toEqual(['Airfryer']);
+    expect(addEquipment([], [item('Airfryer')], 'airfrýer')).toEqual(['Airfryer']);
   });
 
   it('does not add a second one when it is already selected', () => {
     const selected = ['Thermomix'];
-    expect(addEquipment(selected, ['Thermomix'], 'THERMOMIX')).toEqual(['Thermomix']);
+    expect(addEquipment(selected, [item('Thermomix')], 'THERMOMIX')).toEqual(['Thermomix']);
   });
 
   it('adds an unknown name trimmed, after the selected ones', () => {
-    expect(addEquipment(['Oven'], ['Oven'], '  Sous-vide ')).toEqual(['Oven', 'Sous-vide']);
+    expect(addEquipment(['Oven'], [item('Oven')], '  Sous-vide ')).toEqual(['Oven', 'Sous-vide']);
   });
 
   it('does not change its input', () => {

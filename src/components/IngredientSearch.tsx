@@ -1,12 +1,48 @@
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
-import { t } from '../i18n/t';
+import { format, t, useLanguage } from '../i18n/t';
 import {
   SEARCH_DEBOUNCE_MS,
   createDebouncer,
+  dedupeByItem,
   parseTerms,
+  replaceTerm,
   toSearchParams,
+  type TermInfo,
   type IngredientSearch as SearchValue,
 } from '../lib/ingredientSearch';
+import { fetchTermInfo } from '../lib/recipes';
+
+/**
+ * Term information (exact item, "did you mean") for one field. Fetched after a pause in typing and again on a
+ * language change; only the answer to the latest request counts. A failed call changes nothing: the search itself
+ * does not depend on it, and the list shows real connection trouble.
+ */
+function useTermInfo(text: string, lang: 'nl' | 'fr'): TermInfo[] {
+  const [info, setInfo] = useState<TermInfo[]>([]);
+  const termsKey = JSON.stringify(parseTerms(text).terms);
+  useEffect(() => {
+    const terms = JSON.parse(termsKey) as string[];
+    if (terms.length === 0) {
+      setInfo([]);
+      return;
+    }
+    let current = true;
+    const timer = setTimeout(() => {
+      fetchTermInfo(terms, lang)
+        .then((res) => {
+          if (current && !res.error) setInfo(res.info);
+        })
+        .catch(() => {
+          // Leave the previous answer; see above.
+        });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      current = false;
+      clearTimeout(timer);
+    };
+  }, [termsKey, lang]);
+  return info;
+}
 
 interface IngredientSearchProps {
   /** The search as the page holds it (from the URL). */
@@ -24,8 +60,14 @@ const joinTerms = (terms: string[]) => terms.join(', ');
  * only the parsed terms go up, after a pause in typing or at once on submit. Reusable for the favourites list.
  */
 export function IngredientSearch({ value, onChange }: IngredientSearchProps) {
+  const lang = useLanguage();
   const [withText, setWithText] = useState(() => joinTerms(value.with));
   const [withoutText, setWithoutText] = useState(() => joinTerms(value.without));
+  const withInfo = useTermInfo(withText, lang);
+  const withoutInfo = useTermInfo(withoutText, lang);
+  // Read by emit, which outlives a render.
+  const infoRef = useRef({ with: withInfo, without: withoutInfo });
+  infoRef.current = { with: withInfo, without: withoutInfo };
   const withId = useId();
   const withoutId = useId();
   const minId = useId();
@@ -40,7 +82,12 @@ export function IngredientSearch({ value, onChange }: IngredientSearchProps) {
   const inFlight = useRef<string[]>([]);
 
   const emit = (withValue: string, withoutValue: string, min: number | null) => {
-    const next: SearchValue = { with: parseTerms(withValue).terms, without: parseTerms(withoutValue).terms, min };
+    // Two terms for one item count as one (R-021); without info yet, terms are kept as typed.
+    const next: SearchValue = {
+      with: dedupeByItem(parseTerms(withValue).terms, infoRef.current.with).terms,
+      without: dedupeByItem(parseTerms(withoutValue).terms, infoRef.current.without).terms,
+      min,
+    };
     const key = keyOf(next);
     if (key === lastEmitted.current) return;
     lastEmitted.current = key;
@@ -89,6 +136,50 @@ export function IngredientSearch({ value, onChange }: IngredientSearchProps) {
     emit(withText, withoutText, k < value.with.length ? k : null);
   };
 
+  // Duplicates: send the merged terms up as soon as the answer is in, so n and the URL are right.
+  const withTerms = parseTerms(withText).terms;
+  const withoutTerms = parseTerms(withoutText).terms;
+  const duplicates = [
+    ...dedupeByItem(withTerms, withInfo).duplicates,
+    ...dedupeByItem(withoutTerms, withoutInfo).duplicates,
+  ];
+  const infoKey = JSON.stringify([withInfo, withoutInfo]);
+  useEffect(() => {
+    if (duplicates.length > 0) emit(withText, withoutText, latest.current.value.min);
+    // Only a new answer matters; typing goes through the debouncer.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [infoKey]);
+
+  // One "did you mean" per term that is still in the field, so an answer for older input never shows.
+  const suggestionsFor = (terms: string[], info: TermInfo[]) =>
+    terms.flatMap((term) => {
+      const found = info.find((i) => i.term === term);
+      return found?.suggestion && found.itemId === null ? [{ term, name: found.suggestion.name }] : [];
+    });
+  const suggestionButtons = (field: 'with' | 'without', items: Array<{ term: string; name: string }>) =>
+    items.map(({ term, name }) => (
+      <button
+        key={`${field}-${term}`}
+        type="button"
+        className="button-quiet search-suggestion"
+        onClick={() => applySuggestion(field, term, name)}
+      >
+        {format('search.didYouMean', { name })}
+      </button>
+    ));
+  const applySuggestion = (field: 'with' | 'without', term: string, name: string) => {
+    debouncer.cancel();
+    if (field === 'with') {
+      const text = replaceTerm(withText, term, name);
+      setWithText(text);
+      emit(text, withoutText, value.min);
+    } else {
+      const text = replaceTerm(withoutText, term, name);
+      setWithoutText(text);
+      emit(withText, text, value.min);
+    }
+  };
+
   const tooMany = parseTerms(withText).tooMany || parseTerms(withoutText).tooMany;
   const n = value.with.length;
   const selected = value.min !== null && value.min < n ? value.min : n;
@@ -109,6 +200,7 @@ export function IngredientSearch({ value, onChange }: IngredientSearchProps) {
           onChange={(e) => typeWith(e.target.value)}
           aria-describedby={tooMany ? `${hintId} ${errorId}` : hintId}
         />
+        {suggestionButtons('with', suggestionsFor(withTerms, withInfo))}
       </div>
       <div className="field">
         <label htmlFor={withoutId}>{t('search.without')}</label>
@@ -120,7 +212,9 @@ export function IngredientSearch({ value, onChange }: IngredientSearchProps) {
           value={withoutText}
           onChange={(e) => typeWithout(e.target.value)}
         />
+        {suggestionButtons('without', suggestionsFor(withoutTerms, withoutInfo))}
       </div>
+      {duplicates.length > 0 && <p className="field-hint search-duplicate">{t('search.duplicate')}</p>}
       {tooMany && (
         <p className="field-error" id={errorId}>
           {t('search.tooMany')}

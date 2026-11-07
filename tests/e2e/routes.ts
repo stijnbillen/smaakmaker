@@ -54,6 +54,7 @@ export const routes: AppRoute[] = [
   { name: 'favorieten', path: '/favorieten', auth: 'full' },
   { name: 'profiel', path: '/profiel', auth: 'full' },
   { name: 'uitnodigingen', path: '/uitnodigingen', auth: 'admin' },
+  { name: 'databank', path: '/databank', auth: 'admin' },
   { name: 'aanmelden', path: '/aanmelden', auth: 'none' },
   { name: 'welkom', path: '/welkom', auth: 'unnamed' },
 ];

@@ -7,19 +7,22 @@ import { FavoriteButton } from '../components/FavoriteButton';
 import { ReviewSection } from '../components/ReviewSection';
 import { ServingsStepper } from '../components/ServingsStepper';
 import { useConnection } from '../components/ConnectionProvider';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import { canDelete, canEdit } from '../lib/permissions';
 import { formatDuration } from '../lib/format';
 import { ingredientLine, sourceLink } from '../lib/recipe';
 import { signedUrls } from '../lib/photos';
 import { deleteRecipe, fetchFamily } from '../lib/recipes';
 import { useRecipe } from '../lib/useRecipe';
+import { useStoredNames } from '../lib/useStoredNames';
 import { familyView, variantSourceLine, type FamilyMember } from '../lib/variant';
 
 const DELETE_KEY = 'recipe-delete';
 const FAMILY_KEY = 'recipe-family';
 
 export function RecipeDetailPage() {
+  const lang = useLanguage();
+  const storedName = useStoredNames().shown;
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const { session, isAdmin } = useAuth();
@@ -203,7 +206,7 @@ export function RecipeDetailPage() {
           <h2>{t('tags.dish')}</h2>
           <ul className="equipment-tags" data-testid="recipe-dish-tags">
             {recipe.dishTags.map((name) => (
-              <li key={name}>{name}</li>
+              <li key={name}>{storedName('dish', name)}</li>
             ))}
           </ul>
         </section>
@@ -214,7 +217,7 @@ export function RecipeDetailPage() {
           <h2>{t('tags.trait')}</h2>
           <ul className="equipment-tags" data-testid="recipe-trait-tags">
             {recipe.traitTags.map((name) => (
-              <li key={name}>{name}</li>
+              <li key={name}>{storedName('trait', name)}</li>
             ))}
           </ul>
         </section>
@@ -225,7 +228,7 @@ export function RecipeDetailPage() {
           <h2>{t('recipe.equipment')}</h2>
           <ul className="equipment-tags" data-testid="recipe-equipment">
             {recipe.equipment.map((name) => (
-              <li key={name}>{name}</li>
+              <li key={name}>{storedName('equipment', name)}</li>
             ))}
           </ul>
         </section>
@@ -239,9 +242,13 @@ export function RecipeDetailPage() {
             <p className="servings-note">{t('servings.original').replace('{n}', String(stored))}</p>
           )}
           <ul className="ingredient-list">
-            {recipe.ingredients.map((ing, i) => (
-              <li key={i}>{stored === null ? ingredientLine(ing, 1, 1) : ingredientLine(ing, stored, desired)}</li>
-            ))}
+            {recipe.ingredients.map((ing, i) => {
+              // The names come from the items (current, in the interface language); the stored text is the fallback.
+              const item = ing.ingredient_id ? recipe.catalog?.get(ing.ingredient_id) : undefined;
+              const unitItem = ing.unit_id ? recipe.catalog?.get(ing.unit_id) : undefined;
+              const [from, to] = stored === null ? [1, 1] : [stored, desired];
+              return <li key={i}>{ingredientLine(ing, from, to, item, lang, unitItem)}</li>;
+            })}
           </ul>
         </section>
       )}

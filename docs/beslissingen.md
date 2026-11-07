@@ -19,7 +19,7 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **Geen stille retries van de client:** `db.retry: false` en `cache: 'no-store'` in de Supabase-client. postgrest-js herhaalt anders GET's met backoff (seconden), waardoor de melding te laat komt; de gebruiker herhaalt zelf via "Opnieuw proberen".
 - **Playwright bouwt zelf:** de `webServer` draait `npm run build` met de lokale publieke sleutels en daarna `vite preview`, zodat de e2e-bundel altijd naar de lokale Supabase wijst.
 - **Supabase CLI als devDependency:** `supabase` staat in `package.json` zodat `supabase status` (testhulp) via npm-scripts werkt zonder losse installatie.
-- **Voorlopige iconen:** effen vlakken, gemaakt met `scripts/make-icons.mjs`; de stijltaak vervangt ze.
+- **Voorlopige iconen:** effen vlakken, gemaakt met `scripts/make-icons.mjs`; de stijltaak vervangt ze. Vervangen door T-026.
 - **Sessie in e2e-tests vóór R-002:** de test meldt zich via de API aan met een testgebruiker en zet de sessie in de browseropslag. De versie van `supabase-js` ligt vast in de lockfile.
 - **Retry-registratie volgt de levensduur van het scherm:** pagina's roepen bij unmount `resolve(KEY)` aan en negeren late antwoorden (vlag `active`/`mounted`), zodat "Opnieuw proberen" nooit een verlaten actie uitvoert. Het formulier negeert dubbel tikken zolang `save` loopt.
 - **Geen `overflow-x: hidden`:** overloop wordt niet verborgen maar door de lay-outtest gevangen; lange tekst wordt met `overflow-wrap: anywhere` opgevangen.
@@ -43,7 +43,7 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **Lay-out per route:** `AppLayout` (banner, `Outlet`, `BottomNav`) is een layout-route, zodat T-003 het aanmeldscherm erbuiten kan zetten.
 - **Link "Nieuw recept" op het overzicht weggehaald:** "Nieuw" staat al in de navigatie. De terugknop op `/nieuw` is een rustige omlijnde variant.
 - **Favorieten:** gebruikt `ListState` met een lege lijst; T-017 geeft `null` door tijdens het laden.
-- **Iconen (PWA):** `scripts/make-icons.mjs` tekent tomaatrood met een crème ring; zelfde bestandsnamen en afmetingen.
+- **Iconen (PWA):** `scripts/make-icons.mjs` tekent tomaatrood met een crème ring; zelfde bestandsnamen en afmetingen. Vervangen door T-026.
 - **Laadtoestand stopt bij elke fout:** `RecipeListPage` houdt `errored` bij; bij een verbindingsfout verschijnt de banner en verdwijnt de laadindicator, zodat er geen eeuwige "laden…" naast de melding staat.
 
 ## T-003 — Aanmelden met uitnodigingscode (2026-11-01, analyse)
@@ -344,3 +344,76 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - `favorites` maakt van `recipes` ↔ `profiles` een tweede (veel-op-veel) relatie; PostgREST weigert dan `profiles(...)` als embed (PGRST201). Alle embeds van de auteur op `recipes` gebruiken nu `profiles!recipes_author_profile_fkey(display_name)`.
 - `FavoriteButton` houdt per recept één gedeelde toestand (`entries`, op moduleniveau) buiten de component: een tik op de detailpagina met meteen "terug" toont op het overzicht de nieuwe toestand, ook als de aanroep nog loopt.
 - `FavoriteButton` houdt zijn gedeelde toestand per gebruiker bij (sleutel `userId:recipeId`), zodat een nog lopende aanroep bij afmelden zijn wens niet doorgeeft aan de volgende gebruiker in hetzelfde tabblad.
+
+## T-018 — Tweetalige interface (bouw)
+- Taalstatus in `src/i18n/language.ts` als kleine externe store (`subscribe`/`getLanguage`); `useLanguage()` in `t.ts` (`useSyncExternalStore`) staat bovenaan elke component die `t` gebruikt. Zo wisselt de taal live zonder `key`-wissel, en blijft formulierstatus staan. Geen provider nodig: de route-elementen zijn stabiel en zouden anders niet opnieuw renderen.
+- Standaardtaal is `nl` tot `initLanguage()` (in `main.tsx`, vóór de eerste render) loopt; `initLanguage` bewaart niets, alleen een expliciete keuze gaat naar `localStorage['smaakmaker.lang']`.
+- `en.json` wordt in `t.ts` als `Record<TextKey, string>` getypt, zodat een ontbrekende Engelse sleutel al in `tsc -b` faalt. (Vervangen door T-022: nu `fr.json`.)
+- Foutmeldingen in de status (`ReviewSection`, `ReviewForm`) zijn `TextKey`s en worden pas bij het renderen vertaald.
+- Getalnotatie: hoeveelheid en receptgrootte gebruiken het decimaalteken van de taal zonder duizendtalscheiding; datum, tijd en score gebruiken `Intl` per locale (`nl-BE`/`en-GB`, tijdzone Europe/Brussels), met een cache per locale. (Vervangen door T-022: `nl-BE`/`fr-BE` en een komma in beide talen.)
+- `LanguageSwitch` hergebruikt de bestaande `.choice`-knoppen (`aria-pressed`, ≥ 44 px) in een `role="group"`.
+- `scripts/make-email-templates.mjs` schrijft een Nederlands en daarna een Engels blok (elk met link en code) en herschrijft alleen de twee `subject`-regels van `config.toml`. Na een wijziging van `config.toml` moet de lokale Supabase herstart worden (`supabase stop` en `start`), anders gebruikt de mailserver het oude onderwerp.
+
+## T-019 — Ingrediënten- en eenhedendatabank (bouw)
+- Twee tabellen (`ingredients`, `units`) met elk een sleuteltabel (`ingredient_keys`, `unit_keys`, `primary key (key)`): zo is een sleutel uniek over beide talen en alle synoniemen, wat een `unique` op kolommen niet kan. Een `after`-trigger (`security definer`) bouwt de sleutels opnieuw op; een conflict geeft `23505` en rolt alles terug.
+- `item_key()` = `fold_key()` plus witruimte samenvoegen; `fold_key` blijft ongewijzigd voor tags en kookgerief.
+- Gewone gebruikers hebben alleen `select` en `insert (name_nl, name_en)`; geen update/delete-grants of -policies (beheer is R-022). `add_ingredient`/`add_unit` zijn `security invoker` en idempotent: bij een bekende sleutel (ook na een race) komt het bestaande id terug met `created = false`.
+- Koppeling zit als `ingredient_id`/`unit_id` in de bestaande jsonb-regel; een trigger controleert dat het item bestaat (`23503`). `link_recipes_to_catalog()` vangt per rij elke fout op en laat die rij dan ongemoeid.
+- Client: `IngredientDraft` bewaart de koppeling met de sleutel van de tekst bij het laden (`ingredientRef`/`unitRef`); `toRow` neemt hem alleen mee als de sleutel gelijk bleef.
+
+## T-020 — Woordnabijheid en suggesties
+- Berekenen in de databank (`suggest_ingredients`/`suggest_units`), niet in de client: één bron voor sleutels (`item_key`), geen sleutellijst naar de gsm.
+- Trigram via `pg_trgm.similarity()` (drempel 0,35, vergeleken als `real`); afstand via eigen `dl_distance` (beperkte Damerau-Levenshtein, per teken) omdat `fuzzystrmatch` geen verwisseling kent.
+- Lengtegrens (termen < 4 tekens) geldt voor afstand én trigram; exact vanaf 1 teken, begint-met vanaf 2 (zonder `LIKE`, dus `%`/`_` zijn gewone tekens).
+- Wrappers en `catalog_suggest` zijn `security definer` (afwijking van de brief: invoker): zo hoeft `authenticated` geen `execute` op `catalog_suggest`/`dl_*` te hebben en zijn die niet via `/rpc` aan te roepen. De wrappers weigeren zonder aanmelding (42501); de catalogus is voor elke aangemelde gebruiker leesbaar, dus er lekt niets.
+- Client: `src/lib/suggest.ts` (zonder Supabase) met loader op `createDebouncer` + volgnummer, debounce 250 ms; `fetchSuggestions` staat in `recipes.ts`.
+
+## T-021 — Ingrediënten en eenheden kiezen
+- De naam blijft als momentopname in de regel (`name`/`unit`, in de interfacetaal bij opslaan) naast `ingredient_id`/`unit_id`: zoeken, de groottetelling en de terugval blijven werken. Detailpagina en formulier lezen de actuele naam via de verwijzing (`RecipeRecord.catalog`, geladen in `fetchRecipe`).
+- Een gekoppelde regel in de draft hangt aan `ingredient`/`unitItem` (een `CatalogItem`); typen wist de koppeling. Een koppeling zonder geladen item blijft bestaan als item met de opgeslagen tekst als enige naam, zodat een mislukte lading niets wist.
+- Het item ontstaat bij "Ja" (`add_ingredient`/`add_unit`), niet bij "Opslaan". Een leeg of leeg gemaakt `size` (null, "") wordt door `recipes_normalize()` weggelaten, net als een lege eenheid; andere ongeldige waarden (bv. `true`, 1, "huge") geeft `23514`.
+- `CatalogField` houdt per veld bij of de tekst nog gecontroleerd moet worden (`unsettled`) en meldt zich aan in een register van het formulier. "Opslaan" controleert eerst alle niet-gecontroleerde velden en weigert bij een open vraag (melding bij de regel, focus op de vraag). Het formulier zet een patch ook meteen in `draftRef`, zodat "Opslaan" na zo'n controle het resultaat leest en niet de vorige render.
+- Rijen hebben een stabiele `uid` (niet in `isDirty`, niet opgeslagen); antwoorden landen via de `uid`, niet via de index.
+- Opties van de suggestielijst vangen `mousedown`/`pointerdown` op (`preventDefault`), zodat het veld niet blurt en de controle bij verlaten een gekozen suggestie niet overschrijft.
+- `ingredientLine(ingredient, original, desired, item?, lang?, unitItem?)`: het formaat staat als laatste in haakjes; de eenheid wordt ook uit het item gelezen.
+- Het formaat in `ingredientLine` wordt vertaald met de parameter `lang` (nieuwe `tIn` in `src/i18n/t.ts`), zodat naam, eenheid en formaat altijd in dezelfde taal staan.
+- `REQUIREMENTS.md` (R-025) is niet door deze taak gewijzigd; laat de eigenaar dat apart committen.
+
+## T-022 — Frans in plaats van Engels
+- De migraties van T-019/T-020 zijn ter plaatse aangepast (`name_en` → `name_fr`, `'nl' | 'fr'`), want ze stonden nog niet online; lokaal is `supabase db reset` nodig.
+- Een opgeslagen `smaakmaker.lang = "en"` wordt niet gewist: `loadLanguage` negeert elke ongeldige waarde en volgt dan de browsertaal; de volgende expliciete keuze overschrijft ze.
+- Het decimaalteken is in beide talen een komma, vast in `formatQuantity` en `formatRecipeSize`; geen taalvergelijking meer voor notatie.
+- Startlijst: Belgisch Frans (chicon, fromage blanc, cassonade). Een doos is "carton", want "boîte" hoort bij blik (een sleutel hoort bij één item); bol is "boule" (niet gelijk aan de Nederlandse sleutel "bol" van een ander item). Waar de Franse schrijfwijze in het Nederlands gangbaar is (brocoli, courgette) is die de naam van hetzelfde item; Engelse synoniemen zijn weg.
+
+## T-026 — App-icoon koksmuts
+- **Eén tekening, Chromium als rasterizer:** `scripts/make-icons.mjs` definieert de muts één keer (512-raster) en rasteriseert via Playwright-Chromium; geen nieuwe pakketten en geen tweede weergave van de tekening.
+- **Kleuren uit `tokens.css`:** muts = `--color-bg` (= `background_color`), achtergrond = `--color-accent` (= `theme_color`); het manifest blijft qua kleur ongewijzigd.
+- **Varianten per schaal:** alleen `icon.svg` staat als bron in de repo; maskable (schaal 0,82, binnen de veilige cirkel) en favicon (schaal 1,2) zijn dezelfde tekening met een andere schaal.
+
+## T-023 — Tweetalige tags en kookgerief
+- **Canonieke naam is de Nederlandse:** recepten bewaren `name`; `name_fr` is alleen voor weergave en opzoeken. Door gebruikers toegevoegde items hebben `name_fr = null` en tonen één naam in beide talen.
+- **`name_fr` + `name_fr_key` met sleutel-trigger:** een trigger weigert (`23505`) een `name_key` die gelijk is aan de `name_fr_key` van een ander item in dezelfde groep, en omgekeerd; zo hoort elke sleutel bij hoogstens één item. Dezelfde Nederlandse sleutel op een andere rij telt niet als kruising (het herhalen van de startlijst-insert blijft veilig).
+- **Resolvers zoeken eerst op beide sleutels** en geven de canonieke naam terug; ontdubbelen gebeurt op de canonieke sleutel ("soep" + "soupe" wordt één).
+- **`seeded` op `equipment` en `equipment_choices()`:** startlijst-gerief is altijd een keuze; gebruikersgerief pas zodra een recept het gebruikt. `equipment_in_use()` blijft bestaan.
+- **Samenvoegen in `merge_seeded_names()`:** bevat de startlijsten en hernoemt, herschrijft recepten, verwijdert verouderde rijen en zet daarna pas de Franse naam (volgorde door de sleutel-trigger). Alleen de eigenaar kan ze uitvoeren; de migratie roept ze aan en de migratietest kan ze herhalen. Bij elke ronde wordt `name_fr` van het startitem eerst leeggemaakt, zodat een herhaling niet stukloopt op een oude rij met dezelfde Franse sleutel. De migratie heet `20261107110000_…` omdat `20261107100000` al door T-024 in gebruik is.
+- **Weergave via sleutel-opzoeking:** `useStoredNames` laadt de catalogi en toont opgeslagen namen in de taal van de lezer (onbekend: de opgeslagen tekst). Het overzicht zet een met de hand getypte Franse URL-naam om naar de canonieke naam voor de databankvraag, zonder herladen als de URL al canoniek is.
+- **Gedeelde helper** `src/lib/namedItems.ts` (`NamedItem`, `shownName`, `findItem`, `sortByShownName` met `Intl.Collator`, `addNamed`), zonder Supabase-import.
+
+## T-024 — Zoeken met synoniemen
+- **Herkennen in de databank:** `search_recipes` zoekt zelf het item bij elke term (`item_key` → `ingredient_keys`), zonder taalparameter. Resultaten zijn zo taalonafhankelijk, ook voor een met de hand getypte URL.
+- **Regel past bij een item** via de koppeling (`ingredient_id`), via de sleutel van de regeltekst (oude of vrije regels) of als deel van de tekst of van de actuele nl/fr-naam van het gekoppelde item. Synoniemen tellen alleen exact mee, anders vindt "oli" te veel.
+- **Groepen per item:** termen voor hetzelfde item vormen één groep; n telt groepen. De `22023`-controle op `p_min` gebruikt het aantal unieke sleutels en k wordt daarna teruggebracht tot n, zodat een race met het samenvoegen geen fout geeft.
+- **`search_term_info`:** aparte `security definer`-RPC (patroon van `suggest_ingredients`), één aanroep per veld; het zoeken wacht er niet op.
+- **"Al toegevoegd.":** het veld blijft ongewijzigd; de dubbele term gaat niet mee naar boven. `IngredientSearch` stuurt de ontdubbelde termen opnieuw omhoog zodra het antwoord binnen is.
+- **Mislukte ophaling** laat het zoeken ongemoeid: geen suggestie, geen melding.
+
+## T-025 — Beheer van de databank
+- **Alleen `security definer`-functies, geen tabelrechten:** `admin_list/update/merge/delete_catalog` controleren zelf `is_admin()` (`42501`); er is geen update- of delete-grant op de vier tabellen en geen update-policy op `recipes`. Samenvoegen wijzigt in een recept alleen `ingredient_id`/`unit_id`.
+- **Gedeelde vergelijking `catalog_match`** met limietparameter en synoniemen in het resultaat; `catalog_suggest` roept haar met 5 aan, zodat R-019 ongewijzigd blijft en de beheerlijst alle treffers toont. Zonder term sorteert de lijst op de sleutel van de getoonde naam in byte-volgorde (`collate "C"`), onafhankelijk van de databanktaal.
+- **Fouten als codes:** `23505` met het id van het andere item in `detail`, `23503` met het aantal recepten, `22023` voor samenvoegen met zichzelf; de client zet ze om naar teksten uit `nl.json`/`fr.json` (`catalogAdminLogic.ts`, zonder Supabase-import).
+- **Samenvoegen in één functie zonder foutafhandeling:** vergrendelen op id-volgorde (`for update`), recepten omzetten, A verwijderen, dan A's namen als synoniemen bij B; meer dan 20 synoniemen geeft `23514` en rolt alles terug. Gebruik telt verschillende recepten (`@>`-containment op de jsonb-regels).
+- **Herkenbare fout bij te veel synoniemen:** `admin_merge_catalog` vangt de `check_violation` van alleen de synoniemenupdate van B op en geeft `23514` met `detail = 'too_many_synonyms'`; een recept dat een check faalt blijft een gewone `23514` en toont de algemene fout.
+- **Gelijktijdige invoer van dezelfde sleutel:** `admin_update_catalog` vangt de `unique_violation` van de update op en geeft de eigenaar van de sleutel opnieuw als `23505` met id. Is die naam niet op te halen, dan toont de interface de algemene fout in plaats van "Bestaat al bij .".
+- **`recipes_check_catalog_refs` neemt `for key share`** op het item, zodat een gelijktijdig opgeslagen recept niet naar een item verwijst dat net verdwijnt.
+- **Samenvoegen kiest B in dezelfde lijst:** na "Samenvoegen met…" wordt de lijst (zonder A) de keuze van B; tikken op een item opent de bevestiging. Annuleren laat B gekozen, met een knop "Samenvoegen met B" om opnieuw te bevestigen.
+- **Lijst toont 40 items per keer ("Toon meer"):** de a11y-test eist dat elk bedienbaar element met Tab bereikbaar is binnen 80 stappen; de volledige lijst (±175) wordt wel in één keer opgehaald. Afwijking van het plan (geen paginering) om die test te halen.

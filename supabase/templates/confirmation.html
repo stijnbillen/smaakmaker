@@ -7,5 +7,14 @@
     <p>Werkt de link niet, bijvoorbeeld in de geïnstalleerde app? Typ dan deze code over in het veld Code uit de e-mail:</p>
     <p style="font-size:32px;font-weight:600;letter-spacing:6px;margin:8px 0 24px;">{{ .Token }}</p>
     <p style="color:#6b5648;font-size:14px;">Heb je dit niet gevraagd? Dan mag je deze mail negeren.</p>
+    <hr style="border:0;border-top:1px solid #d9ccb6;margin:32px 0;">
+    <div lang="fr">
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:24px;margin:0 0 16px;">Connexion à Smaakmaker</h1>
+    <p>Touchez le bouton pour vous connecter tout de suite :</p>
+    <p><a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:12px 24px;background:#a8321a;color:#fffaf0;border-radius:999px;text-decoration:none;font-weight:600;">Se connecter</a></p>
+    <p>Le lien ne fonctionne pas, par exemple dans l'application installée ? Saisissez alors ce code dans le champ Code de l'e-mail :</p>
+    <p style="font-size:32px;font-weight:600;letter-spacing:6px;margin:8px 0 24px;">{{ .Token }}</p>
+    <p style="color:#6b5648;font-size:14px;">Vous n'avez rien demandé ? Vous pouvez alors ignorer cet e-mail.</p>
+    </div>
   </body>
 </html>

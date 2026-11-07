@@ -1,5 +1,6 @@
 // Pure review logic (R-012). No import of the Supabase client, so unit tests can load it.
-import { t } from '../i18n/t';
+import { locale } from '../i18n/language';
+import { format, t } from '../i18n/t';
 
 export const MAX_REVIEW_LENGTH = 500;
 
@@ -31,16 +32,22 @@ export function validateReview(draft: ReviewDraft): ReviewErrors {
   return errors;
 }
 
-const ratingFormat = new Intl.NumberFormat('nl-BE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const ratingFormats = new Map<string, Intl.NumberFormat>();
 
-/** Always one decimal, comma as separator: "4,3", "4,0". */
+/** Always one decimal, separator of the language: "4,3" / "4.3", "4,0" / "4.0". */
 export function formatRating(n: number): string {
-  return ratingFormat.format(n);
+  const loc = locale();
+  let f = ratingFormats.get(loc);
+  if (!f) {
+    f = new Intl.NumberFormat(loc, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    ratingFormats.set(loc, f);
+  }
+  return f.format(n);
 }
 
 /** "1 review" / "3 reviews". */
 export function reviewCountText(n: number): string {
-  return n === 1 ? t('reviews.countOne') : t('reviews.countMany').replace('{n}', String(n));
+  return n === 1 ? t('reviews.countOne') : format('reviews.countMany', { n });
 }
 
 export type ReviewSort = 'newest' | 'rating';

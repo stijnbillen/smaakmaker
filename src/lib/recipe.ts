@@ -1,7 +1,9 @@
 // Recipe rules shared by the form and the detail page. The database enforces the same limits (checks in
 // the recipe_content migration); the client validates first for a clear message at the field.
 
-import { t } from '../i18n/t';
+import { getLanguage } from '../i18n/language';
+import { format, t, tIn } from '../i18n/t';
+import { displayName, type CatalogItem, type CatalogLang } from './catalog';
 
 export const TITLE_MAX = 100;
 export const INGREDIENT_NAME_MAX = 80;
@@ -54,7 +56,21 @@ export interface IngredientDraft {
   name: string;
   quantity: string;
   unit: string;
+  /**
+   * The catalogue items the line points to (R-018, R-020). The field shows the item's name; typing in the
+   * field removes the link. Without a loaded item, a stored link is kept as an item whose only name is the stored text.
+   */
+  ingredient?: CatalogItem;
+  unitItem?: CatalogItem;
+  size?: IngredientSize;
+  /** The user answered "No": the text stays free text and the question does not come back. */
+  freeText?: { name?: boolean; unit?: boolean };
+  /** Stable id of the row in the form (keys, open questions). Not part of "changed", never stored. */
+  uid?: string;
 }
+
+export const INGREDIENT_SIZES = ['small', 'medium', 'large'] as const;
+export type IngredientSize = (typeof INGREDIENT_SIZES)[number];
 
 export interface RecipeDraft {
   title: string;
@@ -82,6 +98,11 @@ export interface Ingredient {
   name: string;
   quantity?: number;
   unit?: string;
+  /** Optional pointers to the catalogues (R-018); the text above stays as a snapshot (search, size, fallback). */
+  ingredient_id?: string;
+  unit_id?: string;
+  /** Optional size, stored as a code and translated when shown (R-020). */
+  size?: IngredientSize;
 }
 
 /** What is written to the database. */
@@ -120,6 +141,8 @@ export interface RecipeRecord extends Omit<RecipeRow, 'prep_minutes' | 'total_mi
   isFavorite: boolean;
   /** Title of the source, as it is now; null without a (remaining) source. */
   sourceTitle: string | null;
+  /** The catalogue items the ingredient lines point to, by id (R-020). Missing when they could not be loaded. */
+  catalog?: ReadonlyMap<string, CatalogItem>;
 }
 
 /** Counts code points after trimming, like the database does with its trim and char_length. */
@@ -138,7 +161,7 @@ export function parseQuantity(input: string): QuantityResult {
   return { ok: true, value };
 }
 
-/** Decimal comma, no superfluous zeros: 0.25 -> "0,25", 2 -> "2". */
+/** Decimal comma in both languages, no superfluous zeros, no thousands separator: 0.25 -> "0,25", 2 -> "2". */
 export function formatQuantity(value: number): string {
   return String(Number(value.toFixed(2))).replace('.', ',');
 }
@@ -175,16 +198,31 @@ export function scaleQuantity(quantity: number, original: number, desired: numbe
   return Math.round((Math.round(quantity * 100) * desired) / original) / 100;
 }
 
-/** One ingredient line "quantity unit name" with the quantity scaled; without a quantity it stays as stored. */
-export function ingredientLine(ingredient: Ingredient, original: number, desired: number): string {
+/**
+ * One ingredient line "quantity unit name (size)" with the quantity scaled; without a quantity it stays as
+ * stored. A linked item gives the name (and unit) in the interface language; without a loaded item the stored text is shown.
+ */
+export function ingredientLine(
+  ingredient: Ingredient,
+  original: number,
+  desired: number,
+  item?: CatalogItem,
+  lang: CatalogLang = getLanguage(),
+  unitItem?: CatalogItem,
+): string {
   let quantity = '';
   if (ingredient.quantity !== undefined) {
     const scaled = scaleQuantity(ingredient.quantity, original, desired);
     // A result that rounds to 0 would read as "none"; say it is below the smallest amount shown.
-    quantity = scaled > 0 ? formatQuantity(scaled) : t('servings.belowMinimum').replace('{q}', formatQuantity(0.01));
+    quantity = scaled > 0 ? formatQuantity(scaled) : format('servings.belowMinimum', { q: formatQuantity(0.01) });
   }
-  return [quantity, ingredient.unit ?? '', ingredient.name].filter(Boolean).join(' ');
+  const name = item ? displayName(item, lang) || ingredient.name : ingredient.name;
+  const unit = unitItem ? displayName(unitItem, lang) || ingredient.unit : ingredient.unit;
+  const size = ingredient.size ? `(${tIn(lang, SIZE_SHOWN[ingredient.size])})` : '';
+  return [quantity, unit ?? '', name, size].filter(Boolean).join(' ');
 }
+
+const SIZE_SHOWN = { small: 'recipe.sizeSmall', medium: 'recipe.sizeMedium', large: 'recipe.sizeLarge' } as const;
 
 export type TitleError ='titleInvalid';
 export interface IngredientErrors {
@@ -318,7 +356,7 @@ export function removePhoto(list: readonly PhotoDraft[], index: number): PhotoDr
 export const emptyIngredient = (): IngredientDraft => ({ name: '', quantity: '', unit: '' });
 
 const isEmptyIngredient = (ing: IngredientDraft): boolean =>
-  ing.name.trim() === '' && ing.quantity.trim() === '' && ing.unit.trim() === '';
+  ing.name.trim() === '' && ing.quantity.trim() === '' && ing.unit.trim() === '' && !ing.size;
 
 /**
  * Drops rows that are completely empty (the new form starts with one of each), and remembers where
@@ -356,11 +394,16 @@ export function toRow(draft: RecipeDraft): RecipeRow {
   return {
     title: draft.title.trim(),
     ingredients: draft.ingredients.map((ing) => {
-      const row: Ingredient = { name: ing.name.trim() };
+      // A linked field holds the item's shown name already; the snapshot is that name in the language now in use.
+      const lang = getLanguage();
+      const row: Ingredient = { name: (ing.ingredient ? displayName(ing.ingredient, lang) || ing.name : ing.name).trim() };
       const quantity = parseQuantity(ing.quantity);
       if (quantity.ok && quantity.value !== null) row.quantity = quantity.value;
-      const unit = ing.unit.trim();
+      const unit = (ing.unitItem ? displayName(ing.unitItem, lang) || ing.unit : ing.unit).trim();
       if (unit !== '') row.unit = unit;
+      if (ing.ingredient) row.ingredient_id = ing.ingredient.id;
+      if (ing.unitItem && unit !== '') row.unit_id = ing.unitItem.id;
+      if (ing.size) row.size = ing.size;
       return row;
     }),
     steps: draft.steps.map((step) => step.trim()),
@@ -388,7 +431,12 @@ export function sourceLink(source: string | null): string | null {
 export function isDirty(initial: RecipeDraft, current: RecipeDraft): boolean {
   // A Blob serialises to {}, so photos are compared on key, main flag and order instead.
   const signature = (draft: RecipeDraft): string =>
-    JSON.stringify({ ...draft, photos: (draft.photos ?? []).map((p) => [p.key, p.main]) });
+    JSON.stringify({
+      ...draft,
+      photos: (draft.photos ?? []).map((p) => [p.key, p.main]),
+      // The row id is bookkeeping of the form, not content.
+      ingredients: draft.ingredients.map(({ uid: _uid, ...rest }) => rest),
+    });
   return signature(initial) !== signature(current);
 }
 
@@ -398,7 +446,14 @@ type StoredRecipe = Omit<RecipeRow, 'prep_minutes' | 'total_minutes' | 'servings
   Partial<Pick<RecipeRow, 'prep_minutes' | 'total_minutes' | 'source' | 'note' | 'equipment' | 'dish_tags' | 'trait_tags'>> & { servings?: number | null };
 
 /** The form's starting values for a stored recipe; old rows without content get one empty row to fill in. */
-export function draftFromRecord(record: StoredRecipe, sizes?: ReadonlyMap<string, number>): RecipeDraft {
+export function draftFromRecord(
+  record: StoredRecipe,
+  sizes?: ReadonlyMap<string, number>,
+  catalog?: ReadonlyMap<string, CatalogItem>,
+): RecipeDraft {
+  const lang = getLanguage();
+  // A link whose item is not loaded stays, as an item named by the stored text: nothing is lost.
+  const itemFor = (id: string, text: string): CatalogItem => catalog?.get(id) ?? { id, nameNl: text, nameFr: null };
   // Times as text, so a fresh form is not "changed"; an old row without times starts empty.
   const prep = record.prepMinutes ?? record.prep_minutes ?? null;
   const total = record.totalMinutes ?? record.total_minutes ?? null;
@@ -419,11 +474,18 @@ export function draftFromRecord(record: StoredRecipe, sizes?: ReadonlyMap<string
     }),
     ingredients:
       record.ingredients.length > 0
-        ? record.ingredients.map((ing) => ({
-            name: ing.name,
-            quantity: ing.quantity === undefined ? '' : formatQuantity(ing.quantity),
-            unit: ing.unit ?? '',
-          }))
+        ? record.ingredients.map((ing): IngredientDraft => {
+            const ingredient = ing.ingredient_id ? itemFor(ing.ingredient_id, ing.name) : undefined;
+            const unitItem = ing.unit_id && ing.unit ? itemFor(ing.unit_id, ing.unit) : undefined;
+            return {
+              name: ingredient ? displayName(ingredient, lang) || ing.name : ing.name,
+              quantity: ing.quantity === undefined ? '' : formatQuantity(ing.quantity),
+              unit: unitItem ? displayName(unitItem, lang) || (ing.unit ?? '') : (ing.unit ?? ''),
+              ...(ingredient ? { ingredient } : {}),
+              ...(unitItem ? { unitItem } : {}),
+              ...(ing.size ? { size: ing.size } : {}),
+            };
+          })
         : [emptyIngredient()],
     steps: record.steps.length > 0 ? [...record.steps] : [''],
   };

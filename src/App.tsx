@@ -4,6 +4,7 @@ import { AuthProvider } from './components/AuthProvider';
 import { ConnectionProvider } from './components/ConnectionProvider';
 import { RequireAdmin } from './components/RequireAdmin';
 import { RequireAuth } from './components/RequireAuth';
+import { CatalogAdminPage } from './pages/CatalogAdminPage';
 import { EditRecipePage } from './pages/EditRecipePage';
 import { InvitesPage } from './pages/InvitesPage';
 import { FavoritesPage } from './pages/FavoritesPage';
@@ -33,6 +34,7 @@ const router = createBrowserRouter(
           <Route path="/profiel" element={<ProfilePage />} />
           <Route element={<RequireAdmin />}>
             <Route path="/uitnodigingen" element={<InvitesPage />} />
+            <Route path="/databank" element={<CatalogAdminPage />} />
           </Route>
         </Route>
       </Route>

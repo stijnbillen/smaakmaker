@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import { fetchTags } from '../lib/recipes';
-import { tagKey, type TagKind } from '../lib/tags';
+import { findItem, type NamedItem } from '../lib/namedItems';
+import type { TagKind } from '../lib/tags';
 import { useConnection } from './ConnectionProvider';
 import { TagChoices } from './TagChoices';
 
@@ -16,8 +17,9 @@ interface TagFilterProps {
 
 /** Tag choices of one group in the overview; the page keeps the value in the URL. */
 export function TagFilter({ kind, label, value, onToggle }: TagFilterProps) {
+  useLanguage();
   const { report, resolve } = useConnection();
-  const [names, setNames] = useState<string[]>([]);
+  const [items, setItems] = useState<NamedItem[]>([]);
   const key = `tag-filter-${kind}`;
 
   useEffect(() => {
@@ -30,7 +32,7 @@ export function TagFilter({ kind, label, value, onToggle }: TagFilterProps) {
         return;
       }
       resolve(key);
-      setNames(res.names);
+      setItems(res.items);
     }
     void load();
     return () => {
@@ -39,15 +41,15 @@ export function TagFilter({ kind, label, value, onToggle }: TagFilterProps) {
     };
   }, [kind, key, report, resolve]);
 
-  if (names.length === 0 && value.length === 0) return null;
+  if (items.length === 0 && value.length === 0) return null;
   // A name from the URL that the catalogue does not know still gets a button, so the filter can be switched off.
-  const shown = [...names];
-  for (const name of value) if (!shown.some((n) => tagKey(n) === tagKey(name))) shown.push(name);
+  const shown = [...items];
+  for (const name of value) if (!findItem(shown, name)) shown.push({ name, nameFr: null });
   return (
     <fieldset className="form-group equipment-filter">
       <legend>{label}</legend>
       <p className="field-hint">{t('filter.tagsHint')}</p>
-      <TagChoices names={shown} selected={value} onToggle={onToggle} />
+      <TagChoices items={shown} selected={value} onToggle={onToggle} />
     </fieldset>
   );
 }

@@ -296,3 +296,166 @@
 - 2026-11-02 23:57 T-017 build: worker-crash (geen testfout), opnieuw
 - 2026-11-03 00:05 T-017 build: geslaagd
 - 2026-11-03 00:05 T-017 savepoint: gecommit
+- 2026-11-06 17:27 T-018 analist: KLAAR
+- 2026-11-06 17:33 T-018 tester: KLAAR
+- 2026-11-06 17:48 T-018 ontwikkelaar: BLOKKADE: test ÔÇö `tests/e2e/language.spec.ts` mist `with { type: 'json' }` bij de JSON-imports, `byPrefix` matcht "Step {n}" niet, de "Jan"-controle met `exact: true` mist de auteurregel; `tests/db/auth-invites.test.ts` verwacht precies ├®├®n code terwijl de tweetalige mail dezelfde code twee keer bevat.
+- 2026-11-06 17:49 T-018 tester: KLAAR
+- 2026-11-06 17:50 T-018 ontwikkelaar: BLOKKADE: test `tests/unit/i18n.test.ts` regel 144, tegenproef "the scan sees a literal text" verwacht `['text','attr']`, maar de AST-doorloop geeft `['attr','text']` (attributen v├│├│r kindtekst).
+- 2026-11-06 17:50 T-018 tester: KLAAR
+- 2026-11-06 17:58 T-018 ontwikkelaar: KLAAR
+- 2026-11-06 18:05 T-018 build: geslaagd
+- 2026-11-06 18:07 T-018 reviewer: GOEDGEKEURD
+- 2026-11-06 18:13 T-018 build: geslaagd
+- 2026-11-06 18:13 T-018 savepoint: gecommit
+- 2026-11-06 18:17 T-019 analist: KLAAR
+- 2026-11-06 18:19 T-019 tester: KLAAR
+- 2026-11-06 18:24 T-019 ontwikkelaar: BLOKKADE: test `tests/db/catalog-links.test.ts` verwacht dat `'  aardappel '` na insert ongetrimd terugkomt, maar `recipes_normalize` trimt namen al bij insert, dus de test moet de getrimde naam verwachten.
+- 2026-11-06 18:25 T-019 tester: KLAAR
+- 2026-11-06 18:32 T-019 ontwikkelaar: BLOKKADE: test `tests/e2e/recipe-catalog.spec.ts:33,44` vergelijkt `main.innerText()` terwijl de reviewsectie nog laadt ("Reviews ladenÔÇª" tegenover "Nog geen reviews"); de tester moet wachten tot de reviews geladen zijn of alleen de receptinhoud vergelijken.
+- 2026-11-06 18:32 T-019 tester: KLAAR
+- 2026-11-06 18:39 T-019 ontwikkelaar: KLAAR
+- 2026-11-06 18:40 T-019 build: worker-crash (geen testfout), opnieuw
+- 2026-11-06 18:47 T-019 build: geslaagd
+- 2026-11-06 18:50 T-019 reviewer: GOEDGEKEURD
+- 2026-11-06 18:56 T-019 build: geslaagd
+- 2026-11-06 18:56 T-019 savepoint: gecommit
+- 2026-11-06 19:00 T-020 analist: KLAAR
+- 2026-11-06 19:04 T-020 tester: KLAAR
+- 2026-11-06 19:12 T-020 ontwikkelaar: KLAAR
+- 2026-11-06 19:19 T-020 build: geslaagd
+- 2026-11-06 19:20 T-020 reviewer: GOEDGEKEURD
+- 2026-11-06 19:27 T-020 build: geslaagd
+- 2026-11-06 19:27 T-020 savepoint: gecommit
+- 2026-11-06 19:32 T-021 analist: KLAAR
+- 2026-11-06 19:36 T-021 tester: KLAAR
+- 2026-11-06 20:02 T-021 ontwikkelaar: BLOKKADE: test ÔÇö the eight test mistakes above (db bytes-test title lengths, picker e2e English `titleField`, same-text `fill`, `role="alert"` and language-switch location, plus `recipe-catalog`, `language` and `connection` specs expecting the old textbox or stored-name behaviour) must be fixed by the tester.
+- 2026-11-06 20:05 T-021 tester: KLAAR
+- 2026-11-06 20:15 T-021 ontwikkelaar: BLOKKADE: test `tests/helpers/recipe-form.ts` `ingredientNameFields` zoekt `combobox` met naam `/^Ingredi├½nt/`, maar in het Engels is het label "Ingredient"; daardoor falen `ingredient-picker.spec.ts:85` en `:186` (tester moet de regex taalonafhankelijk maken, bv. `/^Ingredi[e├½]nt/`).
+- 2026-11-06 20:16 T-021 tester: KLAAR
+- 2026-11-06 20:25 T-021 ontwikkelaar: BLOKKADE: test `tests/e2e/ingredient-picker.spec.ts:88` gebruikt `/potato/`, dat twee opties vindt, en `tests/helpers/recipe-form.ts` `quantityFields`, `unitFields` en `sizeFields` zoeken alleen op Nederlandse labels, waardoor `ingredient-picker.spec.ts:186` in het Engels faalt.
+- 2026-11-06 20:25 T-021 stop: BLOKKADE: test `tests/e2e/ingredient-picker.spec.ts:88` gebruikt `/potato/`, dat twee opties vindt, en `tests/helpers/recipe-form.ts` `quantityFields`, `unitFields` en `sizeFields` zoeken alleen op Nederlandse labels, waardoor `ingredient-picker.spec.ts:186` in het Engels faalt.
+- 2026-11-06 20:25 - loop: geen taak meer
+- 2026-11-06 20:26 T-021 ontwikkelaar: BLOKKADE: test `tests/e2e/ingredient-picker.spec.ts:88` gebruikt `/potato/` (matcht "potato" en "sweet potato"), en `tests/helpers/recipe-form.ts` `quantityFields`, `unitFields`, `sizeFields` (en `catalogQuestion`/`answerQuestionsNo`) zoeken alleen op Nederlandse labels, waardoor `ingredient-picker.spec.ts:186` in het Engels faalt.
+- 2026-11-06 20:27 T-021 tester: KLAAR
+- 2026-11-06 20:39 T-021 ontwikkelaar: BLOKKADE: test `tests/e2e/ingredient-picker.spec.ts:88` verwacht optie `/^potato$/` terwijl het label terecht "aardappel ÔåÆ potato" is, en `:186` faalt in de volledige run omdat items `tempeh-e2e-ÔÇª` van eerdere tests blijven staan en een "Bedoelde u"-vraag in plaats van "Yes" geven.
+- 2026-11-06 20:40 T-021 tester: KLAAR
+- 2026-11-06 20:49 T-021 ontwikkelaar: KLAAR
+- 2026-11-06 20:50 T-021 build: worker-crash (geen testfout), opnieuw
+- 2026-11-06 20:59 T-021 build: geslaagd
+- 2026-11-06 21:02 T-021 reviewer: BEVINDINGEN: 0/2
+- 2026-11-06 21:03 T-021 tester: KLAAR
+- 2026-11-06 21:03 T-021 ontwikkelaar: KLAAR
+- 2026-11-06 21:12 T-021 build: mislukt
+- 2026-11-06 21:12 T-021 stop: review niet goedgekeurd na 2 rondes
+- 2026-11-06 21:12 - loop: geen taak meer
+- 2026-11-06 21:25 T-021 ontwikkelaar: KLAAR
+- 2026-11-06 21:35 T-021 build: geslaagd
+- 2026-11-06 21:39 T-021 reviewer: GOEDGEKEURD
+- 2026-11-06 21:49 T-021 build: geslaagd
+- 2026-11-06 21:49 T-021 savepoint: gecommit
+- 2026-11-06 21:50 T-022 analist: VRAAG: Krijgt kookgerief een startlijst met Nederlandse en Engelse namen, aangezien R-024 crit. 2 er een veronderstelt maar R-008 en de databank er geen hebben?
+- 2026-11-06 21:50 T-022 stop: VRAAG: Krijgt kookgerief een startlijst met Nederlandse en Engelse namen, aangezien R-024 crit. 2 er een veronderstelt maar R-008 en de databank er geen hebben?
+- 2026-11-06 21:58 T-022 analist: KLAAR
+- 2026-11-06 22:04 T-022 tester: KLAAR
+- 2026-11-06 22:16 T-022 ontwikkelaar: BLOKKADE: test ÔÇö `tests/helpers/language.ts` (vitest/src in Playwright), regex `Ingredi[e├½]nt` in `tests/helpers/recipe-form.ts`, en `SAME_ALLOWED` en commentaar "piece" in `i18n.test.ts` en `english-terms.ts`
+- 2026-11-06 22:17 T-022 tester: KLAAR
+- 2026-11-06 22:51 T-022 ontwikkelaar: BLOKKADE: test `tests/helpers/recipe-form.ts:80` ÔÇö regex `/^Ingr[e├®]di[e├®]nt/` mist `├½`, dus het Nederlandse label "Ingredi├½nt" wordt niet gevonden en veel e2e-tests time-outen (fix: `[e├®├½]`)
+- 2026-11-06 22:51 T-022 tester: KLAAR
+- 2026-11-06 23:07 T-022 ontwikkelaar: BLOKKADE: agent gaf geen eindmarkering. Laatste regel: Playwright e2e still running in the background (the Vitest unit suite passes: 751 tests). Waiting for the result before I report.
+- 2026-11-06 23:07 T-022 stop: BLOKKADE: agent gaf geen eindmarkering. Laatste regel: Playwright e2e still running in the background (the Vitest unit suite passes: 751 tests). Waiting for the result before I report.
+- 2026-11-06 23:09 T-026 analist: KLAAR
+- 2026-11-06 23:11 T-026 tester: KLAAR
+- 2026-11-06 23:12 T-026 ontwikkelaar: KLAAR
+- 2026-11-06 23:14 T-026 build: mislukt
+- 2026-11-06 23:27 T-026 ontwikkelaar: KLAAR
+- 2026-11-06 23:41 T-026 build: mislukt
+- 2026-11-06 23:42 T-026 ontwikkelaar: KLAAR
+- 2026-11-06 23:44 T-026 build: worker-crash (geen testfout), opnieuw
+- 2026-11-06 23:47 T-026 build: mislukt
+- 2026-11-06 23:47 T-026 stop: build of tests falen na 3 pogingen
+- 2026-11-06 23:47 - loop: geen taak meer
+- 2026-11-07 00:00 T-026 ontwikkelaar: BLOKKADE: volledige `npm test` (Playwright-deel) draait nog in de achtergrond en ik kan het resultaat niet afwachten
+- 2026-11-07 00:01 T-026 tester: KLAAR
+- 2026-11-07 00:04 T-026 ontwikkelaar: KLAAR
+- 2026-11-07 00:18 T-026 build: mislukt
+- 2026-11-07 09:12 T-026 ontwikkelaar: KLAAR
+- 2026-11-07 09:26 T-026 ontwikkelaar: KLAAR
+- 2026-11-07 09:34 T-026 build: geslaagd
+- 2026-11-07 09:35 T-026 reviewer: GOEDGEKEURD
+- 2026-11-07 09:44 T-026 build: geslaagd
+- 2026-11-07 09:44 T-026 savepoint: gecommit
+- 2026-11-07 09:55 T-022 ontwikkelaar: BLOKKADE: test `tests/helpers/recipe-form.ts` zoekt velden op Engelse labels (`Quantity`, `Unit`, `Size`) in plaats van `Quantit├®`, `Unit├®`, `Taille`, waardoor 3 Franse e2e-tests in `ingredient-picker.spec.ts` falen.
+- 2026-11-07 09:56 T-022 tester: KLAAR
+- 2026-11-07 10:08 T-022 ontwikkelaar: KLAAR
+- 2026-11-07 10:17 T-022 build: geslaagd
+- 2026-11-07 10:18 T-022 reviewer: GOEDGEKEURD
+- 2026-11-07 10:19 T-022 build: worker-crash (geen testfout), opnieuw
+- 2026-11-07 10:21 T-022 build: mislukt
+- 2026-11-07 10:21 T-022 stop: eindcontrole faalt
+- 2026-11-07 10:21 - loop: geen taak meer
+- 2026-11-07 10:33 T-022 ontwikkelaar: KLAAR
+- 2026-11-07 10:35 T-022 build: worker-crash (geen testfout), opnieuw
+- 2026-11-07 10:44 T-022 build: geslaagd
+- 2026-11-07 10:45 T-022 reviewer: GOEDGEKEURD
+- 2026-11-07 10:53 T-022 build: geslaagd
+- 2026-11-07 10:53 T-022 savepoint: gecommit
+- 2026-11-07 10:56 T-023 analist: KLAAR
+- 2026-11-07 10:59 T-023 tester: KLAAR
+- 2026-11-07 11:16 T-023 ontwikkelaar: BLOKKADE: test tests/e2e/bilingual-data.spec.ts "searching 'pomme de terre' and 'aardappel'ÔÇª" verwacht zoeken met vertalingen en synoniemen (R-021, T-024) dat niet bestaat; `search_recipes` zoekt alleen op de opgeslagen tekst.
+- 2026-11-07 11:17 T-023 tester: KLAAR
+- 2026-11-07 11:27 T-023 ontwikkelaar: KLAAR
+- 2026-11-07 11:27 T-023 build: worker-crash (geen testfout), opnieuw
+- 2026-11-07 11:37 T-023 build: geslaagd
+- 2026-11-07 11:38 T-023 reviewer: BEVINDINGEN: 0/1
+- 2026-11-07 11:39 T-023 tester: KLAAR
+- 2026-11-07 11:39 T-023 ontwikkelaar: KLAAR
+- 2026-11-07 11:41 T-023 build: mislukt
+- 2026-11-07 11:41 T-023 stop: review niet goedgekeurd na 2 rondes
+- 2026-11-07 11:44 T-024 analist: KLAAR
+- 2026-11-07 11:45 T-024 tester: KLAAR
+- 2026-11-07 11:51 T-024 ontwikkelaar: BLOKKADE: test `tests/db/recipe-search-synonyms.test.ts` regel 112 (term `feta${s}` kan `fetakaas${s}` niet vinden) en regel 244 (`'en'` botst met no-english.test.ts)
+- 2026-11-07 11:51 T-024 tester: KLAAR
+- 2026-11-07 12:00 T-024 ontwikkelaar: KLAAR
+- 2026-11-07 12:01 T-024 build: worker-crash (geen testfout), opnieuw
+- 2026-11-07 12:11 T-024 build: geslaagd
+- 2026-11-07 12:12 T-024 reviewer: BEVINDINGEN: 0/1
+- 2026-11-07 12:13 T-024 tester: KLAAR
+- 2026-11-07 12:13 T-024 ontwikkelaar: KLAAR
+- 2026-11-07 12:22 T-024 build: geslaagd
+- 2026-11-07 12:23 T-024 reviewer: GOEDGEKEURD
+- 2026-11-07 12:31 T-024 build: geslaagd
+- 2026-11-07 12:32 T-024 savepoint: gecommit
+- 2026-11-07 12:34 T-025 analist: KLAAR
+- 2026-11-07 12:36 T-025 tester: KLAAR
+- 2026-11-07 12:48 T-025 ontwikkelaar: BLOKKADE: test `tests/e2e/catalog-admin.spec.ts` gebruikt `getByRole('dialog')` terwijl `ConfirmDialog` een `alertdialog` is, de Franse synoniemselector `/synoni/` past niet bij "synonyme", beide crit. 3-varianten voegen hetzelfde item `qzvktomaat` toe, en de crit. 4-test controleert de databank zonder op de samenvoeging te wachten.
+- 2026-11-07 12:49 T-025 tester: KLAAR
+- 2026-11-07 13:04 T-025 ontwikkelaar: KLAAR
+- 2026-11-07 13:13 T-025 build: geslaagd
+- 2026-11-07 13:15 T-025 reviewer: BEVINDINGEN: 0/2
+- 2026-11-07 13:16 T-025 tester: KLAAR
+- 2026-11-07 13:16 T-025 ontwikkelaar: KLAAR
+- 2026-11-07 13:25 T-025 build: mislukt
+- 2026-11-07 13:25 T-025 stop: review niet goedgekeurd na 2 rondes
+- 2026-11-07 13:37 T-023 ontwikkelaar: KLAAR
+- 2026-11-07 13:39 T-023 build: worker-crash (geen testfout), opnieuw
+- 2026-11-07 13:48 T-023 build: geslaagd
+- 2026-11-07 13:50 T-023 reviewer: GOEDGEKEURD
+- 2026-11-07 13:59 T-023 build: mislukt
+- 2026-11-07 13:59 T-023 stop: eindcontrole faalt
+- 2026-11-07 14:13 T-023 ontwikkelaar: KLAAR
+- 2026-11-07 14:22 T-023 build: mislukt
+- 2026-11-07 14:23 T-023 ontwikkelaar: KLAAR
+- 2026-11-07 14:32 T-023 build: mislukt
+- 2026-11-07 14:32 T-023 ontwikkelaar: KLAAR
+- 2026-11-07 14:41 T-023 build: geslaagd
+- 2026-11-07 14:43 T-023 reviewer: GOEDGEKEURD
+- 2026-11-07 14:52 T-023 build: geslaagd
+- 2026-11-07 14:52 T-023 savepoint: gecommit
+- 2026-11-07 15:01 T-025 ontwikkelaar: BLOKKADE: test tests/e2e/catalog-admin.spec.ts:157-158 verwacht 0 rijen voor "qzvkbrocolli-test" na samenvoegen, maar die naam wordt volgens crit. 4 een synoniem van B en staat dus in rij B.
+- 2026-11-07 15:01 T-025 tester: KLAAR
+- 2026-11-07 15:12 T-025 ontwikkelaar: KLAAR
+- 2026-11-07 15:21 T-025 build: geslaagd
+- 2026-11-07 15:23 T-025 reviewer: GOEDGEKEURD
+- 2026-11-07 15:25 T-025 build: worker-crash (geen testfout), opnieuw
+- 2026-11-07 15:35 T-025 build: geslaagd
+- 2026-11-07 15:35 T-025 savepoint: gecommit

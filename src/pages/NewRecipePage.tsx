@@ -1,13 +1,14 @@
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RecipeForm } from '../components/RecipeForm';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import { emptyDraft } from '../lib/recipe';
 import { createRecipe, newSaveSession } from '../lib/recipes';
 
 const INITIAL = emptyDraft();
 
 export function NewRecipePage() {
+  useLanguage();
   const navigate = useNavigate();
   // One recipe id and one set of uploaded files per form, so "try again" reuses what is already uploaded.
   const session = useRef(newSaveSession());

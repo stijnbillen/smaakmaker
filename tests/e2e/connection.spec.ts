@@ -77,7 +77,8 @@ test('typed form input survives a connection error and retry (R-001 crit. 6)', a
   await fillRecipe(page, { title: 'Mijn halfaf recept', ingredients: ['Zout'], steps: ['Roer goed.'] });
   const expectInputKept = async () => {
     await expect(titleField(page)).toHaveValue('Mijn halfaf recept');
-    await expect(ingredientNameFields(page).first()).toHaveValue('Zout');
+    // T-021: "Zout" matches a catalogue item exactly, so the field shows the item's name (case as in the catalogue).
+    await expect(ingredientNameFields(page).first()).toHaveValue(/^zout$/i);
     await expect(stepFields(page).first()).toHaveValue('Roer goed.');
   };
 

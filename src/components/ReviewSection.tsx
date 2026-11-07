@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { t } from '../i18n/t';
+import { t, type TextKey, useLanguage } from '../i18n/t';
 import { canDeleteReview, canEditReview } from '../lib/permissions';
 import { formatRating, reviewCountText, type Review, type ReviewDraft } from '../lib/reviews';
 import {
@@ -23,6 +23,7 @@ const SAVE_KEY = 'review-save';
 const DELETE_KEY = 'review-delete';
 
 export function ReviewSection({ recipeId }: { recipeId: string }) {
+  useLanguage();
   const { session, isAdmin } = useAuth();
   const { report, resolve } = useConnection();
   const userId = session?.user.id ?? null;
@@ -32,8 +33,9 @@ export function ReviewSection({ recipeId }: { recipeId: string }) {
   const [loadFailed, setLoadFailed] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  // Keys, not translated texts: a message shown before a language switch follows the new language.
+  const [saveError, setSaveError] = useState<TextKey | null>(null);
+  const [notice, setNotice] = useState<TextKey | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const active = useRef(true);
@@ -81,13 +83,13 @@ export function ReviewSection({ recipeId }: { recipeId: string }) {
       if ('duplicate' in res && res.duplicate) {
         // Created elsewhere (second tab): show what exists so the user can edit it.
         resolve(SAVE_KEY);
-        setNotice(t('reviews.duplicate'));
+        setNotice('reviews.duplicate');
         await load();
         return;
       }
       if (res.error) {
         // A connection error gets the banner and keeps the input; other errors show their own message.
-        if (!report(SAVE_KEY, res.error, res.status, () => void save(draft, target))) setSaveError(t('reviews.saveFailed'));
+        if (!report(SAVE_KEY, res.error, res.status, () => void save(draft, target))) setSaveError('reviews.saveFailed');
         return;
       }
       resolve(SAVE_KEY);
@@ -109,7 +111,7 @@ export function ReviewSection({ recipeId }: { recipeId: string }) {
       setDeleting(false);
       if (error) {
         // 0 rows counts as failed too (row-level security refuses silently).
-        if (!report(DELETE_KEY, error, status, () => void remove(id))) setNotice(t('reviews.deleteFailed'));
+        if (!report(DELETE_KEY, error, status, () => void remove(id))) setNotice('reviews.deleteFailed');
         return;
       }
       resolve(DELETE_KEY);
@@ -135,7 +137,7 @@ export function ReviewSection({ recipeId }: { recipeId: string }) {
       {loadFailed && <p>{t('reviews.loadFailed')}</p>}
       {notice && (
         <p role="alert" className="field-error">
-          {notice}
+          {t(notice)}
         </p>
       )}
 

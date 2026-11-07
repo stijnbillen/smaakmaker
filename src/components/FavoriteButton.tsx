@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import { addFavorite, removeFavorite } from '../lib/favorites';
 import { useAuth } from './AuthProvider';
 import { useConnection } from './ConnectionProvider';
@@ -43,6 +43,7 @@ const publish = (entry: Entry, pressed: boolean) => entry.listeners.forEach((lis
  * can never put an older choice back.
  */
 export function FavoriteButton({ recipeId, initial }: FavoriteButtonProps) {
+  useLanguage();
   const { report, resolve } = useConnection();
   const [failed, setFailed] = useState(false);
   const active = useRef(true);

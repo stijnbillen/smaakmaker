@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import { PhotoError, toJpeg } from '../lib/photoResize';
 import { signedUrls } from '../lib/photos';
 import { addPhotos, MAX_PHOTOS, moveItem, removePhoto, setMain, type PhotoDraft } from '../lib/recipe';
@@ -22,6 +22,7 @@ const text = (key: Parameters<typeof t>[0], values: Record<string, string | numb
 
 /** Camera and gallery buttons, the previews, and the order / main photo / remove controls. */
 export function PhotoPicker({ photos, onChange, onBusyChange }: PhotoPickerProps) {
+  useLanguage();
   const [message, setMessage] = useState<Message | null>(null);
   const [busy, setBusy] = useState(false);
   const [urls, setUrls] = useState<Map<string, string>>(new Map());

@@ -10,7 +10,8 @@ import { draftFromRecord, type PhotoDraft, type RecipeDraft, type RecipeRecord }
  * family are not part of the draft: the page passes the source id to `createRecipe` separately.
  */
 export function variantDraft(record: RecipeRecord, sizes: ReadonlyMap<string, number>): RecipeDraft {
-  const plain = draftFromRecord(record, sizes);
+  // References, free text and sizes come along; the item map of the loaded record gives the current names.
+  const plain = draftFromRecord(record, sizes, record.catalog);
   const photos: PhotoDraft[] = (record.photos ?? []).map((p) => {
     // A file missing from the folder listing counts as the bucket maximum, like the database does.
     const bytes = sizes.get(p.path) ?? PHOTO_MAX_BYTES;

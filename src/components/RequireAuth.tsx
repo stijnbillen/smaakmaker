@@ -1,11 +1,12 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import { signOut } from '../lib/auth';
 import { useAuth } from './AuthProvider';
 import { AuthLoading } from './AuthLoading';
 
 /** Guards the app screens: no session -> sign-in, no display name yet -> welcome. */
 export function RequireAuth() {
+  useLanguage();
   const { session, loading, profileFailed, displayName, retryProfile } = useAuth();
 
   if (loading) return <AuthLoading />;

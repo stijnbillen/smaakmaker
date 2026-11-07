@@ -1,4 +1,6 @@
-import { t } from '../i18n/t';
+import { getLanguage } from '../i18n/language';
+import { format } from '../i18n/t';
+import { displayName } from './catalog';
 import { pruneDraft, type RecipeDraft } from './recipe';
 import { PHOTO_MAX_BYTES } from './photoResize';
 
@@ -24,7 +26,13 @@ const bytesOf = (s: string | null | undefined): number => utf8Bytes((s ?? '').tr
 export function recipeTextBytes(draft: RecipeDraft): number {
   const { draft: d } = pruneDraft(draft);
   let total = bytesOf(d.title) + bytesOf(d.source) + bytesOf(d.note);
-  for (const ing of d.ingredients) total += bytesOf(ing.name) + bytesOf(ing.unit);
+  // The text of a linked line is the item's shown name, the same text toRow writes and the database counts.
+  const lang = getLanguage();
+  for (const ing of d.ingredients) {
+    const name = ing.ingredient ? displayName(ing.ingredient, lang) || ing.name : ing.name;
+    const unit = ing.unitItem ? displayName(ing.unitItem, lang) || ing.unit : ing.unit;
+    total += bytesOf(name) + bytesOf(unit) + bytesOf(ing.size);
+  }
   for (const step of d.steps) total += bytesOf(step);
   for (const list of [d.dishTags, d.traitTags, d.equipment]) for (const name of list ?? []) total += bytesOf(name);
   return total;
@@ -41,10 +49,10 @@ export function checkRecipeSize(textBytes: number, photoBytes: readonly number[]
   return textBytes > RECIPE_MAX_BYTES ? 'textTooLarge' : 'photosTooLarge';
 }
 
-/** "1,3 van 2 MB": rounded up to one decimal, so a size over the limit never shows as "2,0". */
+/** "1,3 van 2 MB" / "1.3 of 2 MB": rounded up to one decimal, so a size over the limit never shows as "2,0". */
 export function formatRecipeSize(bytes: number): string {
   // Whole tenths via integer maths: floating point could turn 1,3 MB exactly into 1,3000000000000003.
   const tenths = Math.ceil((bytes * 10) / MB);
   const used = `${Math.floor(tenths / 10)},${tenths % 10}`;
-  return t('size.used').replace('{used}', used);
+  return format('size.used', { used });
 }

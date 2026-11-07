@@ -51,7 +51,8 @@ describe('tagKey (R-010 crit. 3: case and accent insensitive)', () => {
 });
 
 describe('addTag (R-010 crit. 3: no duplicate tag)', () => {
-  const catalog = ['dessert', 'soep', 'tapas'];
+  // T-023: the catalogue is a list of NamedItem ({ name, nameFr }).
+  const catalog = ['dessert', 'soep', 'tapas'].map((name) => ({ name, nameFr: null }));
 
   it('"DESSERT" selects the existing "dessert" with the spelling of the catalogue', () => {
     expect(addTag([], catalog, 'DESSERT')).toEqual(['dessert']);
@@ -66,7 +67,7 @@ describe('addTag (R-010 crit. 3: no duplicate tag)', () => {
   });
 
   it('matches accent-insensitively against the catalogue', () => {
-    expect(addTag([], ['crème'], 'CREME')).toEqual(['crème']);
+    expect(addTag([], [{ name: 'crème', nameFr: null }], 'CREME')).toEqual(['crème']);
   });
 });
 

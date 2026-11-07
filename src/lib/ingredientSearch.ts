@@ -93,3 +93,43 @@ export function createDebouncer<A>(fn: (arg: A) => void, ms: number): Debouncer<
   };
   return debounced;
 }
+
+/** What the database knows about one typed term (search_term_info). */
+export interface TermInfo {
+  term: string;
+  /** The catalogue item the term exactly names, or null. */
+  itemId: string | null;
+  /** "Did you mean": only when there is no exact item. */
+  suggestion?: { id: string; name: string };
+}
+
+/**
+ * Keeps the first term of each item and reports the ones that drop out. Terms without an item are
+ * de-duplicated on their key, as before. A term without info counts as an item-less term.
+ */
+export function dedupeByItem(terms: string[], info: TermInfo[]): { terms: string[]; duplicates: string[] } {
+  const itemOf = new Map(info.map((i) => [i.term, i.itemId]));
+  const seen = new Set<string>();
+  const kept: string[] = [];
+  const duplicates: string[] = [];
+  for (const term of terms) {
+    const itemId = itemOf.get(term) ?? null;
+    const group = itemId !== null ? `item:${itemId}` : `key:${simpleKey(term.trim())}`;
+    if (seen.has(group)) {
+      duplicates.push(term);
+      continue;
+    }
+    seen.add(group);
+    kept.push(term);
+  }
+  return { terms: kept, duplicates };
+}
+
+/** Replaces every term of a comma text that has the same key as `term`; the other terms and their order stay. */
+export function replaceTerm(text: string, term: string, replacement: string): string {
+  const key = simpleKey(term.trim());
+  return text
+    .split(',')
+    .map((part) => (simpleKey(part.trim()) === key ? replacement : part.trim()))
+    .join(', ');
+}

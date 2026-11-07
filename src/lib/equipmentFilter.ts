@@ -20,10 +20,14 @@ export const hasEquipmentFilter = (names: readonly string[]): boolean => names.l
 
 /** Minimal shape of a PostgREST filter builder, so this stays free of the client's generics. */
 interface Filterable<T> {
-  overlaps(column: string, value: string[]): T;
+  overlaps(column: string, value: string): T;
 }
+
+/** Quoted Postgres array literal (same as tagFilter.ts): a name with a comma, quote or brace stays one element. */
+const arrayLiteral = (names: readonly string[]): string =>
+  `{${names.map((name) => `"${name.replace(/[\\"]/g, '\\$&')}"`).join(',')}}`;
 
 /** A database filter: it combines with the other filters with "and". No choice, no filter. */
 export function applyEquipmentFilter<T extends Filterable<T>>(query: T, names: readonly string[]): T {
-  return names.length === 0 ? query : query.overlaps('equipment', [...names]);
+  return names.length === 0 ? query : query.overlaps('equipment', arrayLiteral(names));
 }

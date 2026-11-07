@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import fr from '../../src/i18n/fr.json';
 import nlJson from '../../src/i18n/nl.json';
+import { resetLanguage, useLanguage } from '../helpers/language';
 import { canDeleteReview, canEditReview } from '../../src/lib/permissions';
 import { formatRating, MAX_REVIEW_LENGTH, parseSort, reviewCountText, toSearchParams, validateReview } from '../../src/lib/reviews';
 
@@ -29,6 +31,28 @@ describe('validateReview (crit. 1 and 2)', () => {
   });
   it('treats an empty or blank body as valid (optional)', () => {
     expect(validateReview({ rating: 3, body: '   ' }).body).toBeUndefined();
+  });
+});
+
+// R-026 crit. 6: rating "4,3" with a comma in both languages.
+describe('formatRating per language (R-026 crit. 6)', () => {
+  afterEach(resetLanguage);
+
+  it.each([
+    [4.25, '4,3'],
+    [4, '4,0'],
+    [3.04, '3,0'],
+  ])('formatRating(%s) is "%s" in nl and in fr', (n, text) => {
+    useLanguage('nl');
+    expect(formatRating(n)).toBe(text);
+    useLanguage('fr');
+    expect(formatRating(n)).toBe(text);
+  });
+
+  it('reviewCountText follows the language', () => {
+    useLanguage('fr');
+    expect(reviewCountText(1)).toBe(fr['reviews.countOne']);
+    expect(reviewCountText(3)).toBe(fr['reviews.countMany'].replace('{n}', '3'));
   });
 });
 

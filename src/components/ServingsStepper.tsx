@@ -1,4 +1,4 @@
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import { SERVINGS_MAX, SERVINGS_MIN } from '../lib/recipe';
 
 interface ServingsStepperProps {
@@ -14,6 +14,7 @@ const icons = {
 
 /** Controlled: the page owns the value, nothing is stored here. */
 export function ServingsStepper({ value, onChange }: ServingsStepperProps) {
+  useLanguage();
   const button = (label: string, icon: keyof typeof icons, disabled: boolean, next: number) => (
     <button type="button" className="icon-button servings-button" aria-label={label} disabled={disabled} onClick={() => onChange(next)}>
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">

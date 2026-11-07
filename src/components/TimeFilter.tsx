@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { t, type TextKey } from '../i18n/t';
+import { t, type TextKey, useLanguage } from '../i18n/t';
 import { formatDuration } from '../lib/format';
 import { TIME_FILTER_CHOICES, type TimeFilter as TimeFilterValue } from '../lib/timeFilter';
 
@@ -15,6 +15,7 @@ interface SelectProps {
 }
 
 function TimeSelect({ label, value, onChange }: SelectProps) {
+  useLanguage();
   const id = useId();
   return (
     <div className="field">
@@ -33,6 +34,7 @@ function TimeSelect({ label, value, onChange }: SelectProps) {
 
 /** Maximum preparation time and maximum total time; the page keeps the value in the URL. */
 export function TimeFilter({ value, onChange }: TimeFilterProps) {
+  useLanguage();
   return (
     <div className="time-filter field-pair">
       <TimeSelect label="filter.maxPrep" value={value.maxPrep} onChange={(maxPrep) => onChange({ ...value, maxPrep })} />

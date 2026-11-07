@@ -59,6 +59,10 @@ test.describe('detail page shows the recipe', () => {
 });
 
 test.describe('author', () => {
+  // Block the service worker: once it controls the page it answers requests itself, and page.route never sees
+  // them, so the intercepted DELETE below would reach the database after all.
+  test.use({ serviceWorkers: 'block' });
+
   test.beforeEach(async ({ page }) => {
     await signInViaStorage(page, author.session);
   });

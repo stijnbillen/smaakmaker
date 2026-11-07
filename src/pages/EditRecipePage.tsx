@@ -3,7 +3,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../components/AuthProvider';
 import { useConnection } from '../components/ConnectionProvider';
 import { RecipeForm } from '../components/RecipeForm';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import { canEdit } from '../lib/permissions';
 import { fetchPhotoSizes } from '../lib/photos';
 import { draftFromRecord } from '../lib/recipe';
@@ -11,6 +11,7 @@ import { newSaveSession, updateRecipe } from '../lib/recipes';
 import { useRecipe } from '../lib/useRecipe';
 
 export function EditRecipePage() {
+  useLanguage();
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const { session } = useAuth();
@@ -45,7 +46,7 @@ export function EditRecipePage() {
     };
     // Once per loaded recipe; the photo list of the form itself may change without a new lookup.
   }, [id, recipe, hasPhotos, report, resolve]);
-  const initial = useMemo(() => (recipe ? draftFromRecord(recipe) : null), [recipe]);
+  const initial = useMemo(() => (recipe ? draftFromRecord(recipe, undefined, recipe.catalog) : null), [recipe]);
   // Uploaded files survive a failed attempt, so "try again" does not upload them twice.
   const saveSession = useRef(newSaveSession(id));
 

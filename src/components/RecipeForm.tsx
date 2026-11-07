@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useBlocker } from 'react-router-dom';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import {
   emptyIngredient,
+  INGREDIENT_NAME_MAX,
+  INGREDIENT_SIZES,
   isDirty,
   MAX_INGREDIENTS,
+  UNIT_MAX,
+  type IngredientSize,
   MAX_STEPS,
   moveItem,
   pruneDraft,
@@ -16,6 +20,7 @@ import {
 } from '../lib/recipe';
 import type { SaveResult, SizeProblem } from '../lib/recipes';
 import { checkRecipeSize, formatRecipeSize, PHOTO_MAX_BYTES, recipeSizeBytes, recipeTextBytes, RECIPE_MAX_BYTES } from '../lib/recipeSize';
+import { CatalogField, type FieldHandle } from './CatalogField';
 import { ConfirmDialog } from './ConfirmDialog';
 import { EquipmentPicker } from './EquipmentPicker';
 import { PhotoPicker } from './PhotoPicker';
@@ -24,6 +29,17 @@ import { TagPicker } from './TagPicker';
 import { useConnection } from './ConnectionProvider';
 
 const KEY = 'recipe-form';
+
+const SIZE_CHOICE = { small: 'form.sizeSmall', medium: 'form.sizeMedium', large: 'form.sizeLarge' } as const;
+
+let lineCounter = 0;
+/** A stable id per ingredient row, so an open question or a late answer stays with its own row. */
+const newUid = (): string => `line-${++lineCounter}`;
+const newLine = (): IngredientDraft => ({ ...emptyIngredient(), uid: newUid() });
+const withUids = (draft: RecipeDraft): RecipeDraft => ({
+  ...draft,
+  ingredients: draft.ingredients.map((ing) => (ing.uid ? ing : { ...ing, uid: newUid() })),
+});
 
 interface RecipeFormProps {
   heading: string;
@@ -77,9 +93,15 @@ function FieldError({ id, children }: { id: string; children: ReactNode }) {
 
 /** The one form for a new recipe and for editing. */
 export function RecipeForm({ heading, initial, submit, onSaved, backTo, photoSizes }: RecipeFormProps) {
+  useLanguage();
   const { report, resolve } = useConnection();
   const base = useId();
-  const [draft, setDraft] = useState<RecipeDraft>(initial);
+  const [draft, setDraft] = useState<RecipeDraft>(() => withUids(initial));
+  // Open questions of the catalogue fields ("uid:name" / "uid:unit"), and the handles to check them.
+  const [asking, setAsking] = useState<ReadonlySet<string>>(new Set());
+  const [answerFirst, setAnswerFirst] = useState(false);
+  const [focusAsk, setFocusAsk] = useState<{ key: string; n: number } | null>(null);
+  const fields = useRef(new Map<string, FieldHandle>());
   const [attempted, setAttempted] = useState(false);
   const [focusTick, setFocusTick] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -145,6 +167,24 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo, photoSiz
   const save = useCallback(async () => {
     // Ignore double taps while a request is running.
     if (savingRef.current) return;
+    setAnswerFirst(false);
+    // A changed name or unit that was not checked yet (the user tapped "Opslaan" straight away) is checked first.
+    const unchecked = [...fields.current.values()].filter((h) => h.status() === 'unsettled');
+    if (unchecked.length > 0) {
+      savingRef.current = true;
+      await Promise.all(unchecked.map((h) => h.check()));
+      savingRef.current = false;
+      if (!mounted.current) return;
+    }
+    // A question is still open: the answer decides whether the line points to an item, so it comes first.
+    const open = draftRef.current.ingredients
+      .flatMap((ing) => [`${ing.uid}:name`, `${ing.uid}:unit`])
+      .find((key) => fields.current.get(key)?.status() === 'asking');
+    if (open) {
+      setAnswerFirst(true);
+      setFocusAsk((prev) => ({ key: open, n: (prev?.n ?? 0) + 1 }));
+      return;
+    }
     const result = check(draftRef.current);
     if (!result.ok) {
       setAttempted(true);
@@ -194,8 +234,33 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo, photoSiz
   }
 
   const setTitle = (title: string) => setDraft((d) => ({ ...d, title }));
-  const setIngredient = (i: number, patch: Partial<IngredientDraft>) =>
-    setDraft((d) => ({ ...d, ingredients: d.ingredients.map((ing, j) => (j === i ? { ...ing, ...patch } : ing)) }));
+  // By row id, not index: an answer that arrives late must land on its own row even after a move or removal.
+  const patchLine = (uid: string | undefined, patch: Partial<IngredientDraft> | ((current: IngredientDraft) => Partial<IngredientDraft>)) => {
+    const apply = (d: RecipeDraft): RecipeDraft => ({
+      ...d,
+      ingredients: d.ingredients.map((ing) =>
+        ing.uid === uid ? { ...ing, ...(typeof patch === 'function' ? patch(ing) : patch) } : ing,
+      ),
+    });
+    // Also in the ref at once: "Opslaan" waits for a check and must then read the result, not the last render.
+    draftRef.current = apply(draftRef.current);
+    setDraft(apply);
+  };
+  const onAsking = useCallback((key: string, isAsking: boolean) => {
+    setAsking((prev) => {
+      const next = new Set(prev);
+      if (isAsking) next.add(key);
+      else next.delete(key);
+      return next;
+    });
+  }, []);
+  useEffect(() => {
+    if (asking.size === 0) setAnswerFirst(false);
+  }, [asking]);
+  // After a refused save the focus goes to the open question (rendered by now).
+  useEffect(() => {
+    if (focusAsk) fields.current.get(focusAsk.key)?.focusQuestion();
+  }, [focusAsk]);
   const setStep = (i: number, value: string) =>
     setDraft((d) => ({ ...d, steps: d.steps.map((s, j) => (j === i ? value : s)) }));
 
@@ -329,21 +394,25 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo, photoSiz
               // The message about the whole list hangs on the first row's name field.
               const listError = i === 0 && ingredientsError === 'ingredientsRequired';
               return (
-                <li key={i} className="row">
+                <li key={ing.uid ?? i} className="row">
                   <div className="row-fields">
-                    <div className="field row-name">
-                      <label htmlFor={ids(`ing-${i}-name`)}>{label}</label>
-                      <input
-                        id={ids(`ing-${i}-name`)}
-                        type="text"
-                        value={ing.name}
-                        autoComplete="off"
-                        onChange={(e) => setIngredient(i, { name: e.target.value })}
-                        aria-invalid={invalid(row?.name || listError)}
-                        aria-describedby={describedBy(row?.name && ids(`ing-${i}-name-error`), listError && ids('ingredients-error'))}
-                      />
+                    <CatalogField
+                      kind="ingredient"
+                      fieldKey={`${ing.uid}:name`}
+                      id={ids(`ing-${i}-name`)}
+                      label={label}
+                      className="row-name"
+                      value={ing.name}
+                      max={INGREDIENT_NAME_MAX}
+                      registry={fields}
+                      onAsking={onAsking}
+                      onChange={(v) => patchLine(ing.uid, (cur) => ({ name: v.text, ingredient: v.item, freeText: { ...cur.freeText, name: v.free } }))}
+                      invalid={Boolean(row?.name || listError)}
+                      describedBy={describedBy(row?.name && ids(`ing-${i}-name-error`), listError && ids('ingredients-error'))}
+                    >
                       {row?.name && <FieldError id={ids(`ing-${i}-name-error`)}>{t('form.nameInvalid')}</FieldError>}
-                    </div>
+                    </CatalogField>
+                    {answerFirst && asking.has(`${ing.uid}:name`) && <FieldError id={ids(`ing-${i}-answer`)}>{t('form.answerFirst')}</FieldError>}
                     <div className="field row-quantity">
                       <label htmlFor={ids(`ing-${i}-quantity`)}>{t('form.quantity')}</label>
                       <input
@@ -352,24 +421,43 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo, photoSiz
                         inputMode="decimal"
                         value={ing.quantity}
                         autoComplete="off"
-                        onChange={(e) => setIngredient(i, { quantity: e.target.value })}
+                        onChange={(e) => patchLine(ing.uid, { quantity: e.target.value })}
                         aria-invalid={invalid(row?.quantity)}
                         aria-describedby={describedBy(row?.quantity && ids(`ing-${i}-quantity-error`))}
                       />
                       {row?.quantity && <FieldError id={ids(`ing-${i}-quantity-error`)}>{t('form.quantityInvalid')}</FieldError>}
                     </div>
-                    <div className="field row-unit">
-                      <label htmlFor={ids(`ing-${i}-unit`)}>{t('form.unit')}</label>
-                      <input
-                        id={ids(`ing-${i}-unit`)}
-                        type="text"
-                        value={ing.unit}
-                        autoComplete="off"
-                        onChange={(e) => setIngredient(i, { unit: e.target.value })}
-                        aria-invalid={invalid(row?.unit)}
-                        aria-describedby={describedBy(row?.unit && ids(`ing-${i}-unit-error`))}
-                      />
+                    <CatalogField
+                      kind="unit"
+                      fieldKey={`${ing.uid}:unit`}
+                      id={ids(`ing-${i}-unit`)}
+                      label={t('form.unit')}
+                      className="row-unit"
+                      value={ing.unit}
+                      max={UNIT_MAX}
+                      registry={fields}
+                      onAsking={onAsking}
+                      onChange={(v) => patchLine(ing.uid, (cur) => ({ unit: v.text, unitItem: v.item, freeText: { ...cur.freeText, unit: v.free } }))}
+                      invalid={Boolean(row?.unit)}
+                      describedBy={describedBy(row?.unit && ids(`ing-${i}-unit-error`))}
+                    >
                       {row?.unit && <FieldError id={ids(`ing-${i}-unit-error`)}>{t('form.unitInvalid')}</FieldError>}
+                    </CatalogField>
+                    {answerFirst && asking.has(`${ing.uid}:unit`) && <FieldError id={ids(`ing-${i}-unit-answer`)}>{t('form.answerFirst')}</FieldError>}
+                    <div className="field row-size">
+                      <label htmlFor={ids(`ing-${i}-size`)}>{t('form.size')}</label>
+                      <select
+                        id={ids(`ing-${i}-size`)}
+                        value={ing.size ?? ''}
+                        onChange={(e) => patchLine(ing.uid, { size: (e.target.value || undefined) as IngredientSize | undefined })}
+                      >
+                        <option value="">{t('form.sizeNone')}</option>
+                        {INGREDIENT_SIZES.map((size) => (
+                          <option key={size} value={size}>
+                            {t(SIZE_CHOICE[size])}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                   <RowButtons
@@ -388,7 +476,7 @@ export function RecipeForm({ heading, initial, submit, onSaved, backTo, photoSiz
             className="button-quiet list-add"
             data-needed={ingredientsError && draft.ingredients.length === 0 ? '' : undefined}
             disabled={draft.ingredients.length >= MAX_INGREDIENTS}
-            onClick={() => setDraft((d) => ({ ...d, ingredients: [...d.ingredients, emptyIngredient()] }))}
+            onClick={() => setDraft((d) => ({ ...d, ingredients: [...d.ingredients, newLine()] }))}
           >
             {t('form.addIngredient')}
           </button>

@@ -1,7 +1,11 @@
+import type { CatalogItem, CatalogLang } from './catalog';
 import { isConnectionError } from './connection';
+import type { TermInfo } from './ingredientSearch';
 import { copyPhoto, removePhotos, uploadPhoto } from './photos';
 import { toRow, type PhotoDraft, type RecipeDraft, type RecipeRecord, type StoredPhoto } from './recipe';
+import type { NamedItem } from './namedItems';
 import { supabase } from './supabase';
+import type { MatchKind, SuggestKind, SuggestMode, Suggestion } from './suggest';
 import type { TagKind } from './tags';
 import type { FamilyMember } from './variant';
 
@@ -59,8 +63,10 @@ export async function fetchRecipe(id: string): Promise<FetchResult> {
     if (src.error) return { recipe: null, notFound: false, error: src.error, status: src.status };
     sourceTitle = (src.data as { title: string } | null)?.title ?? null;
   }
+  const catalog = await fetchCatalogForLines(row.ingredients);
   return {
     recipe: {
+      catalog,
       id: row.id,
       title: row.title,
       ingredients: row.ingredients,
@@ -89,6 +95,56 @@ export async function fetchRecipe(id: string): Promise<FetchResult> {
   };
 }
 
+interface CatalogRow {
+  id: string;
+  name_nl: string | null;
+  name_fr: string | null;
+}
+
+/** Items by id for the ingredient lines of a recipe (R-020). Empty lists make no call. */
+export async function fetchCatalogItems(
+  ingredientIds: readonly string[],
+  unitIds: readonly string[],
+): Promise<CallResult & { items: Map<string, CatalogItem> }> {
+  const items = new Map<string, CatalogItem>();
+  let failure: CallResult = { error: null, status: 200 };
+  for (const [table, ids] of [['ingredients', ingredientIds], ['units', unitIds]] as const) {
+    if (ids.length === 0) continue;
+    const { data, error, status } = await supabase.from(table).select('id,name_nl,name_fr').in('id', [...ids]);
+    if (error) {
+      failure = { error, status };
+      continue;
+    }
+    for (const r of (data ?? []) as CatalogRow[]) items.set(r.id, { id: r.id, nameNl: r.name_nl, nameFr: r.name_fr });
+  }
+  return { items, ...failure };
+}
+
+/** The items of a recipe's lines. A failed lookup gives what was found: the lines fall back to their stored text. */
+async function fetchCatalogForLines(lines: RecipeRecord['ingredients']): Promise<Map<string, CatalogItem>> {
+  const ing = new Set<string>();
+  const unit = new Set<string>();
+  for (const line of lines ?? []) {
+    if (line.ingredient_id) ing.add(line.ingredient_id);
+    if (line.unit_id) unit.add(line.unit_id);
+  }
+  return (await fetchCatalogItems([...ing], [...unit])).items;
+}
+
+/** Adds an item to the shared catalogue; a known key returns the existing item (`created` false). */
+export async function addCatalogItem(
+  kind: SuggestKind,
+  name: string,
+  lang: CatalogLang,
+): Promise<CallResult & { id: string | null; created: boolean }> {
+  const { data, error, status } = await supabase.rpc(kind === 'ingredient' ? 'add_ingredient' : 'add_unit', {
+    p_name: name,
+    p_lang: lang,
+  });
+  const row = ((data ?? []) as unknown as Array<{ id: string; created: boolean }>)[0];
+  return { id: error || !row ? null : row.id, created: !error && row?.created === true, error, status };
+}
+
 /** All recipes of one family, oldest first: one query gives the direct variants and the whole family list. */
 export async function fetchFamily(familyId: string): Promise<CallResult & { members: FamilyMember[] }> {
   const { data, error, status } = await supabase
@@ -100,16 +156,96 @@ export async function fetchFamily(familyId: string): Promise<CallResult & { memb
   return { members: error ? [] : ((data ?? []) as unknown as FamilyMember[]), error, status };
 }
 
-/** Catalogue names that are in at least one recipe: the choices in the form and the filter. */
-export async function fetchEquipmentInUse(): Promise<CallResult & { names: string[] }> {
-  const { data, error, status } = await supabase.rpc('equipment_in_use');
-  return { names: error ? [] : ((data ?? []) as unknown as string[]), error, status };
+const toItems = (rows: Array<{ name: string; name_fr: string | null }> | null): NamedItem[] =>
+  (rows ?? []).map((row) => ({ name: row.name, nameFr: row.name_fr }));
+
+/** The start list plus the equipment that is in at least one recipe: the choices in the form and the filter. */
+export async function fetchEquipmentChoices(): Promise<CallResult & { items: NamedItem[] }> {
+  const { data, error, status } = await supabase.rpc('equipment_choices');
+  return { items: error ? [] : toItems(data as Array<{ name: string; name_fr: string | null }> | null), error, status };
 }
 
-/** All names of a tag group, in catalogue order: the choices in the form and the filter. */
-export async function fetchTags(kind: TagKind): Promise<CallResult & { names: string[] }> {
-  const { data, error, status } = await supabase.from('tags').select('name').eq('kind', kind).order('name_key');
-  return { names: error ? [] : (data ?? []).map((row) => row.name as string), error, status };
+/** Every equipment item with both names: to show the names stored in a recipe in the reader's language. */
+export async function fetchEquipmentCatalog(): Promise<CallResult & { items: NamedItem[] }> {
+  const { data, error, status } = await supabase.from('equipment').select('name,name_fr').order('name_key');
+  return { items: error ? [] : toItems(data), error, status };
+}
+
+/** Every tag (both groups) with both names, for the same purpose. */
+export async function fetchTagCatalog(): Promise<CallResult & { items: Record<TagKind, NamedItem[]> }> {
+  const { data, error, status } = await supabase.from('tags').select('kind,name,name_fr');
+  const items: Record<TagKind, NamedItem[]> = { dish: [], trait: [] };
+  if (!error) {
+    for (const row of data ?? []) {
+      if (row.kind === 'dish' || row.kind === 'trait') items[row.kind as TagKind].push({ name: row.name, nameFr: row.name_fr });
+    }
+  }
+  return { items, error, status };
+}
+
+interface SuggestRow {
+  id: string;
+  name_nl: string | null;
+  name_fr: string | null;
+  matched: string;
+  match_kind: MatchKind;
+  distance: number | null;
+  similarity: number;
+}
+
+/** Closest catalogue items for a typed term (R-019); the unit tests of the loader never load this file. */
+export async function fetchSuggestions(
+  kind: SuggestKind,
+  term: string,
+  mode: SuggestMode,
+  lang: 'nl' | 'fr',
+): Promise<CallResult & { rows: Suggestion[] }> {
+  const { data, error, status } = await supabase.rpc(kind === 'ingredient' ? 'suggest_ingredients' : 'suggest_units', {
+    p_term: term,
+    p_autocomplete: mode === 'autocomplete',
+    p_lang: lang,
+  });
+  const rows = error
+    ? []
+    : ((data ?? []) as unknown as SuggestRow[]).map((r) => ({
+        id: r.id,
+        nameNl: r.name_nl,
+        nameFr: r.name_fr,
+        matched: r.matched,
+        matchKind: r.match_kind,
+        distance: r.distance,
+        similarity: r.similarity,
+      }));
+  return { rows, error, status };
+}
+
+interface TermInfoRow {
+  term: string;
+  item_id: string | null;
+  suggestion_id: string | null;
+  suggestion_name: string | null;
+}
+
+/** Per search term: the catalogue item it names, or a "did you mean" suggestion (R-021). */
+export async function fetchTermInfo(
+  terms: string[],
+  lang: 'nl' | 'fr',
+): Promise<CallResult & { info: TermInfo[] }> {
+  const { data, error, status } = await supabase.rpc('search_term_info', { p_terms: terms, p_lang: lang });
+  const info: TermInfo[] = error
+    ? []
+    : ((data ?? []) as unknown as TermInfoRow[]).map((r) => ({
+        term: r.term,
+        itemId: r.item_id,
+        ...(r.suggestion_id && r.suggestion_name ? { suggestion: { id: r.suggestion_id, name: r.suggestion_name } } : {}),
+      }));
+  return { info, error, status };
+}
+
+/** All items of a tag group: the choices in the form and the filter (the component sorts them by shown name). */
+export async function fetchTags(kind: TagKind): Promise<CallResult & { items: NamedItem[] }> {
+  const { data, error, status } = await supabase.from('tags').select('name,name_fr').eq('kind', kind).order('name_key');
+  return { items: error ? [] : toItems(data), error, status };
 }
 
 /** Set when the database refused the recipe as too large (R-004): which part is too large. */

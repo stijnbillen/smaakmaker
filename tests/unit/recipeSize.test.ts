@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import { resetLanguage, useLanguage } from '../helpers/language';
 import {
   checkRecipeSize,
   formatRecipeSize,
@@ -163,6 +164,28 @@ describe('crit. 4: formatRecipeSize', () => {
   });
 
   it('uses a decimal comma', () => expect(formatRecipeSize(524_288)).toBe('0,5 van 2 MB'));
+});
+
+// R-026 crit. 6: a decimal comma in both languages ("1,3 van 2 MB"); the French wording comes from fr.json.
+describe('formatRecipeSize per language (R-026 crit. 6)', () => {
+  afterEach(resetLanguage);
+
+  it('uses a decimal comma in Dutch and in French', () => {
+    useLanguage('nl');
+    expect(formatRecipeSize(1_363_148)).toBe('1,3 van 2 MB');
+    useLanguage('fr');
+    const fr = formatRecipeSize(1_363_148);
+    expect(fr).toMatch(/^1,3\s/);
+    expect(fr).not.toContain('1.3');
+    expect(fr).toContain('2');
+  });
+
+  it('still rounds up in French, with a comma', () => {
+    useLanguage('fr');
+    expect(formatRecipeSize(1)).toMatch(/^0,1\s/);
+    expect(formatRecipeSize(2_097_153)).toMatch(/^2,1\s/);
+    expect(formatRecipeSize(2_097_152)).toMatch(/^2,0\s/);
+  });
 });
 
 describe('nl.json texts (R-001 crit. 6)', () => {

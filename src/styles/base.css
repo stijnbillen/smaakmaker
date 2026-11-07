@@ -442,6 +442,73 @@ textarea[aria-invalid='true'] {
   margin-bottom: var(--space-3);
 }
 
+/* Size sits on its own line below quantity and unit, the question of a field on a full line of its own. */
+.row-size {
+  grid-column: 1 / -1;
+}
+
+.row-fields > [role='alert'],
+.row-fields > .field-error {
+  grid-column: 1 / -1;
+  margin-top: 0;
+  margin-bottom: var(--space-3);
+}
+
+/* Suggestions (R-020): a plain list under the field, in the flow of the page, so nothing is clipped at 360 px. */
+.suggestion-list {
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  list-style: none;
+  background: var(--color-bg-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.suggestion-option {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
+  color: var(--color-text-body);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.suggestion-option + .suggestion-option {
+  border-top: 1px solid var(--color-border);
+}
+
+.suggestion-option:hover {
+  background: var(--color-bg-sunken);
+}
+
+/* The inline question: set apart by an accent bar, buttons that wrap on a narrow screen. */
+.catalog-question {
+  grid-column: 1 / -1;
+  margin-bottom: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-bg-sunken);
+  border-left: 4px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+}
+
+.catalog-question-text {
+  margin: 0 0 var(--space-2);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.catalog-question-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.catalog-question-buttons button {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
 .row-buttons {
   display: flex;
   justify-content: flex-end;
@@ -704,6 +771,23 @@ textarea[aria-invalid='true'] {
 .choice:focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
+}
+
+/* Language choice (sign-in and profile): a small labelled pair of toggle buttons */
+.language-switch {
+  margin: var(--space-5) 0 var(--space-3);
+}
+
+.language-switch-label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.language-switch .choice-list {
+  margin-bottom: 0;
 }
 
 .inline-add {
@@ -1031,6 +1115,15 @@ textarea[aria-invalid='true'] {
   margin-top: var(--space-3);
 }
 
+/* "Bedoelde u <naam>?" under a field: wraps instead of widening the page on a 360 px screen. */
+.search-suggestion {
+  display: block;
+  max-width: 100%;
+  margin-top: var(--space-2);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
 .search-submit {
   min-width: var(--tap-min);
   margin-bottom: var(--space-4);
@@ -1043,4 +1136,144 @@ textarea[aria-invalid='true'] {
   font-weight: 600;
   color: var(--color-text-accent);
   overflow-wrap: anywhere;
+}
+
+/* Catalogue administration (R-022): list and edit panel stacked, no table, so 360 px never scrolls sideways. */
+.catalog-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.catalog-tab {
+  flex: 1;
+  margin: 0;
+  color: var(--color-text-accent);
+  background: transparent;
+  border: 2px solid var(--color-accent);
+}
+
+.catalog-tab[aria-selected='true'] {
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+}
+
+.catalog-list {
+  list-style: none;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.catalog-row {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.catalog-row-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  width: 100%;
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  color: var(--color-text-body);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-md);
+  overflow-wrap: anywhere;
+}
+
+.catalog-names {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.catalog-meta {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.catalog-editor {
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+.catalog-editor-label {
+  margin: var(--space-3) 0 var(--space-1);
+  font-weight: 600;
+}
+
+.catalog-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.catalog-chips li {
+  display: flex;
+  align-items: center;
+  max-width: 100%;
+  padding-left: var(--space-3);
+  background: var(--color-bg-sunken);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  overflow-wrap: anywhere;
+}
+
+.catalog-chip-remove {
+  margin: 0;
+  padding: 0;
+  color: var(--color-text-body);
+  background: transparent;
+  border: 0;
+}
+
+.catalog-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.catalog-add input {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+
+.catalog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.catalog-actions button,
+.catalog-add button {
+  margin: 0;
+}
+
+.catalog-merge-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-bg-sunken);
+  border-radius: var(--radius-md);
+}
+
+.catalog-merge-bar p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.catalog-merge-bar button {
+  margin: 0;
 }

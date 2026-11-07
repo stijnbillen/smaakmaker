@@ -1,4 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import fr from '../../src/i18n/fr.json' with { type: 'json' };
+import nl from '../../src/i18n/nl.json' with { type: 'json' };
 import { waitForMail } from '../helpers/mailpit';
 import { backdateCodes, inviteValidAt, inviteValidAtUnknown, userExists, userIdByEmail } from '../helpers/pg';
 import {
@@ -42,6 +44,26 @@ async function codeUsedBy(code: string): Promise<string | null> {
   const r = await adminClient().from('invites').select('used_by').eq('code', code).single();
   expect(r.error).toBeNull();
   return (r.data as { used_by: string | null }).used_by;
+}
+
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+/** Subject is "{nl} / {fr}"; the Dutch heading comes first in the body; link and code are there. */
+function expectBilingual(mail: Awaited<ReturnType<typeof waitForMail>>) {
+  expect(mail.subject).toBe(`${nl['email.subject']} / ${fr['email.subject']}`);
+  const body = `${mail.html}\n${mail.text}`;
+  const nlAt = Math.max(body.indexOf(nl['email.heading']), body.indexOf(escapeHtml(nl['email.heading'])));
+  const frAt = Math.max(body.indexOf(fr['email.heading']), body.indexOf(escapeHtml(fr['email.heading'])));
+  expect(nlAt).toBeGreaterThanOrEqual(0);
+  expect(frAt).toBeGreaterThanOrEqual(0);
+  // Compare within the HTML part only: that is where both blocks are laid out in order.
+  const html = mail.html;
+  const h = (s: string) => Math.max(html.indexOf(s), html.indexOf(escapeHtml(s)));
+  expect(h(nl['email.heading'])).toBeGreaterThanOrEqual(0);
+  expect(h(nl['email.heading'])).toBeLessThan(h(fr['email.heading']));
+  expect(mail.link).not.toBeNull();
+  expect(mail.codes.length).toBeGreaterThan(0);
 }
 
 beforeAll(async () => {
@@ -112,6 +134,26 @@ describe('no account without a valid invite code (R-002 crit. 1)', () => {
     expect(verified.error).toBeNull();
     expect(verified.data.session).not.toBeNull();
     expect(await codeUsedBy(code)).toBe(verified.data.user!.id);
+  });
+
+  // R-026 crit. 6: the mail is bilingual, Dutch first; subject "{nl} / {fr}".
+  it('the mail for a new account has the combined subject and the Dutch heading before the French one', async () => {
+    const code = await newInvite();
+    const email = newEmail('bilingual');
+    const sent = Date.now();
+    expect((await requestNewAccount(email, code)).error).toBeNull();
+    const mail = await waitForMail(email, { sinceMs: sent });
+    expectBilingual(mail);
+  });
+
+  it('the mail for an existing account (magic link template) is bilingual too', async () => {
+    const user = await createTestUser('bilingualold');
+    users.push(user);
+    const sent = Date.now();
+    const res = await anonClient().auth.signInWithOtp({ email: user.email, options: { shouldCreateUser: false } });
+    expect(res.error).toBeNull();
+    const mail = await waitForMail(user.email, { sinceMs: sent });
+    expectBilingual(mail);
   });
 
   it('check_invite answers only yes or no, for the public roles', async () => {
@@ -378,18 +420,19 @@ describe('nothing readable or writable without signing in (R-002 crit. 5)', () =
 });
 
 describe('the mail has the link and a 6-digit code (R-002 crit. 6)', () => {
-  it('new user: confirmation mail with a /auth/v1/verify link and exactly one 6-digit code', async () => {
+  it('new user: confirmation mail with a /auth/v1/verify link and one distinct 6-digit code', async () => {
     const code = await newInvite();
     const email = newEmail('mail-new');
     const sent = Date.now();
     expect((await requestNewAccount(email, code)).error).toBeNull();
     const mail = await waitForMail(email, { sinceMs: sent });
     expect(mail.link).toMatch(/\/auth\/v1\/verify/);
-    expect(mail.codes).toHaveLength(1);
+    // the bilingual mail repeats the same code once per language
+    expect(new Set(mail.codes).size).toBe(1);
     expect(mail.codes[0]).toMatch(/^\d{6}$/);
   });
 
-  it('existing user: login mail with a /auth/v1/verify link and exactly one 6-digit code', async () => {
+  it('existing user: login mail with a /auth/v1/verify link and one distinct 6-digit code', async () => {
     const u = await createTestUser('mail-old');
     users.push(u);
     const sent = Date.now();
@@ -397,7 +440,8 @@ describe('the mail has the link and a 6-digit code (R-002 crit. 6)', () => {
     expect(res.error).toBeNull();
     const mail = await waitForMail(u.email, { sinceMs: sent });
     expect(mail.link).toMatch(/\/auth\/v1\/verify/);
-    expect(mail.codes).toHaveLength(1);
+    // the bilingual mail repeats the same code once per language
+    expect(new Set(mail.codes).size).toBe(1);
     expect(mail.codes[0]).toMatch(/^\d{6}$/);
   });
 

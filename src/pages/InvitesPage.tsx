@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useConnection } from '../components/ConnectionProvider';
 import { ListState } from '../components/ListState';
-import { t } from '../i18n/t';
+import { t, useLanguage } from '../i18n/t';
 import { formatDateTime } from '../lib/format';
 import { createInvite, listInvites, type InviteRow } from '../lib/invites';
 
@@ -13,6 +13,7 @@ const statusText = {
 } as const;
 
 export function InvitesPage() {
+  useLanguage();
   const { report, resolve } = useConnection();
   const [invites, setInvites] = useState<InviteRow[] | null>(null);
   const [errored, setErrored] = useState(false);
