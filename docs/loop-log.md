@@ -398,3 +398,16 @@
 - 2026-11-07 10:44 T-022 build: geslaagd
 - 2026-11-07 10:45 T-022 reviewer: GOEDGEKEURD
 - 2026-11-07 10:53 T-022 build: geslaagd
+- 2026-11-07 10:53 T-022 savepoint: gecommit
+- 2026-11-07 10:56 T-023 analist: KLAAR
+- 2026-11-07 10:59 T-023 tester: KLAAR
+- 2026-11-07 11:16 T-023 ontwikkelaar: BLOKKADE: test tests/e2e/bilingual-data.spec.ts "searching 'pomme de terre' and 'aardappel'ÔÇª" verwacht zoeken met vertalingen en synoniemen (R-021, T-024) dat niet bestaat; `search_recipes` zoekt alleen op de opgeslagen tekst.
+- 2026-11-07 11:17 T-023 tester: KLAAR
+- 2026-11-07 11:27 T-023 ontwikkelaar: KLAAR
+- 2026-11-07 11:27 T-023 build: worker-crash (geen testfout), opnieuw
+- 2026-11-07 11:37 T-023 build: geslaagd
+- 2026-11-07 11:38 T-023 reviewer: BEVINDINGEN: 0/1
+- 2026-11-07 11:39 T-023 tester: KLAAR
+- 2026-11-07 11:39 T-023 ontwikkelaar: KLAAR
+- 2026-11-07 11:41 T-023 build: mislukt
+- 2026-11-07 11:41 T-023 stop: review niet goedgekeurd na 2 rondes

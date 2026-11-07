@@ -389,3 +389,12 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **Eén tekening, Chromium als rasterizer:** `scripts/make-icons.mjs` definieert de muts één keer (512-raster) en rasteriseert via Playwright-Chromium; geen nieuwe pakketten en geen tweede weergave van de tekening.
 - **Kleuren uit `tokens.css`:** muts = `--color-bg` (= `background_color`), achtergrond = `--color-accent` (= `theme_color`); het manifest blijft qua kleur ongewijzigd.
 - **Varianten per schaal:** alleen `icon.svg` staat als bron in de repo; maskable (schaal 0,82, binnen de veilige cirkel) en favicon (schaal 1,2) zijn dezelfde tekening met een andere schaal.
+
+## T-023 — Tweetalige tags en kookgerief
+- **Canonieke naam is de Nederlandse:** recepten bewaren `name`; `name_fr` is alleen voor weergave en opzoeken. Door gebruikers toegevoegde items hebben `name_fr = null` en tonen één naam in beide talen.
+- **`name_fr` + `name_fr_key` met sleutel-trigger:** een trigger weigert (`23505`) een `name_key` die gelijk is aan de `name_fr_key` van een ander item in dezelfde groep, en omgekeerd; zo hoort elke sleutel bij hoogstens één item. Dezelfde Nederlandse sleutel op een andere rij telt niet als kruising (het herhalen van de startlijst-insert blijft veilig).
+- **Resolvers zoeken eerst op beide sleutels** en geven de canonieke naam terug; ontdubbelen gebeurt op de canonieke sleutel ("soep" + "soupe" wordt één).
+- **`seeded` op `equipment` en `equipment_choices()`:** startlijst-gerief is altijd een keuze; gebruikersgerief pas zodra een recept het gebruikt. `equipment_in_use()` blijft bestaan.
+- **Samenvoegen in `merge_seeded_names()`:** bevat de startlijsten en hernoemt, herschrijft recepten, verwijdert verouderde rijen en zet daarna pas de Franse naam (volgorde door de sleutel-trigger). Alleen de eigenaar kan ze uitvoeren; de migratie roept ze aan en de migratietest kan ze herhalen.
+- **Weergave via sleutel-opzoeking:** `useStoredNames` laadt de catalogi en toont opgeslagen namen in de taal van de lezer (onbekend: de opgeslagen tekst). Het overzicht zet een met de hand getypte Franse URL-naam om naar de canonieke naam voor de databankvraag, zonder herladen als de URL al canoniek is.
+- **Gedeelde helper** `src/lib/namedItems.ts` (`NamedItem`, `shownName`, `findItem`, `sortByShownName` met `Intl.Collator`, `addNamed`), zonder Supabase-import.
