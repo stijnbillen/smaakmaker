@@ -10,7 +10,7 @@ export type MatchKind = 'exact' | 'prefix' | 'similar';
 export interface Suggestion {
   id: string;
   nameNl: string | null;
-  nameEn: string | null;
+  nameFr: string | null;
   /** Name or synonym as stored, so the form can show "brocoli → broccoli". */
   matched: string;
   matchKind: MatchKind;

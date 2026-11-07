@@ -26,15 +26,15 @@ describe('itemKey (R-018 key)', () => {
 
 // T-021 / R-020 crit. 9: the shown name follows the interface language, with the other name as fallback.
 describe('displayName (R-020 crit. 9)', () => {
-  const both = { id: '1', nameNl: 'aardappel', nameEn: 'potato' };
+  const both = { id: '1', nameNl: 'aardappel', nameFr: 'pomme de terre' };
 
   it('gives the name of the interface language', () => {
     expect(displayName(both, 'nl')).toBe('aardappel');
-    expect(displayName(both, 'en')).toBe('potato');
+    expect(displayName(both, 'fr')).toBe('pomme de terre');
   });
 
   it('falls back to the other name when the language has none', () => {
-    expect(displayName({ ...both, nameEn: null }, 'en')).toBe('aardappel');
-    expect(displayName({ ...both, nameNl: null }, 'nl')).toBe('potato');
+    expect(displayName({ ...both, nameFr: null }, 'fr')).toBe('aardappel');
+    expect(displayName({ ...both, nameNl: null }, 'nl')).toBe('pomme de terre');
   });
 });

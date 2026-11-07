@@ -67,7 +67,7 @@ describe('link_recipes_to_catalog (R-018 crit. 6)', () => {
       { name: 'Brocolli', quantity: 200, unit: 'G' },
       { name: '  aardappel ' },
       { name: 'tempeh-xyz', quantity: 2, unit: 'handvol' },
-      { name: 'Tomato', quantity: 1, unit: 'stuk' },
+      { name: 'Tomate', quantity: 1, unit: 'stuk' },
     ];
     const id = await insertPlain('Koppel mij', original);
     const beforeRest = await rest(id);

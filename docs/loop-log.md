@@ -392,3 +392,9 @@
 - 2026-11-07 10:19 T-022 build: worker-crash (geen testfout), opnieuw
 - 2026-11-07 10:21 T-022 build: mislukt
 - 2026-11-07 10:21 T-022 stop: eindcontrole faalt
+- 2026-11-07 10:21 - loop: geen taak meer
+- 2026-11-07 10:33 T-022 ontwikkelaar: KLAAR
+- 2026-11-07 10:35 T-022 build: worker-crash (geen testfout), opnieuw
+- 2026-11-07 10:44 T-022 build: geslaagd
+- 2026-11-07 10:45 T-022 reviewer: GOEDGEKEURD
+- 2026-11-07 10:53 T-022 build: geslaagd

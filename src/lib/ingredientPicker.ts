@@ -17,7 +17,7 @@ export type Resolution =
   | { action: 'didYouMean'; options: CatalogItem[] }
   | { action: 'askNew' };
 
-const itemOf = (row: Suggestion): CatalogItem => ({ id: row.id, nameNl: row.nameNl, nameEn: row.nameEn });
+const itemOf = (row: Suggestion): CatalogItem => ({ id: row.id, nameNl: row.nameNl, nameFr: row.nameFr });
 
 /**
  * What to do when the user leaves a field whose text changed. `rows` come from the `didYouMean` mode of

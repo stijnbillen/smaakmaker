@@ -7,6 +7,8 @@ import {
   type TestUser,
 } from '../helpers/supabase-admin';
 import { sql } from '../helpers/pg';
+import { RETIRED_LANG } from '../helpers/retired-lang';
+import { ENGLISH_INGREDIENT_TERMS, ENGLISH_UNIT_TERMS } from '../helpers/english-terms';
 
 // T-019 / R-018 against the local Supabase: ingredient and unit catalogues.
 const CHECK_VIOLATION = '23514';
@@ -25,12 +27,12 @@ type Kind = 'ingredients' | 'units';
 async function adminInsert(
   table: Kind,
   nameNl: string | null,
-  nameEn: string | null,
+  nameFr: string | null,
   synonyms: string[] = [],
 ): Promise<string | null> {
   try {
     await sql(
-      `insert into public.${table} (name_nl, name_en, synonyms) values (${nul(nameNl)}, ${nul(nameEn)}, ${arr(synonyms)})`,
+      `insert into public.${table} (name_nl, name_fr, synonyms) values (${nul(nameNl)}, ${nul(nameFr)}, ${arr(synonyms)})`,
     );
     return null;
   } catch (e) {
@@ -41,7 +43,7 @@ async function adminInsert(
 const cleanup: Array<() => Promise<unknown>> = [];
 /** Removes every item whose Dutch name starts with the marker (keys cascade). */
 const track = (table: Kind, marker: string) =>
-  cleanup.push(() => sql(`delete from public.${table} where name_nl like ${lit(marker + '%')} or name_en like ${lit(marker + '%')}`));
+  cleanup.push(() => sql(`delete from public.${table} where name_nl like ${lit(marker + '%')} or name_fr like ${lit(marker + '%')}`));
 
 describe('ingredient and unit catalogue (R-018)', () => {
   let a: TestUser;
@@ -79,7 +81,7 @@ describe('ingredient and unit catalogue (R-018)', () => {
           expect(await adminInsert(table, '   ', '   ')).toBe(CHECK_VIOLATION);
           // One real name next to a blank one is fine, and the blank one is stored as null.
           expect(await adminInsert(table, '   ', s)).toBeNull();
-          const rows = await sql<{ name_nl: string | null }>(`select name_nl from public.${table} where name_en = ${lit(s)}`);
+          const rows = await sql<{ name_nl: string | null }>(`select name_nl from public.${table} where name_fr = ${lit(s)}`);
           expect(rows[0].name_nl).toBeNull();
         });
 
@@ -135,8 +137,8 @@ describe('ingredient and unit catalogue (R-018)', () => {
       expect(res.error?.code).toBe(UNIQUE_VIOLATION);
     });
 
-    it('refuses an English name equal to the Dutch key of another item ("tomaat")', async () => {
-      const res = await insertAs(a, 'ingredients', { name_en: 'tomaat' });
+    it('refuses a French name equal to the Dutch key of another item ("tomaat")', async () => {
+      const res = await insertAs(a, 'ingredients', { name_fr: 'tomaat' });
       expect(res.error?.code).toBe(UNIQUE_VIOLATION);
     });
 
@@ -146,12 +148,12 @@ describe('ingredient and unit catalogue (R-018)', () => {
       expect((await insertAs(a, 'ingredients', { name_nl: name })).error).toBeNull();
     });
 
-    it('lets one item have the same key in Dutch and English', async () => {
+    it('lets one item have the same key in Dutch and French', async () => {
       const s = suffix();
       track('ingredients', s);
       track('units', s);
-      expect((await insertAs(a, 'ingredients', { name_nl: s + 'ab', name_en: s + 'AB' })).error).toBeNull();
-      expect((await insertAs(a, 'units', { name_nl: s + 'u', name_en: s + 'U' })).error).toBeNull();
+      expect((await insertAs(a, 'ingredients', { name_nl: s + 'ab', name_fr: s + 'AB' })).error).toBeNull();
+      expect((await insertAs(a, 'units', { name_nl: s + 'u', name_fr: s + 'U' })).error).toBeNull();
     });
 
     it('refuses an administrator synonym that is already the name of another item (23505)', async () => {
@@ -201,28 +203,78 @@ describe('ingredient and unit catalogue (R-018)', () => {
 
   describe('crit. 3: the starting list', () => {
     it('has at least 150 ingredients and 25 units with both names', async () => {
-      const i = await sql<{ n: string }>(`select count(*) as n from public.ingredients where name_nl is not null and name_en is not null`);
-      const u = await sql<{ n: string }>(`select count(*) as n from public.units where name_nl is not null and name_en is not null`);
+      const i = await sql<{ n: string }>(`select count(*) as n from public.ingredients where name_nl is not null and name_fr is not null`);
+      const u = await sql<{ n: string }>(`select count(*) as n from public.units where name_nl is not null and name_fr is not null`);
       expect(Number(i[0].n)).toBeGreaterThanOrEqual(150);
       expect(Number(u[0].n)).toBeGreaterThanOrEqual(25);
     });
 
-    it('has broccoli / broccoli with its three spellings as synonyms, under one key', async () => {
-      const rows = await sql<{ name_nl: string; name_en: string; synonyms: string[] }>(
-        `select i.name_nl, i.name_en, i.synonyms from public.ingredient_keys k join public.ingredients i on i.id = k.ingredient_id where k.key = 'broccoli'`,
+    // R-026 crit. 4: Dutch + French names; Dutch spelling variants stay synonyms, no English left.
+    it('has broccoli / brocoli with the spellings "broccolli" and "brocolli" as synonyms, under one key', async () => {
+      const rows = await sql<{ name_nl: string; name_fr: string; synonyms: string[] }>(
+        `select i.name_nl, i.name_fr, i.synonyms from public.ingredient_keys k join public.ingredients i on i.id = k.ingredient_id where k.key = 'broccoli'`,
       );
       expect(rows).toHaveLength(1);
       expect(rows[0].name_nl).toBe('broccoli');
-      expect(rows[0].name_en).toBe('broccoli');
-      expect(rows[0].synonyms).toEqual(expect.arrayContaining(['brocoli', 'brocolli', 'broccolli']));
+      expect(rows[0].name_fr).toBe('brocoli');
+      expect(rows[0].synonyms).toEqual(expect.arrayContaining(['brocolli', 'broccolli']));
     });
 
     it.each([
-      ['aardappel', 'potato'],
-      ['tomaat', 'tomato'],
-    ])('has %s / %s', async (nlName, enName) => {
-      const rows = await sql(`select 1 from public.ingredients where name_nl = ${lit(nlName)} and name_en = ${lit(enName)}`);
+      ['broccoli', 'brocoli'],
+      ['aardappel', 'pomme de terre'],
+      ['tomaat', 'tomate'],
+    ])('has %s / %s as one row', async (nlName, frName) => {
+      const rows = await sql(`select 1 from public.ingredients where name_nl = ${lit(nlName)} and name_fr = ${lit(frName)}`);
       expect(rows).toHaveLength(1);
+    });
+
+    it.each([
+      ['tomate', 'tomaat'],
+      ['pomme de terre', 'aardappel'],
+    ])('the French key "%s" points to the item "%s"', async (frKey, nlName) => {
+      const rows = await sql<{ name_nl: string }>(
+        `select i.name_nl from public.ingredient_keys k join public.ingredients i on i.id = k.ingredient_id where k.key = public.item_key(${lit(frKey)})`,
+      );
+      expect(rows.map((r) => r.name_nl)).toEqual([nlName]);
+    });
+
+    it.each([
+      ['el', 'c. à soupe'],
+      ['tl', 'c. à café'],
+      ['stuk', 'pièce'],
+      ['snuf', 'pincée'],
+      ['teentje', 'gousse'],
+      ['takje', 'brin'],
+      ['blik', 'boîte'],
+      ['bosje', 'botte'],
+    ])('has the unit %s / %s as one row, also found by its French key', async (nlName, frName) => {
+      const rows = await sql<{ name_nl: string }>(
+        `select u.name_nl from public.unit_keys k join public.units u on u.id = k.unit_id where k.key = public.item_key(${lit(frName)})`,
+      );
+      expect(rows.map((r) => r.name_nl)).toEqual([nlName]);
+      const own = await sql(`select 1 from public.units where name_nl = ${lit(nlName)} and name_fr = ${lit(frName)}`);
+      expect(own).toHaveLength(1);
+    });
+
+    // No English left in the starting lists (R-026 crit. 4): neither as a key nor as a name.
+    it.each(ENGLISH_INGREDIENT_TERMS)('has no English ingredient key "%s"', async (key) => {
+      expect(await sql(`select 1 from public.ingredient_keys where key = ${lit(key)}`)).toHaveLength(0);
+    });
+
+    it.each(ENGLISH_UNIT_TERMS)('has no English unit key "%s"', async (key) => {
+      expect(await sql(`select 1 from public.unit_keys where key = ${lit(key)}`)).toHaveLength(0);
+    });
+
+    it('has name_fr and no column ending in _en on ingredients and units (crit. 3)', async () => {
+      for (const table of ['ingredients', 'units']) {
+        const cols = await sql<{ column_name: string }>(
+          `select column_name from information_schema.columns where table_schema = 'public' and table_name = ${lit(table)}`,
+        );
+        const names = cols.map((c) => c.column_name);
+        expect(names, table).toContain('name_fr');
+        expect(names.filter((n) => n.endsWith('_en')), table).toEqual([]);
+      }
     });
 
     it.each(['zout', 'paprika'])('has %s (needed by R-019)', async (key) => {
@@ -233,14 +285,14 @@ describe('ingredient and unit catalogue (R-018)', () => {
       expect(await sql(`select 1 from public.ingredient_keys where key = ${lit(key)}`)).toHaveLength(0);
     });
 
-    it('has the required units, each with an English name', async () => {
+    it('has the required units, each with a French name', async () => {
       const required = ['g', 'kg', 'ml', 'dl', 'l', 'el', 'tl', 'stuk', 'snuf', 'teentje', 'takje', 'blik', 'bosje'];
       for (const key of required) {
-        const rows = await sql<{ name_en: string | null }>(
-          `select u.name_en from public.unit_keys k join public.units u on u.id = k.unit_id where k.key = ${lit(key)}`,
+        const rows = await sql<{ name_fr: string | null }>(
+          `select u.name_fr from public.unit_keys k join public.units u on u.id = k.unit_id where k.key = ${lit(key)}`,
         );
         expect(rows, key).toHaveLength(1);
-        expect(rows[0].name_en, key).toBeTruthy();
+        expect(rows[0].name_fr, key).toBeTruthy();
       }
     });
 
@@ -251,6 +303,22 @@ describe('ingredient and unit catalogue (R-018)', () => {
       const by = Object.fromEntries(rows.map((r) => [r.key, r.synonyms]));
       expect(by.el).toContain('eetlepel');
       expect(by.tl).toContain('theelepel');
+    });
+
+    it('add_ingredient(tempeh, fr) fills name_fr and leaves name_nl empty (R-026 crit. 3)', async () => {
+      const name = `tempeh${suffix()}`;
+      track('ingredients', name);
+      expect((await a.client.rpc('add_ingredient', { p_name: name, p_lang: 'fr' })).error).toBeNull();
+      const rows = await sql<{ name_nl: string | null; name_fr: string | null }>(`select name_nl, name_fr from public.ingredients where name_fr = ${lit(name)}`);
+      expect(rows).toEqual([{ name_nl: null, name_fr: name }]);
+    });
+
+    it('a plain user can insert name_fr directly (column right) but not update it', async () => {
+      const name = `direct${suffix()}`;
+      track('ingredients', name);
+      expect((await a.client.from('ingredients').insert({ name_fr: name })).error).toBeNull();
+      await a.client.from('ingredients').update({ name_fr: 'gekaapt' }).eq('name_fr', name).select();
+      expect(await sql(`select 1 from public.ingredients where name_fr = ${lit(name)}`)).toHaveLength(1);
     });
 
     it('is in a migration, not in seed.sql', async () => {
@@ -301,22 +369,23 @@ describe('ingredient and unit catalogue (R-018)', () => {
           expect(res.error).toBeNull();
           const rows = await sql<Record<string, unknown>>(`select * from public.${table} where name_nl = ${lit(name)}`);
           expect(rows).toHaveLength(1);
-          expect(rows[0].name_en).toBeNull();
+          expect(rows[0].name_fr).toBeNull();
           expect(rows[0].synonyms).toEqual([]);
           expect(rows[0].created_by).toBe(a.id);
         });
 
-        it('stores the name in the English column for en', async () => {
-          const name = `en${suffix()}`;
+        it('stores the name in the French column for fr', async () => {
+          const name = `fr${suffix()}`;
           track(table, name);
-          expect((await a.client.rpc(rpc, { p_name: name, p_lang: 'en' })).error).toBeNull();
-          const rows = await sql<Record<string, unknown>>(`select * from public.${table} where name_en = ${lit(name)}`);
+          expect((await a.client.rpc(rpc, { p_name: name, p_lang: 'fr' })).error).toBeNull();
+          const rows = await sql<Record<string, unknown>>(`select * from public.${table} where name_fr = ${lit(name)}`);
           expect(rows).toHaveLength(1);
           expect(rows[0].name_nl).toBeNull();
         });
 
         it('refuses another language code with 22023', async () => {
-          const res = await a.client.rpc(rpc, { p_name: `fr${suffix()}`, p_lang: 'fr' });
+          // The retired code is refused too (R-026 crit. 3).
+          const res = await a.client.rpc(rpc, { p_name: `xx${suffix()}`, p_lang: RETIRED_LANG });
           expect(res.error?.code).toBe(INVALID_PARAMETER);
         });
 
@@ -365,7 +434,7 @@ describe('ingredient and unit catalogue (R-018)', () => {
           expect(targets).toHaveLength(2);
           const snapshot = () => sql(`select to_jsonb(t) as j from public.${table} t where id in (${targets.map((t) => lit(t.id)).join(',')}) order by id`);
           const before = await snapshot();
-          for (const patch of [{ name_nl: 'gekaapt' }, { name_en: 'hijacked' }, { synonyms: ['x'] }]) {
+          for (const patch of [{ name_nl: 'gekaapt' }, { name_fr: 'gekaapt-fr' }, { synonyms: ['x'] }]) {
             for (const t of targets) await a.client.from(table).update(patch).eq('id', t.id).select();
           }
           expect(await snapshot()).toEqual(before);

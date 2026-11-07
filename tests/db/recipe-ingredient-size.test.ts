@@ -106,14 +106,14 @@ describe('ingredient line size and references (R-020)', () => {
     const before = await rowOf();
 
     const newName = `hernoemd-${Date.now()}`;
-    await sql(`update public.ingredients set name_nl = ${lit(newName)}, name_en = 'renamed' where id = ${lit(item)}`);
+    await sql(`update public.ingredients set name_nl = ${lit(newName)}, name_fr = 'renommé' where id = ${lit(item)}`);
 
-    const joined = await sql<{ name_nl: string; name_en: string }>(
-      `select i.name_nl, i.name_en from public.recipes r
+    const joined = await sql<{ name_nl: string; name_fr: string }>(
+      `select i.name_nl, i.name_fr from public.recipes r
        cross join lateral jsonb_array_elements(r.ingredients) l
        join public.ingredients i on i.id = (l->>'ingredient_id')::uuid where r.id = ${lit(id)}`,
     );
-    expect(joined[0]).toEqual({ name_nl: newName, name_en: 'renamed' });
+    expect(joined[0]).toEqual({ name_nl: newName, name_fr: 'renommé' });
     expect(await rowOf()).toEqual(before);
   });
 

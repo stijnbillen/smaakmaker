@@ -3,7 +3,7 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync,
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import en from '../../src/i18n/en.json';
+import fr from '../../src/i18n/fr.json';
 import nl from '../../src/i18n/nl.json';
 
 const flat = nl as Record<string, string>;
@@ -42,29 +42,29 @@ describe('e-mail templates (R-002 crit. 6)', () => {
     }
   });
 
-  // T-018 / R-023 crit. 7: Dutch and English in the same mail, Dutch first.
-  describe('bilingual mail (R-023 crit. 7)', () => {
-    const enFlat = en as Record<string, string>;
-    const subject = `${flat['email.subject']} / ${enFlat['email.subject']}`;
+  // T-018 / R-023 crit. 7 + T-022 / R-026 crit. 6: Dutch and French in the same mail, Dutch first.
+  describe('bilingual mail (R-026 crit. 6)', () => {
+    const frFlat = fr as Record<string, string>;
+    const subject = `${flat['email.subject']} / ${frFlat['email.subject']}`;
     const inTemplate = (html: string, value: string) => html.includes(value) || html.includes(escapeHtml(value));
 
     for (const file of TEMPLATES) {
-      it(`${file}: has every email.* text of nl.json AND en.json (subject is in config.toml)`, () => {
+      it(`${file}: has every email.* text of nl.json AND fr.json (subject is in config.toml)`, () => {
         const html = readFileSync(file, 'utf8');
-        for (const [name, map] of [['nl', flat], ['en', enFlat]] as const) {
+        for (const [name, map] of [['nl', flat], ['fr', frFlat]] as const) {
           for (const key of Object.keys(map).filter((k) => k.startsWith('email.') && k !== 'email.subject')) {
             expect(inTemplate(html, map[key]), `${name}:${key}`).toBe(true);
           }
         }
       });
 
-      it(`${file}: Dutch heading comes before the English heading`, () => {
+      it(`${file}: Dutch heading comes before the French heading`, () => {
         const html = readFileSync(file, 'utf8');
         const nlAt = html.indexOf(escapeHtml(flat['email.heading']));
-        const enAt = html.indexOf(escapeHtml(enFlat['email.heading']));
+        const frAt = html.indexOf(escapeHtml(frFlat['email.heading']));
         expect(nlAt).toBeGreaterThanOrEqual(0);
-        expect(enAt).toBeGreaterThanOrEqual(0);
-        expect(nlAt).toBeLessThan(enAt);
+        expect(frAt).toBeGreaterThanOrEqual(0);
+        expect(nlAt).toBeLessThan(frAt);
       });
 
       it(`${file}: each language block has its own link and code, with lang attributes`, () => {
@@ -72,12 +72,13 @@ describe('e-mail templates (R-002 crit. 6)', () => {
         expect(html.match(/\{\{ \.ConfirmationURL \}\}/g)?.length).toBe(2);
         expect(html.match(/\{\{ \.Token \}\}/g)?.length).toBe(2);
         expect(html).toMatch(/lang="nl"/);
-        expect(html).toMatch(/<div lang="en"/);
-        expect(html.indexOf('lang="nl"')).toBeLessThan(html.indexOf('lang="en"'));
+        expect(html).toMatch(/<div lang="fr"/);
+        expect(html).not.toMatch(new RegExp(`lang="${'e'}n"`));
+        expect(html.indexOf('lang="nl"')).toBeLessThan(html.indexOf('lang="fr"'));
       });
     }
 
-    it('the subject in config.toml is "{nl} / {en}", Dutch first, for both templates', () => {
+    it('the subject in config.toml is "{nl} / {fr}", Dutch first, for both templates', () => {
       const toml = readFileSync('supabase/config.toml', 'utf8');
       for (const name of ['confirmation', 'magic_link']) {
         const section = new RegExp(`\\[auth\\.email\\.template\\.${name}\\]\\r?\\nsubject = "([^"]*)"`).exec(toml);
@@ -95,7 +96,7 @@ describe('e-mail templates (R-002 crit. 6)', () => {
       mkdirSync(join(dir, 'src/i18n'), { recursive: true });
       mkdirSync(join(dir, 'supabase'), { recursive: true });
       copyFileSync('src/i18n/nl.json', join(dir, 'src/i18n/nl.json'));
-      copyFileSync('src/i18n/en.json', join(dir, 'src/i18n/en.json'));
+      copyFileSync('src/i18n/fr.json', join(dir, 'src/i18n/fr.json'));
       copyFileSync('supabase/config.toml', join(dir, 'supabase/config.toml'));
       execFileSync(process.execPath, [resolve('scripts/make-email-templates.mjs')], { cwd: dir, stdio: 'pipe' });
       for (const file of TEMPLATES) {
@@ -121,7 +122,7 @@ describe('e-mail templates (R-002 crit. 6)', () => {
       mkdirSync(join(dir, 'src/i18n'), { recursive: true });
       mkdirSync(join(dir, 'supabase'), { recursive: true });
       copyFileSync('src/i18n/nl.json', join(dir, 'src/i18n/nl.json'));
-      copyFileSync('src/i18n/en.json', join(dir, 'src/i18n/en.json'));
+      copyFileSync('src/i18n/fr.json', join(dir, 'src/i18n/fr.json'));
       const original = readFileSync('supabase/config.toml', 'utf8').replace(/\r\n/g, '\n');
       // Start from an old Dutch-only subject to prove the lines are rewritten.
       const old = original.replace(/^subject = ".*"$/gm, 'subject = "old"');

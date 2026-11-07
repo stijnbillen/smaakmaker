@@ -16,6 +16,9 @@ import {
 import { signInViaStorage } from '../helpers/session';
 import { adminClient, assertSupabaseUp, createTestUser, deleteTestUser, insertRecipe, type TestUser } from '../helpers/supabase-admin';
 import { sql } from '../helpers/pg';
+import frJson from '../../src/i18n/fr.json' with { type: 'json' };
+
+const fr = frJson as Record<string, string>;
 
 // T-021 / R-020 in the recipe form at 360 x 640. Real taps/clicks, not only fill + Tab (a tap also blurs).
 let user: TestUser;
@@ -30,13 +33,13 @@ test.beforeAll(async () => {
   await assertSupabaseUp();
   user = await createTestUser('picker', { displayName: 'Pia Picker' });
   // Remove items that earlier runs left behind under the old naming scheme.
-  await sql(`delete from public.ingredients where name_nl like 'tempeh-e2e-%' or name_en like 'tempeh-e2e-%'`).catch(() => undefined);
+  await sql(`delete from public.ingredients where name_nl like 'tempeh-e2e-%' or name_fr like 'tempeh-e2e-%'`).catch(() => undefined);
 });
 
 test.afterAll(async () => {
   if (created.length) {
     await sql(`delete from public.recipes where title in (${created.map(lit).join(',')})`).catch(() => undefined);
-    await sql(`delete from public.ingredients where name_nl in (${created.map(lit).join(',')}) or name_en in (${created.map(lit).join(',')})`).catch(() => undefined);
+    await sql(`delete from public.ingredients where name_nl in (${created.map(lit).join(',')}) or name_fr in (${created.map(lit).join(',')})`).catch(() => undefined);
   }
   if (user) await deleteTestUser(user);
 });
@@ -49,11 +52,11 @@ test.beforeEach(async ({ page }) => {
 const idOf = async (table: 'ingredient_keys' | 'unit_keys', col: string, key: string) =>
   (await sql<{ id: string }>(`select ${col} as id from public.${table} where key = ${lit(key)}`))[0].id;
 
-async function openNew(page: Page, lang: 'nl' | 'en' = 'nl') {
+async function openNew(page: Page, lang: 'nl' | 'fr' = 'nl') {
   await page.addInitScript((l) => window.localStorage.setItem('smaakmaker.lang', l), lang);
   await page.goto('/nieuw');
-  // The title label is English in the English interface, so wait on the label of the chosen language.
-  await expect(page.getByRole('textbox', { name: lang === 'en' ? 'Title' : 'Titel', exact: true })).toBeVisible();
+  // The title label differs per interface language, so wait on the label of the chosen language.
+  await expect(page.getByRole('textbox', { name: lang === 'fr' ? fr['form.titleLabel'] : nl['form.titleLabel'], exact: true })).toBeVisible();
 }
 
 /** Fills the title, times, servings and step, so only the ingredient row is under test. */
@@ -87,14 +90,14 @@ test.describe('suggestions (crit. 1)', () => {
     await expect(page.getByRole('option', { name: 'brocoli → broccoli' })).toBeVisible();
   });
 
-  test('in English "aardap" offers "potato"', async ({ page }) => {
-    await openNew(page, 'en');
+  test('in French "aardap" offers "pomme de terre"', async ({ page }) => {
+    await openNew(page, 'fr');
     await ingredientNameFields(page).first().fill('aardap');
-    await expect(page.getByRole('option', { name: 'aardappel → potato', exact: true })).toBeVisible();
+    await expect(page.getByRole('option', { name: 'aardappel → pomme de terre', exact: true })).toBeVisible();
   });
 
-  // Crit. "Overal": the form fits 360 px in both languages, also with an open list and an open question (the English one is longer).
-  for (const lang of ['nl', 'en'] as const) test(`the open list and the open question fit in 360 px and every option is at least 44 px high (${lang})`, async ({ page }) => {
+  // Crit. "Overal": the form fits 360 px in both languages, also with an open list and an open question (the French one is longer).
+  for (const lang of ['nl', 'fr'] as const) test(`the open list and the open question fit in 360 px and every option is at least 44 px high (${lang})`, async ({ page }) => {
     await openNew(page, lang);
     await ingredientNameFields(page).first().fill('br');
     await expect(page.getByRole('listbox')).toBeVisible();
@@ -125,11 +128,11 @@ test.describe('choosing (crit. 2)', () => {
     expect((await savedLines(title))[0].ingredient_id).toBe(await idOf('ingredient_keys', 'ingredient_id', 'broccoli'));
   });
 
-  test('typing a full name "Tomato" and a unit "EL" and moving on links both without a question', async ({ page }) => {
+  test('typing a full French name "Tomate" and a unit "EL" and moving on links both without a question', async ({ page }) => {
     const title = unique('Exact');
     await openNew(page);
     await fillRest(page, title);
-    await ingredientNameFields(page).first().fill('Tomato');
+    await ingredientNameFields(page).first().fill('Tomate');
     await unitFields(page).first().fill('EL');
     await quantityFields(page).first().click();
     await page.waitForTimeout(800);
@@ -167,9 +170,9 @@ test.describe('"Bedoelde u" (crit. 3, 6)', () => {
     await ingredientNameFields(page).first().fill(`${base}o`);
     await quantityFields(page).first().click();
     const res = await user.client.rpc('suggest_ingredients', { p_term: `${base}o`, p_autocomplete: false, p_lang: 'nl' });
-    const expected = ((res.data ?? []) as Array<{ name_nl: string | null; name_en: string | null }>)
+    const expected = ((res.data ?? []) as Array<{ name_nl: string | null; name_fr: string | null }>)
       .slice(0, 5)
-      .map((r) => r.name_nl ?? r.name_en);
+      .map((r) => r.name_nl ?? r.name_fr);
     expect(expected.length).toBeGreaterThanOrEqual(2);
     const group = page.getByRole('group', { name: `Bedoelde u ${expected.join(' / ')}?` });
     await expect(group).toBeVisible();
@@ -201,23 +204,23 @@ test.describe('new item (crit. 4, 6, 11)', () => {
     await expect(page.getByRole('group', { name: `Nieuw ingrediënt '${name}'. Opslaan in de databank zodat iedereen het kan kiezen?` })).toBeVisible();
     await page.getByRole('button', { name: 'Ja', exact: true }).click();
     await expect(catalogQuestion(page)).toHaveCount(0);
-    const items = await sql<{ id: string; name_nl: string | null; name_en: string | null }>(`select id, name_nl, name_en from public.ingredients where name_nl = ${lit(name)}`);
+    const items = await sql<{ id: string; name_nl: string | null; name_fr: string | null }>(`select id, name_nl, name_fr from public.ingredients where name_nl = ${lit(name)}`);
     expect(items).toHaveLength(1);
-    expect(items[0].name_en).toBeNull();
+    expect(items[0].name_fr).toBeNull();
     await saveButton(page).click();
     await expect(page).toHaveURL(/\/recept\/[0-9a-f-]{36}$/);
     expect((await savedLines(title))[0].ingredient_id).toBe(items[0].id);
   });
 
-  test('in English "Yes" fills name_en and leaves name_nl empty', async ({ page }) => {
+  test('in French "Oui" fills name_fr and leaves name_nl empty', async ({ page }) => {
     const name = rnd();
     created.push(name);
-    await openNew(page, 'en');
+    await openNew(page, 'fr');
     await ingredientNameFields(page).first().fill(name);
     await quantityFields(page).first().click();
-    await page.getByRole('button', { name: 'Yes', exact: true }).click();
+    await page.getByRole('button', { name: fr['form.yes'], exact: true }).click();
     await expect(catalogQuestion(page)).toHaveCount(0);
-    const items = await sql<{ name_nl: string | null }>(`select name_nl from public.ingredients where name_en = ${lit(name)}`);
+    const items = await sql<{ name_nl: string | null }>(`select name_nl from public.ingredients where name_fr = ${lit(name)}`);
     expect(items).toHaveLength(1);
     expect(items[0].name_nl).toBeNull();
   });
@@ -272,7 +275,7 @@ test.describe('new item (crit. 4, 6, 11)', () => {
     const title = unique('ZonderEenheid');
     await openNew(page);
     await fillRest(page, title);
-    await ingredientNameFields(page).first().fill('Tomato');
+    await ingredientNameFields(page).first().fill('Tomate');
     await quantityFields(page).first().fill('2');
     await page.waitForTimeout(500);
     await saveButton(page).click();
@@ -307,7 +310,7 @@ test.describe('new item (crit. 4, 6, 11)', () => {
 });
 
 test.describe('size and references on the pages (crit. 7, 9, 10)', () => {
-  test('size Groot shows "2 aardappel (groot)", and "2 potato (large)" after switching to English without reload', async ({ page }) => {
+  test('size Groot shows "2 aardappel (groot)", and "2 pomme de terre (grande taille)" after switching to French without reload', async ({ page }) => {
     const title = unique('Maat');
     await openNew(page);
     await fillRest(page, title);
@@ -320,9 +323,16 @@ test.describe('size and references on the pages (crit. 7, 9, 10)', () => {
     await expect(page.getByRole('main')).toContainText('2 aardappel (groot)');
     // The language switch lives on /profiel; go there and back inside the app, so nothing reloads.
     await page.getByRole('navigation').getByRole('link', { name: 'Profiel', exact: true }).click();
-    await page.getByRole('group', { name: 'Taal' }).getByRole('button', { name: 'English', exact: true }).click();
+    await page.getByRole('group', { name: 'Taal' }).getByRole('button', { name: 'Français', exact: true }).click();
     await page.goBack();
-    await expect(page.getByRole('main')).toContainText('2 potato (large)');
+    await expect(page.getByRole('main')).toContainText('2 pomme de terre (grande taille)');
+  });
+
+  // R-026 crit. 5: the form's size list shows the three French sizes.
+  test('in French the size list shows the three French sizes', async ({ page }) => {
+    await openNew(page, 'fr');
+    const labels = await sizeFields(page).first().locator('option').allTextContents();
+    for (const key of ['form.sizeSmall', 'form.sizeMedium', 'form.sizeLarge']) expect(labels).toContain(fr[key]);
   });
 
   test('an admin rename shows on the detail page and in the edit form (crit. 9)', async ({ page }) => {
@@ -331,17 +341,17 @@ test.describe('size and references on the pages (crit. 7, 9, 10)', () => {
     created.push(row.title);
     const newName = unique('nieuwenaam');
     created.push(newName);
-    await sql(`update public.ingredients set name_nl = ${lit(newName)}, name_en = ${lit(newName + '-en')} where id = ${lit(item)}`);
+    await sql(`update public.ingredients set name_nl = ${lit(newName)}, name_fr = ${lit(newName + '-fr')} where id = ${lit(item)}`);
     await page.goto(`/recept/${row.id}`);
     await expect(page.getByRole('main')).toContainText(newName);
     await page.goto(`/recept/${row.id}/bewerken`);
     await expect(ingredientNameFields(page).first()).toHaveValue(newName);
-    // Crit. 9: in English the detail page and the form show the new English name.
-    await page.addInitScript(() => window.localStorage.setItem('smaakmaker.lang', 'en'));
+    // Crit. 9: in French the detail page and the form show the new French name.
+    await page.addInitScript(() => window.localStorage.setItem('smaakmaker.lang', 'fr'));
     await page.goto(`/recept/${row.id}`);
-    await expect(page.getByRole('main')).toContainText(`${newName}-en`);
+    await expect(page.getByRole('main')).toContainText(`${newName}-fr`);
     await page.goto(`/recept/${row.id}/bewerken`);
-    await expect(ingredientNameFields(page).first()).toHaveValue(`${newName}-en`);
+    await expect(ingredientNameFields(page).first()).toHaveValue(`${newName}-fr`);
   });
 
   test('a variant keeps ids, sizes and the free line (crit. 10)', async ({ page }) => {

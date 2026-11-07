@@ -16,7 +16,7 @@ $$;
 create table public.ingredients (
   id uuid primary key default gen_random_uuid(),
   name_nl text,
-  name_en text,
+  name_fr text,
   synonyms text[] not null default '{}',
   created_by uuid default auth.uid() references public.profiles (id) on delete set null,
   created_at timestamptz not null default now()
@@ -25,7 +25,7 @@ create table public.ingredients (
 create table public.units (
   id uuid primary key default gen_random_uuid(),
   name_nl text,
-  name_en text,
+  name_fr text,
   synonyms text[] not null default '{}',
   created_by uuid default auth.uid() references public.profiles (id) on delete set null,
   created_at timestamptz not null default now()
@@ -45,7 +45,7 @@ create index unit_keys_item_idx on public.unit_keys (unit_id);
 
 -- Names are null or 1..max characters, at least one name, at most 20 synonyms of 1..max characters.
 -- Counted in characters (char_length) after trimming, which the normalise trigger has already done.
-create function public.catalog_names_valid(p_nl text, p_en text, p_syn text[], p_max int)
+create function public.catalog_names_valid(p_nl text, p_fr text, p_syn text[], p_max int)
 returns boolean
 language plpgsql
 immutable
@@ -54,9 +54,9 @@ as $$
 declare
   v_s text;
 begin
-  if p_nl is null and p_en is null then return false; end if;
+  if p_nl is null and p_fr is null then return false; end if;
   if p_nl is not null and char_length(p_nl) not between 1 and p_max then return false; end if;
-  if p_en is not null and char_length(p_en) not between 1 and p_max then return false; end if;
+  if p_fr is not null and char_length(p_fr) not between 1 and p_max then return false; end if;
   if p_syn is null or coalesce(array_length(p_syn, 1), 0) > 20 then return false; end if;
   foreach v_s in array p_syn loop
     if v_s is null or char_length(v_s) not between 1 and p_max then return false; end if;
@@ -80,7 +80,7 @@ declare
   v_out text[] := '{}';
 begin
   new.name_nl := nullif(public.recipe_trim(new.name_nl), '');
-  new.name_en := nullif(public.recipe_trim(new.name_en), '');
+  new.name_fr := nullif(public.recipe_trim(new.name_fr), '');
   foreach v_s in array coalesce(new.synonyms, '{}') loop
     v_t := public.recipe_trim(v_s);
     if v_t is not null and public.item_key(v_t) = any(v_seen) then
@@ -90,7 +90,7 @@ begin
     v_out := v_out || v_t;
   end loop;
   new.synonyms := v_out;
-  if not public.catalog_names_valid(new.name_nl, new.name_en, new.synonyms, v_max) then
+  if not public.catalog_names_valid(new.name_nl, new.name_fr, new.synonyms, v_max) then
     raise exception 'invalid catalogue item' using errcode = '23514';
   end if;
   return new;
@@ -116,7 +116,7 @@ declare
   v_keys text[];
 begin
   select coalesce(array_agg(distinct k), '{}') into v_keys
-  from unnest(array[new.name_nl, new.name_en] || new.synonyms) as t(n),
+  from unnest(array[new.name_nl, new.name_fr] || new.synonyms) as t(n),
        lateral (select public.item_key(t.n) as k) s
   where t.n is not null and s.k <> '';
   if tg_table_name = 'ingredients' then
@@ -146,8 +146,8 @@ alter table public.unit_keys enable row level security;
 
 revoke all on public.ingredients, public.units, public.ingredient_keys, public.unit_keys from public, anon, authenticated;
 grant select on public.ingredients, public.units, public.ingredient_keys, public.unit_keys to authenticated;
-grant insert (name_nl, name_en) on public.ingredients to authenticated;
-grant insert (name_nl, name_en) on public.units to authenticated;
+grant insert (name_nl, name_fr) on public.ingredients to authenticated;
+grant insert (name_nl, name_fr) on public.units to authenticated;
 
 create policy ingredients_select on public.ingredients for select to authenticated using (true);
 create policy ingredients_insert on public.ingredients for insert to authenticated with check (true);
@@ -167,8 +167,8 @@ as $$
 declare
   v_id uuid;
 begin
-  if p_lang is null or p_lang not in ('nl', 'en') then
-    raise exception 'language must be nl or en' using errcode = '22023';
+  if p_lang is null or p_lang not in ('nl', 'fr') then
+    raise exception 'language must be nl or fr' using errcode = '22023';
   end if;
   select k.ingredient_id into v_id from public.ingredient_keys k where k.key = public.item_key(p_name);
   if v_id is not null then
@@ -179,7 +179,7 @@ begin
     if p_lang = 'nl' then
       insert into public.ingredients (name_nl) values (p_name) returning ingredients.id into v_id;
     else
-      insert into public.ingredients (name_en) values (p_name) returning ingredients.id into v_id;
+      insert into public.ingredients (name_fr) values (p_name) returning ingredients.id into v_id;
     end if;
     return query select v_id, true;
   exception when unique_violation then
@@ -199,8 +199,8 @@ as $$
 declare
   v_id uuid;
 begin
-  if p_lang is null or p_lang not in ('nl', 'en') then
-    raise exception 'language must be nl or en' using errcode = '22023';
+  if p_lang is null or p_lang not in ('nl', 'fr') then
+    raise exception 'language must be nl or fr' using errcode = '22023';
   end if;
   select k.unit_id into v_id from public.unit_keys k where k.key = public.item_key(p_name);
   if v_id is not null then
@@ -211,7 +211,7 @@ begin
     if p_lang = 'nl' then
       insert into public.units (name_nl) values (p_name) returning units.id into v_id;
     else
-      insert into public.units (name_en) values (p_name) returning units.id into v_id;
+      insert into public.units (name_fr) values (p_name) returning units.id into v_id;
     end if;
     return query select v_id, true;
   exception when unique_violation then

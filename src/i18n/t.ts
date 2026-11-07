@@ -1,12 +1,12 @@
 import { useSyncExternalStore } from 'react';
-import en from './en.json';
-import { getLanguage, subscribe } from './language';
+import fr from './fr.json';
+import { getLanguage, subscribe, type Language } from './language';
 import nl from './nl.json';
 
 export type TextKey = keyof typeof nl;
 
-// A missing English key fails here, at compile time (tsc -b).
-const texts: Record<'nl' | 'en', Record<TextKey, string>> = { nl, en: en satisfies Record<TextKey, string> };
+// A missing French key fails here, at compile time (tsc -b).
+const texts: Record<Language, Record<TextKey, string>> = { nl, fr: fr satisfies Record<TextKey, string> };
 
 /** Looks up a visible text by key in the current language; unknown keys fail at compile time. */
 export function t(key: TextKey): string {
@@ -14,7 +14,7 @@ export function t(key: TextKey): string {
 }
 
 /** Like t(), but in an explicit language (for text that must follow a parameter, not the global language). */
-export function tIn(lang: 'nl' | 'en', key: TextKey): string {
+export function tIn(lang: Language, key: TextKey): string {
   return texts[lang][key];
 }
 

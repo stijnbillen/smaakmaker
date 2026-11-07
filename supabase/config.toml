@@ -244,13 +244,13 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# Bilingual mails (Dutch first) with link AND 6-digit code. Generated from nl.json and en.json by scripts/make-email-templates.mjs.
+# Bilingual mails (Dutch first) with link AND 6-digit code. Generated from nl.json and fr.json by scripts/make-email-templates.mjs.
 [auth.email.template.confirmation]
-subject = "Je code om aan te melden bij Smaakmaker / Your code to sign in to Smaakmaker"
+subject = "Je code om aan te melden bij Smaakmaker / Votre code pour vous connecter à Smaakmaker"
 content_path = "./supabase/templates/confirmation.html"
 
 [auth.email.template.magic_link]
-subject = "Je code om aan te melden bij Smaakmaker / Your code to sign in to Smaakmaker"
+subject = "Je code om aan te melden bij Smaakmaker / Votre code pour vous connecter à Smaakmaker"
 content_path = "./supabase/templates/magic_link.html"
 
 # Uncomment to customize email template

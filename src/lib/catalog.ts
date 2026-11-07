@@ -21,14 +21,14 @@ export interface IngredientRef {
 export interface CatalogItem {
   id: string;
   nameNl: string | null;
-  nameEn: string | null;
+  nameFr: string | null;
 }
 
-export type CatalogLang = 'nl' | 'en';
+export type CatalogLang = 'nl' | 'fr';
 
 /** The name in the interface language; when that one is missing, the other name. */
 export function displayName(item: CatalogItem, lang: CatalogLang): string {
-  const [first, second] = lang === 'nl' ? [item.nameNl, item.nameEn] : [item.nameEn, item.nameNl];
+  const [first, second] = lang === 'nl' ? [item.nameNl, item.nameFr] : [item.nameFr, item.nameNl];
   return first || second || '';
 }
 

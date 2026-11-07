@@ -1,13 +1,14 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import nl from '../../src/i18n/nl.json';
 import ts from 'typescript';
-import en from '../../src/i18n/en.json';
+import fr from '../../src/i18n/fr.json';
 import { t, type TextKey } from '../../src/i18n/t';
 import nlBefore from './fixtures/nl-before-T-018.json';
+import { RETIRED_LANG } from '../helpers/retired-lang';
 
-// T-018 / R-023: the Dutch and English text files must be interchangeable.
+// T-018 / R-023 + T-022 / R-026: the Dutch and French text files must be interchangeable.
 type TextMap = Record<string, string>;
 
 const PLACEHOLDER = /\{(\w+)\}/g;
@@ -29,19 +30,24 @@ function compareTexts(a: TextMap, b: TextMap): string[] {
   return problems;
 }
 
-describe('nl.json and en.json are in line (R-023 crit. 1)', () => {
+describe('nl.json and fr.json are in line (R-026 crit. 1)', () => {
   const nlMap = nl as TextMap;
-  const enMap = en as TextMap;
+  const frMap = fr as TextMap;
+
+  it('the English text file is gone (R-026 crit. 1)', () => {
+    expect(existsSync(`src/i18n/${RETIRED_LANG}.json`)).toBe(false);
+    expect(existsSync('src/i18n/fr.json')).toBe(true);
+  });
 
   it('have the same keys, both directions', () => {
     const nlKeys = new Set(Object.keys(nlMap));
-    const enKeys = new Set(Object.keys(enMap));
-    expect([...nlKeys].filter((k) => !enKeys.has(k))).toEqual([]);
-    expect([...enKeys].filter((k) => !nlKeys.has(k))).toEqual([]);
+    const frKeys = new Set(Object.keys(frMap));
+    expect([...nlKeys].filter((k) => !frKeys.has(k))).toEqual([]);
+    expect([...frKeys].filter((k) => !nlKeys.has(k))).toEqual([]);
   });
 
   it('have no empty values', () => {
-    for (const [name, map] of [['nl', nlMap], ['en', enMap]] as const) {
+    for (const [name, map] of [['nl', nlMap], ['fr', frMap]] as const) {
       for (const [k, v] of Object.entries(map)) {
         expect(typeof v === 'string' && v.trim().length > 0, `${name}:${k}`).toBe(true);
       }
@@ -49,8 +55,32 @@ describe('nl.json and en.json are in line (R-023 crit. 1)', () => {
   });
 
   it('have the same {placeholders} per key', () => {
-    const wrong = Object.keys(nlMap).filter((k) => k in enMap && placeholders(nlMap[k]).join() !== placeholders(enMap[k]).join());
+    const wrong = Object.keys(nlMap).filter((k) => k in frMap && placeholders(nlMap[k]).join() !== placeholders(frMap[k]).join());
     expect(wrong).toEqual([]);
+  });
+
+  // R-026 crit. 1: a full translation, not a copy of the Dutch (or English) text.
+  it('no French value equals the Dutch one, except a short explicit list', () => {
+    const SAME_ALLOWED = new Set([
+      'app.name', 'app.title', 'language.nl', 'language.fr', 'time.minutes',
+    ]);
+    const same = Object.keys(nlMap).filter((k) => k in frMap && nlMap[k] === frMap[k] && !SAME_ALLOWED.has(k));
+    // Symbols without letters ("…", "·") and very short unit-like values are not translations either.
+    const real = same.filter((k) => hasLetters(nlMap[k]) && nlMap[k].replace(PLACEHOLDER, '').trim().length > 3);
+    expect(real).toEqual([]);
+  });
+
+  it('has fixed French texts for a sample of keys', () => {
+    expect(frMap['nav.profile']).toBe('Profil');
+    expect(frMap['language.fr']).toBe('Français');
+    expect(frMap['time.hours']).toBe('{h} h');
+    expect(frMap['time.minutes']).toBe('{m} min');
+  });
+
+  it('French size labels (R-026 crit. 5)', () => {
+    expect(frMap['recipe.sizeSmall']).toBe('petite taille');
+    expect(frMap['recipe.sizeMedium']).toBe('taille moyenne');
+    expect(frMap['recipe.sizeLarge']).toBe('grande taille');
   });
 
   it('compareTexts finds a deliberately different file (negative control)', () => {
@@ -61,34 +91,33 @@ describe('nl.json and en.json are in line (R-023 crit. 1)', () => {
     expect(compareTexts({ a: 'x {n}' }, { a: 'x {m}' }).length).toBeGreaterThan(0);
   });
 
-  it('TextKey stays keyof typeof nl and en.json is typed Record<TextKey, string> (missing key fails tsc)', () => {
+  it('TextKey stays keyof typeof nl and fr.json is typed Record<TextKey, string> (missing key fails tsc)', () => {
     const t_ts = readFileSync('src/i18n/t.ts', 'utf8');
     expect(t_ts).toMatch(/type TextKey\s*=\s*keyof typeof nl\b/);
     const typed = files('src/i18n')
       .filter((f) => /\.tsx?$/.test(f))
       .some((f) => /Record<TextKey,\s*string>/.test(readFileSync(f, 'utf8')));
     expect(typed).toBe(true);
-    // Compile-time proof that the English file covers every key.
-    const check: Record<TextKey, string> = en;
+    // Compile-time proof that the French file covers every key.
+    const check: Record<TextKey, string> = fr;
     expect(Object.keys(check).length).toBeGreaterThan(0);
   });
 
   it('has the new keys of T-018 in both files', () => {
-    for (const k of ['language.label', 'language.nl', 'language.en', 'app.title', 'format.dateTime']) {
+    for (const k of ['language.label', 'language.nl', 'language.fr', 'app.title', 'format.dateTime']) {
       expect(nlMap[k], `nl:${k}`).toBeTruthy();
-      expect(enMap[k], `en:${k}`).toBeTruthy();
+      expect(frMap[k], `fr:${k}`).toBeTruthy();
     }
     // Each language is named in its own language, whatever the interface language is.
     expect(nlMap['language.nl']).toBe('Nederlands');
-    expect(nlMap['language.en']).toBe('English');
-    expect(enMap['language.nl']).toBe('Nederlands');
-    expect(enMap['language.en']).toBe('English');
+    expect(nlMap['language.fr']).toBe('Français');
+    expect(frMap['language.nl']).toBe('Nederlands');
+    expect(frMap['language.fr']).toBe('Français');
+    expect(nlMap['language.en']).toBeUndefined();
   });
 
-  it('has the English units and brand the requirement names', () => {
-    expect(enMap['time.hours']).toBe('{h} h');
-    expect(enMap['time.minutes']).toBe('{m} min');
-    expect(enMap['app.name']).toBe('Smaakmaker');
+  it('has the brand the requirement names', () => {
+    expect(frMap['app.name']).toBe('Smaakmaker');
   });
 });
 
@@ -112,7 +141,7 @@ function walk(node: ts.Node, visit: (n: ts.Node) => void) {
 }
 
 // Allowed literal texts: the brand, the language names (always in their own language) and symbols.
-const ALLOWED_LITERALS = new Set(['Smaakmaker', 'Nederlands', 'English']);
+const ALLOWED_LITERALS = new Set(['Smaakmaker', 'Nederlands', 'Français']);
 const LITERAL_ATTRIBUTES = new Set(['aria-label', 'placeholder', 'title', 'alt']);
 const hasLetters = (s: string) => /\p{L}/u.test(s);
 
@@ -172,7 +201,7 @@ describe('no literal visible text in components (R-023 crit. 5)', () => {
     }
     for (const k of ['open', 'used', 'expired']) {
       expect((nl as TextMap)[`invites.status.${k}`], k).toBeTruthy();
-      expect((en as TextMap)[`invites.status.${k}`], k).toBeTruthy();
+      expect((fr as TextMap)[`invites.status.${k}`], k).toBeTruthy();
     }
   });
 });

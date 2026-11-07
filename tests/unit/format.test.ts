@@ -37,13 +37,13 @@ describe('formatDateTime (R-017 crit. 2)', () => {
   });
 });
 
-// T-018 / R-023 crit. 6: dates, times and durations follow the language (nl-BE / en-GB).
+// T-018 / R-023 crit. 6 + T-022 / R-026 crit. 6: dates, times and durations follow the language (nl-BE / fr-BE).
 describe('format per language (R-023 crit. 6)', () => {
   afterEach(() => {
     setLanguage('nl');
     vi.unstubAllGlobals();
   });
-  const useLanguage = (lang: 'nl' | 'en') => {
+  const useLanguage = (lang: 'nl' | 'fr') => {
     vi.stubGlobal('document', { documentElement: { lang: '' }, title: '' });
     vi.stubGlobal('localStorage', { getItem: () => null, setItem: () => undefined });
     setLanguage(lang);
@@ -51,7 +51,7 @@ describe('format per language (R-023 crit. 6)', () => {
 
   it.each([
     ['nl', '1 november 2026'],
-    ['en', '1 November 2026'],
+    ['fr', '1 novembre 2026'],
   ] as const)('formatDate in %s is "%s"', (lang, text) => {
     useLanguage(lang);
     expect(formatDate('2026-11-01T12:00:00Z')).toBe(text);
@@ -59,15 +59,15 @@ describe('format per language (R-023 crit. 6)', () => {
 
   it.each([
     ['nl', '9 november 2026 om 14:05'],
-    ['en', '9 November 2026 at 14:05'],
+    ['fr', '9 novembre 2026 à 14:05'],
   ] as const)('formatDateTime in %s is "%s"', (lang, text) => {
     useLanguage(lang);
     expect(formatDateTime('2026-11-09T13:05:00Z')).toBe(text);
   });
 
-  it('keeps the Brussels day in English too', () => {
-    useLanguage('en');
-    expect(formatDate('2026-11-01T23:30:00Z')).toBe('2 November 2026');
+  it('keeps the Brussels day in French too', () => {
+    useLanguage('fr');
+    expect(formatDate('2026-11-01T23:30:00Z')).toBe('2 novembre 2026');
   });
 
   it.each([
@@ -76,15 +76,15 @@ describe('format per language (R-023 crit. 6)', () => {
     [60, '1 u', '1 h'],
     [90, '1 u 30 min', '1 h 30 min'],
     [4320, '72 u', '72 h'],
-  ])('formatDuration(%s) is "%s" (nl) and "%s" (en)', (minutes, nlText, enText) => {
+  ])('formatDuration(%s) is "%s" (nl) and "%s" (fr)', (minutes, nlText, frText) => {
     useLanguage('nl');
     expect(formatDuration(minutes)).toBe(nlText);
-    useLanguage('en');
-    expect(formatDuration(minutes)).toBe(enText);
+    useLanguage('fr');
+    expect(formatDuration(minutes)).toBe(frText);
   });
 
   it('switches back to Dutch without leftovers (cache per locale)', () => {
-    useLanguage('en');
+    useLanguage('fr');
     formatDate('2026-11-01T12:00:00Z');
     useLanguage('nl');
     expect(formatDate('2026-11-01T12:00:00Z')).toBe('1 november 2026');

@@ -1,12 +1,12 @@
-// Builds the Supabase auth mail templates from the email.* texts in src/i18n/nl.json and en.json,
+// Builds the Supabase auth mail templates from the email.* texts in src/i18n/nl.json and fr.json,
 // so that all visible texts have one source. Run: node scripts/make-email-templates.mjs
-// The mail holds a full Dutch block and then a full English block (each with link and code), and the
-// subject lines in supabase/config.toml become "{nl} / {en}". Only those two lines of config.toml change.
+// The mail holds a full Dutch block and then a full French block (each with link and code), and the
+// subject lines in supabase/config.toml become "{nl} / {fr}". Only those two lines of config.toml change.
 // The output is committed; tests/unit/email-templates.test.ts keeps it in sync with the text files.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const nl = JSON.parse(readFileSync('src/i18n/nl.json', 'utf8'));
-const en = JSON.parse(readFileSync('src/i18n/en.json', 'utf8'));
+const fr = JSON.parse(readFileSync('src/i18n/fr.json', 'utf8'));
 
 // Same escaping the test expects: & < > " (apostrophes stay as they are).
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -25,8 +25,8 @@ const html = `<!doctype html>
   <body style="margin:0;padding:24px;background:#fbf5ea;color:#2b1d14;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;line-height:1.45;">
     ${block(nl)}
     <hr style="border:0;border-top:1px solid #d9ccb6;margin:32px 0;">
-    <div lang="en">
-    ${block(en)}
+    <div lang="fr">
+    ${block(fr)}
     </div>
   </body>
 </html>
@@ -39,7 +39,7 @@ for (const name of ['confirmation', 'magic_link']) {
 }
 
 // Subject lines in config.toml: rewrite only the two `subject = ` lines below the two templates.
-const subject = `${nl['email.subject']} / ${en['email.subject']}`;
+const subject = `${nl['email.subject']} / ${fr['email.subject']}`;
 const toml = readFileSync('supabase/config.toml', 'utf8');
 const updated = toml.replace(
   /(\[auth\.email\.template\.(?:confirmation|magic_link)\]\r?\n)subject = "[^"]*"/g,

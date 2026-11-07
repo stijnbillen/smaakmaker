@@ -213,7 +213,7 @@ export function CatalogField({
     }
     resolve(`${reportKey}-add`);
     let item: CatalogItem =
-      langRef.current === 'nl' ? { id: res.id, nameNl: text, nameEn: null } : { id: res.id, nameNl: null, nameEn: text };
+      langRef.current === 'nl' ? { id: res.id, nameNl: text, nameFr: null } : { id: res.id, nameNl: null, nameFr: text };
     // Someone else added it first: show the names it really has.
     if (!res.created) {
       const found = await fetchCatalogItems(kind === 'ingredient' ? [res.id] : [], kind === 'unit' ? [res.id] : []);
@@ -275,7 +275,7 @@ export function CatalogField({
                 className="suggestion-option"
                 onPointerDown={keepFocus}
                 onMouseDown={keepFocus}
-                onClick={() => link({ id: row.id, nameNl: row.nameNl, nameEn: row.nameEn })}
+                onClick={() => link({ id: row.id, nameNl: row.nameNl, nameFr: row.nameFr })}
               >
                 {optionLabel(row, lang, value)}
               </li>

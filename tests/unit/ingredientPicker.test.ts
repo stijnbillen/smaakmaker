@@ -8,7 +8,7 @@ import type { Suggestion } from '../../src/lib/suggest';
 // text length (80 for a name, 20 for a unit); the options are capped at 5 (R-019) inside the function.
 const row = (over: Partial<Suggestion> & { id: string }): Suggestion => ({
   nameNl: 'broccoli',
-  nameEn: 'broccoli',
+  nameFr: 'brocoli',
   matched: 'broccoli',
   matchKind: 'similar',
   distance: 1,
@@ -25,10 +25,10 @@ describe('suggestionLabel (crit. 1)', () => {
     expect(suggestionLabel(row({ id: '1', matched: 'Broccoli' }), 'nl')).toBe('broccoli');
   });
 
-  it('uses the English name in English, and falls back to the Dutch name without one', () => {
-    const potato = row({ id: '2', nameNl: 'aardappel', nameEn: 'potato', matched: 'aardappel' });
-    expect(suggestionLabel(potato, 'en')).toBe('aardappel → potato');
-    expect(suggestionLabel({ ...potato, nameEn: null, matched: 'aardappel' }, 'en')).toBe('aardappel');
+  it('uses the French name in French, and falls back to the Dutch name without one', () => {
+    const potato = row({ id: '2', nameNl: 'aardappel', nameFr: 'pomme de terre', matched: 'aardappel' });
+    expect(suggestionLabel(potato, 'fr')).toBe('aardappel → pomme de terre');
+    expect(suggestionLabel({ ...potato, nameFr: null, matched: 'aardappel' }, 'fr')).toBe('aardappel');
   });
 });
 

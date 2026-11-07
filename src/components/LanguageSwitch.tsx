@@ -2,9 +2,9 @@ import { useId } from 'react';
 import { setLanguage, type Language } from '../i18n/language';
 import { t, useLanguage } from '../i18n/t';
 
-const LANGUAGES: { code: Language; label: 'language.nl' | 'language.en' }[] = [
+const LANGUAGES: { code: Language; label: 'language.nl' | 'language.fr' }[] = [
   { code: 'nl', label: 'language.nl' },
-  { code: 'en', label: 'language.en' },
+  { code: 'fr', label: 'language.fr' },
 ];
 
 /** Two toggle buttons; each language is named in its own language, whatever the interface language is. */

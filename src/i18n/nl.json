@@ -230,7 +230,7 @@
   "search.matches": "{count} van {total}",
   "language.label": "Taal",
   "language.nl": "Nederlands",
-  "language.en": "English",
+  "language.fr": "Français",
   "app.title": "Smaakmaker",
   "format.dateTime": "{date} om {time}"
 }

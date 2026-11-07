@@ -77,14 +77,14 @@ export const noteField = (page: Page): Locator => page.getByRole('textbox', { na
 
 export const titleField = (page: Page): Locator => page.getByRole('textbox', { name: nl['form.titleLabel'], exact: true });
 // T-021: the name and unit fields are comboboxes (suggestion list), no longer plain textboxes.
-export const ingredientNameFields = (page: Page): Locator => page.getByRole('combobox', { name: /^Ingredi[eë]nt/ });
-export const quantityFields = (page: Page): Locator => page.getByRole('textbox', { name: /^(Hoeveelheid|Quantity)/ });
-export const unitFields = (page: Page): Locator => page.getByRole('combobox', { name: /^(Eenheid|Unit)/ });
-export const sizeFields = (page: Page): Locator => page.getByLabel(/^(Formaat|Size)/);
+export const ingredientNameFields = (page: Page): Locator => page.getByRole('combobox', { name: /^Ingr[eéë]di[eéë]nt/ });
+export const quantityFields = (page: Page): Locator => page.getByRole('textbox', { name: /^(Hoeveelheid|Quantité|Quantity)/ });
+export const unitFields = (page: Page): Locator => page.getByRole('combobox', { name: /^(Eenheid|Unité|Unit)/ });
+export const sizeFields = (page: Page): Locator => page.getByLabel(/^(Formaat|Taille|Size)/);
 
 /** The inline question of a catalogue field ("Bedoelde u …?" / "Nieuw ingrediënt …" / "Nieuwe eenheid …"). */
 export const catalogQuestion = (page: Page): Locator =>
-  page.getByRole('group', { name: /^(Bedoelde u|Nieuw ingrediënt|Nieuwe eenheid|Did you mean|New ingredient|New unit)/ });
+  page.getByRole('group', { name: /^(Bedoelde u|Nieuw ingrediënt|Nieuwe eenheid|Vouliez-vous|Nouvel ingrédient|Nouvelle unité|Did you mean|New ingredient|New unit)/ });
 
 /**
  * T-021: answers every open catalogue question with "No" (free text), so a typed name that is not in the
@@ -98,11 +98,11 @@ export async function answerQuestionsNo(page: Page): Promise<void> {
     } catch {
       return;
     }
-    await question.getByRole('button', { name: /^(Nee|No)/ }).click();
+    await question.getByRole('button', { name: /^(Nee|Non|No)/ }).click();
     await expect(question).toBeHidden().catch(() => undefined);
   }
 }
-export const stepFields = (page: Page): Locator => page.getByRole('textbox', { name: /^(Stap|Step)/ });
+export const stepFields = (page: Page): Locator => page.getByRole('textbox', { name: /^(Stap|Étape|Step)/ });
 export const saveButton = (page: Page): Locator => page.getByRole('button', { name: nl['form.save'], exact: true });
 export const addIngredientButton = (page: Page): Locator =>
   page.getByRole('button', { name: nl['form.addIngredient'], exact: true });

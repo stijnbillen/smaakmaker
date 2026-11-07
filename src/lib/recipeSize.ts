@@ -53,7 +53,6 @@ export function checkRecipeSize(textBytes: number, photoBytes: readonly number[]
 export function formatRecipeSize(bytes: number): string {
   // Whole tenths via integer maths: floating point could turn 1,3 MB exactly into 1,3000000000000003.
   const tenths = Math.ceil((bytes * 10) / MB);
-  const sign = getLanguage() === 'nl' ? ',' : '.';
-  const used = `${Math.floor(tenths / 10)}${sign}${tenths % 10}`;
+  const used = `${Math.floor(tenths / 10)},${tenths % 10}`;
   return format('size.used', { used });
 }

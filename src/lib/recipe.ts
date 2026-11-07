@@ -161,10 +161,9 @@ export function parseQuantity(input: string): QuantityResult {
   return { ok: true, value };
 }
 
-/** Decimal sign of the language, no superfluous zeros, no thousands separator: 0.25 -> "0,25" / "0.25", 2 -> "2". */
+/** Decimal comma in both languages, no superfluous zeros, no thousands separator: 0.25 -> "0,25", 2 -> "2". */
 export function formatQuantity(value: number): string {
-  const plain = String(Number(value.toFixed(2)));
-  return getLanguage() === 'nl' ? plain.replace('.', ',') : plain;
+  return String(Number(value.toFixed(2))).replace('.', ',');
 }
 
 export type MinutesResult = { ok: true; value: number } | { ok: false; reason: 'required' | 'invalid' };
@@ -454,7 +453,7 @@ export function draftFromRecord(
 ): RecipeDraft {
   const lang = getLanguage();
   // A link whose item is not loaded stays, as an item named by the stored text: nothing is lost.
-  const itemFor = (id: string, text: string): CatalogItem => catalog?.get(id) ?? { id, nameNl: text, nameEn: null };
+  const itemFor = (id: string, text: string): CatalogItem => catalog?.get(id) ?? { id, nameNl: text, nameFr: null };
   // Times as text, so a fresh form is not "changed"; an old row without times starts empty.
   const prep = record.prepMinutes ?? record.prep_minutes ?? null;
   const total = record.totalMinutes ?? record.total_minutes ?? null;

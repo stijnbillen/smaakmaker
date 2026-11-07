@@ -96,7 +96,7 @@ export async function fetchRecipe(id: string): Promise<FetchResult> {
 interface CatalogRow {
   id: string;
   name_nl: string | null;
-  name_en: string | null;
+  name_fr: string | null;
 }
 
 /** Items by id for the ingredient lines of a recipe (R-020). Empty lists make no call. */
@@ -108,12 +108,12 @@ export async function fetchCatalogItems(
   let failure: CallResult = { error: null, status: 200 };
   for (const [table, ids] of [['ingredients', ingredientIds], ['units', unitIds]] as const) {
     if (ids.length === 0) continue;
-    const { data, error, status } = await supabase.from(table).select('id,name_nl,name_en').in('id', [...ids]);
+    const { data, error, status } = await supabase.from(table).select('id,name_nl,name_fr').in('id', [...ids]);
     if (error) {
       failure = { error, status };
       continue;
     }
-    for (const r of (data ?? []) as CatalogRow[]) items.set(r.id, { id: r.id, nameNl: r.name_nl, nameEn: r.name_en });
+    for (const r of (data ?? []) as CatalogRow[]) items.set(r.id, { id: r.id, nameNl: r.name_nl, nameFr: r.name_fr });
   }
   return { items, ...failure };
 }
@@ -163,7 +163,7 @@ export async function fetchEquipmentInUse(): Promise<CallResult & { names: strin
 interface SuggestRow {
   id: string;
   name_nl: string | null;
-  name_en: string | null;
+  name_fr: string | null;
   matched: string;
   match_kind: MatchKind;
   distance: number | null;
@@ -175,7 +175,7 @@ export async function fetchSuggestions(
   kind: SuggestKind,
   term: string,
   mode: SuggestMode,
-  lang: 'nl' | 'en',
+  lang: 'nl' | 'fr',
 ): Promise<CallResult & { rows: Suggestion[] }> {
   const { data, error, status } = await supabase.rpc(kind === 'ingredient' ? 'suggest_ingredients' : 'suggest_units', {
     p_term: term,
@@ -187,7 +187,7 @@ export async function fetchSuggestions(
     : ((data ?? []) as unknown as SuggestRow[]).map((r) => ({
         id: r.id,
         nameNl: r.name_nl,
-        nameEn: r.name_en,
+        nameFr: r.name_fr,
         matched: r.matched,
         matchKind: r.match_kind,
         distance: r.distance,

@@ -166,22 +166,25 @@ describe('crit. 4: formatRecipeSize', () => {
   it('uses a decimal comma', () => expect(formatRecipeSize(524_288)).toBe('0,5 van 2 MB'));
 });
 
-// T-018 / R-023 crit. 6: "1,3 van 2 MB" in Dutch, "1.3 of 2 MB" in English.
-describe('formatRecipeSize per language (R-023 crit. 6)', () => {
+// R-026 crit. 6: a decimal comma in both languages ("1,3 van 2 MB"); the French wording comes from fr.json.
+describe('formatRecipeSize per language (R-026 crit. 6)', () => {
   afterEach(resetLanguage);
 
-  it('uses a decimal comma in Dutch and a decimal point in English', () => {
+  it('uses a decimal comma in Dutch and in French', () => {
     useLanguage('nl');
     expect(formatRecipeSize(1_363_148)).toBe('1,3 van 2 MB');
-    useLanguage('en');
-    expect(formatRecipeSize(1_363_148)).toBe('1.3 of 2 MB');
+    useLanguage('fr');
+    const fr = formatRecipeSize(1_363_148);
+    expect(fr).toMatch(/^1,3\s/);
+    expect(fr).not.toContain('1.3');
+    expect(fr).toContain('2');
   });
 
-  it('still rounds up in English', () => {
-    useLanguage('en');
-    expect(formatRecipeSize(1)).toBe('0.1 of 2 MB');
-    expect(formatRecipeSize(2_097_153)).toBe('2.1 of 2 MB');
-    expect(formatRecipeSize(2_097_152)).toBe('2.0 of 2 MB');
+  it('still rounds up in French, with a comma', () => {
+    useLanguage('fr');
+    expect(formatRecipeSize(1)).toMatch(/^0,1\s/);
+    expect(formatRecipeSize(2_097_153)).toMatch(/^2,1\s/);
+    expect(formatRecipeSize(2_097_152)).toMatch(/^2,0\s/);
   });
 });
 

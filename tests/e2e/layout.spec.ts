@@ -81,7 +81,7 @@ test('overflow check detects a 500 px wide element (R-001 crit. 4, negative cont
   await expect(expectNoHorizontalScroll(page)).rejects.toThrow();
 });
 
-// T-018 / R-023 crit. 9: English texts are longer; every `button`, link and [role=button] must show its whole text.
+// T-018 / R-023 crit. 9, R-026 crit. 8: French texts are longer; every `button`, link and [role=button] must show its whole text.
 async function expectNoClippedText(page: Page) {
   const clipped = await page.evaluate(() => {
     const out: string[] = [];
@@ -96,7 +96,7 @@ async function expectNoClippedText(page: Page) {
   expect(clipped, 'clipped button or link text').toEqual([]);
 }
 
-for (const lang of ['nl', 'en'] as const) {
+for (const lang of ['nl', 'fr'] as const) {
 for (const route of routes) {
   test.describe(`scherm ${route.name} [${lang}]` /* no route.path: it changes after beforeAll (prepareRoutes) */, () => {
     test.beforeEach(async ({ page }) => {

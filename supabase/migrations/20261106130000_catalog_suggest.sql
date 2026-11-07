@@ -58,7 +58,7 @@ $$;
 -- (so authenticated has no execute right on them), yet the public wrappers have to reach them. The wrappers
 -- check that the caller is signed in; the catalogue itself is readable by every signed-in user.
 create function public.catalog_suggest(p_kind text, p_term text, p_autocomplete boolean, p_lang text)
-returns table (id uuid, name_nl text, name_en text, matched text, match_kind text, distance int, similarity real)
+returns table (id uuid, name_nl text, name_fr text, matched text, match_kind text, distance int, similarity real)
 language plpgsql
 security definer
 stable
@@ -72,8 +72,8 @@ declare
   v_keys text;
   v_fk text;
 begin
-  if p_lang is null or p_lang not in ('nl', 'en') then
-    raise exception 'language must be nl or en' using errcode = '22023';
+  if p_lang is null or p_lang not in ('nl', 'fr') then
+    raise exception 'language must be nl or fr' using errcode = '22023';
   end if;
   if p_kind not in ('ingredient', 'unit') then
     raise exception 'unknown kind' using errcode = '22023';
@@ -106,16 +106,16 @@ begin
       where r.rank is not null
       order by r.item_id, r.rank, r.dist nulls last, r.sim desc, r.key
     )
-    select i.id, i.name_nl, i.name_en,
-           (select n from unnest(array[i.name_nl, i.name_en] || i.synonyms) as t(n)
+    select i.id, i.name_nl, i.name_fr,
+           (select n from unnest(array[i.name_nl, i.name_fr] || i.synonyms) as t(n)
              where n is not null and public.item_key(n) = b.key limit 1) as matched,
            case b.rank when 0 then 'exact' when 1 then 'prefix' else 'similar' end as match_kind,
            b.dist, b.sim
     from best b
     join public.%1$I i on i.id = b.item_id
     order by b.rank, b.dist nulls last, b.sim desc,
-             public.item_key(case when $3 = 'nl' then coalesce(i.name_nl, i.name_en)
-                                  else coalesce(i.name_en, i.name_nl) end),
+             public.item_key(case when $3 = 'nl' then coalesce(i.name_nl, i.name_fr)
+                                  else coalesce(i.name_fr, i.name_nl) end),
              i.id
     limit 5
   $q$, v_items, v_keys, v_fk)
@@ -124,7 +124,7 @@ end;
 $$;
 
 create function public.suggest_ingredients(p_term text, p_autocomplete boolean, p_lang text)
-returns table (id uuid, name_nl text, name_en text, matched text, match_kind text, distance int, similarity real)
+returns table (id uuid, name_nl text, name_fr text, matched text, match_kind text, distance int, similarity real)
 language plpgsql
 security definer
 stable
@@ -139,7 +139,7 @@ end;
 $$;
 
 create function public.suggest_units(p_term text, p_autocomplete boolean, p_lang text)
-returns table (id uuid, name_nl text, name_en text, matched text, match_kind text, distance int, similarity real)
+returns table (id uuid, name_nl text, name_fr text, matched text, match_kind text, distance int, similarity real)
 language plpgsql
 security definer
 stable

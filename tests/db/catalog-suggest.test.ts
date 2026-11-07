@@ -7,6 +7,7 @@ import {
   type TestUser,
 } from '../helpers/supabase-admin';
 import { sql } from '../helpers/pg';
+import { RETIRED_LANG } from '../helpers/retired-lang';
 
 // T-020 / R-019 against the local Supabase: closeness of a typed term to catalogue items.
 // Test items use invented keys ("qzvk..."), so the starting list never interferes; every test removes its items.
@@ -22,7 +23,7 @@ type Mode = 'autocomplete' | 'didYouMean';
 interface Row {
   id: string;
   name_nl: string | null;
-  name_en: string | null;
+  name_fr: string | null;
   matched: string;
   match_kind: 'exact' | 'prefix' | 'similar';
   distance: number | null;
@@ -31,7 +32,7 @@ interface Row {
 
 interface Item {
   nl?: string | null;
-  en?: string | null;
+  fr?: string | null;
   syn?: string[];
 }
 
@@ -42,8 +43,8 @@ async function addItems(table: Table, items: Item[]): Promise<string[]> {
   const ids: string[] = [];
   for (const it of items) {
     const rows = await sql<{ id: string }>(
-      `insert into public.${table} (name_nl, name_en, synonyms)
-       values (${it.nl == null ? 'null' : lit(it.nl)}, ${it.en == null ? 'null' : lit(it.en)}, ${arr(it.syn ?? [])}) returning id`,
+      `insert into public.${table} (name_nl, name_fr, synonyms)
+       values (${it.nl == null ? 'null' : lit(it.nl)}, ${it.fr == null ? 'null' : lit(it.fr)}, ${arr(it.syn ?? [])}) returning id`,
     );
     ids.push(rows[0].id);
   }
@@ -60,7 +61,7 @@ async function removeItems(): Promise<void> {
   }
 }
 
-const names = (rows: Row[]) => rows.map((r) => r.name_nl ?? r.name_en);
+const names = (rows: Row[]) => rows.map((r) => r.name_nl ?? r.name_fr);
 
 describe('catalogue suggestions (R-019)', () => {
   let a: TestUser;
@@ -68,7 +69,7 @@ describe('catalogue suggestions (R-019)', () => {
   const suggest = async (
     term: string,
     mode: Mode = 'didYouMean',
-    lang: 'nl' | 'en' = 'nl',
+    lang: 'nl' | 'fr' = 'nl',
     kind: 'ingredients' | 'units' = 'ingredients',
   ): Promise<Row[]> => {
     const res = await a.client.rpc(kind === 'ingredients' ? 'suggest_ingredients' : 'suggest_units', {
@@ -115,18 +116,24 @@ describe('catalogue suggestions (R-019)', () => {
       expect(x.map((r) => [r.id, r.match_kind])).toEqual(y.map((r) => [r.id, r.match_kind]));
     });
 
-    it('"tomato" (English name) gives tomaat and "brocoli" (synonym) gives broccoli, both exact', async () => {
-      const t = await suggest('tomato');
+    it('"tomate" (French name) gives tomaat and "brocolli" (synonym) gives broccoli, both exact', async () => {
+      const t = await suggest('tomate');
       expect(t[0]).toMatchObject({ name_nl: 'tomaat', match_kind: 'exact' });
-      const b = await suggest('brocoli');
+      const b = await suggest('brocolli');
       expect(b[0]).toMatchObject({ name_nl: 'broccoli', match_kind: 'exact' });
     });
 
-    it('`matched` is the name or synonym as stored ("brocoli" for the term "Brocoli")', async () => {
-      const rows = await suggest('Brocoli');
-      expect(rows[0].matched).toBe('brocoli');
-      const en = await suggest('TOMATO');
-      expect(en[0].matched).toBe('tomato');
+    it('a result row has name_fr and no English key (R-026 crit. 3)', async () => {
+      const rows = await suggest('tomate');
+      expect(rows[0]).toHaveProperty('name_fr', 'tomate');
+      expect(Object.keys(rows[0]).filter((k) => k.endsWith('_en'))).toEqual([]);
+    });
+
+    it('`matched` is the name or synonym as stored ("brocolli" for the term "Brocolli")', async () => {
+      const rows = await suggest('Brocolli');
+      expect(rows[0].matched).toBe('brocolli');
+      const fr = await suggest('TOMATE');
+      expect(fr[0].matched).toBe('tomate');
     });
 
     it('keeps the stored spelling of a synonym with capitals', async () => {
@@ -331,11 +338,11 @@ describe('catalogue suggestions (R-019)', () => {
       await removeItems();
     });
 
-    it('nl and en give the same set of items', async () => {
-      await addItems('ingredients', [{ nl: 'qzvkwa', en: 'qzvkwz' }, { en: 'qzvkwb' }, { nl: 'qzvkwc' }]);
+    it('nl and fr give the same set of items', async () => {
+      await addItems('ingredients', [{ nl: 'qzvkwa', fr: 'qzvkwz' }, { fr: 'qzvkwb' }, { nl: 'qzvkwc' }]);
       const nl = await suggest('qzvkwj', 'didYouMean', 'nl');
-      const en = await suggest('qzvkwj', 'didYouMean', 'en');
-      expect(nl.map((r) => r.id).sort()).toEqual(en.map((r) => r.id).sort());
+      const fr = await suggest('qzvkwj', 'didYouMean', 'fr');
+      expect(nl.map((r) => r.id).sort()).toEqual(fr.map((r) => r.id).sort());
       await removeItems();
     });
   });
@@ -347,7 +354,7 @@ describe('catalogue suggestions (R-019)', () => {
       expect(pap.find((r) => r.match_kind === 'similar')).toMatchObject({ name_nl: 'paprika' });
       const tom = await suggest('tomaaat', mode);
       expect(tom.find((r) => r.match_kind === 'similar')).toMatchObject({ name_nl: 'tomaat' });
-      expect((await suggest('tomato', mode))[0]).toMatchObject({ name_nl: 'tomaat', match_kind: 'exact' });
+      expect((await suggest('tomate', mode))[0]).toMatchObject({ name_nl: 'tomaat', match_kind: 'exact' });
       expect((await suggest('zout', mode))[0]).toMatchObject({ name_nl: 'zout', match_kind: 'exact' });
     });
 
@@ -358,7 +365,7 @@ describe('catalogue suggestions (R-019)', () => {
     });
 
     it('autocomplete mode gives the same first item as didYouMean for the examples', async () => {
-      for (const term of ['brocolli', 'paprica', 'tomaaat', 'tomato', 'zout']) {
+      for (const term of ['brocolli', 'paprica', 'tomaaat', 'tomate', 'zout']) {
         const x = await suggest(term, 'autocomplete');
         const y = await suggest(term, 'didYouMean');
         expect(x[0].id, term).toBe(y[0].id);
@@ -435,9 +442,11 @@ describe('catalogue suggestions (R-019)', () => {
       }
     });
 
-    it('a language other than nl or en is refused with 22023', async () => {
-      const res = await a.client.rpc('suggest_ingredients', { p_term: 'zout', p_autocomplete: false, p_lang: 'fr' });
-      expect(res.error?.code).toBe(INVALID_PARAMETER);
+    it('a language other than nl or fr (also the retired code) is refused with 22023', async () => {
+      for (const lang of [RETIRED_LANG, 'de']) {
+        const res = await a.client.rpc('suggest_ingredients', { p_term: 'zout', p_autocomplete: false, p_lang: lang });
+        expect(res.error?.code, lang).toBe(INVALID_PARAMETER);
+      }
     });
 
     it('an empty, blank or null term gives no rows', async () => {

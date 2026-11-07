@@ -15,13 +15,13 @@ import type { CatalogItem } from '../../src/lib/catalog';
 import { recipeTextBytes } from '../../src/lib/recipeSize';
 import { variantDraft } from '../../src/lib/variant';
 import nlJson from '../../src/i18n/nl.json';
-import enJson from '../../src/i18n/en.json';
+import frJson from '../../src/i18n/fr.json';
 
 // T-021 / R-020 (replaces the R-018 key comparison of T-019: the link now hangs on "field not touched").
 const ING = '11111111-1111-4111-8111-111111111111';
 const UNIT = '22222222-2222-4222-8222-222222222222';
-const potato = { id: ING, nameNl: 'aardappel', nameEn: 'potato' };
-const gram = { id: UNIT, nameNl: 'gram', nameEn: 'gram' };
+const potato = { id: ING, nameNl: 'aardappel', nameFr: 'pomme de terre' };
+const gram = { id: UNIT, nameNl: 'gram', nameFr: 'gramme' };
 
 afterEach(resetLanguage);
 
@@ -56,9 +56,9 @@ const rowsOf = (draft: RecipeDraft) => toRow(draft).ingredients as unknown as Ar
 describe('draft lines and toRow (crit. 2, 5, 7, 9)', () => {
   it('a linked line writes the id and the shown name of the item (snapshot) in the interface language', () => {
     const d = emptyDraft();
-    d.ingredients = [{ name: 'potato', quantity: '2', unit: 'gram', ingredient: potato, unitItem: gram, size: 'large' }];
-    useLanguage('en');
-    expect(rowsOf(d)[0]).toEqual({ name: 'potato', quantity: 2, unit: 'gram', ingredient_id: ING, unit_id: UNIT, size: 'large' });
+    d.ingredients = [{ name: 'pomme de terre', quantity: '2', unit: 'gramme', ingredient: potato, unitItem: gram, size: 'large' }];
+    useLanguage('fr');
+    expect(rowsOf(d)[0]).toEqual({ name: 'pomme de terre', quantity: 2, unit: 'gramme', ingredient_id: ING, unit_id: UNIT, size: 'large' });
     useLanguage('nl');
     expect(rowsOf(d)[0]).toMatchObject({ name: 'aardappel', ingredient_id: ING });
   });
@@ -80,8 +80,8 @@ describe('draft lines and toRow (crit. 2, 5, 7, 9)', () => {
   it('shows the current item name in the form when the catalogue is loaded (crit. 9: reference, not copy)', () => {
     useLanguage('nl');
     const catalog = new Map<string, CatalogItem>([
-      [ING, { id: ING, nameNl: 'broccoli', nameEn: 'broccoli' }],
-      [UNIT, { id: UNIT, nameNl: 'gram', nameEn: 'gram' }],
+      [ING, { id: ING, nameNl: 'broccoli', nameFr: 'brocoli' }],
+      [UNIT, { id: UNIT, nameNl: 'gram', nameFr: 'gramme' }],
     ]);
     const d = draftFromRecord(record, undefined, catalog);
     expect(d.ingredients[0].name).toBe('broccoli');
@@ -125,11 +125,20 @@ describe('ingredientLine with item and size (crit. 7, 8, 9)', () => {
   // Assumed signature: ingredientLine(ingredient, original, desired, item?, lang?).
   const line = { name: 'aardappel', quantity: 2, size: 'large' as const };
 
-  it('shows "2 aardappel (groot)" in Dutch and "2 potato (large)" in English', () => {
+  it('shows "2 aardappel (groot)" in Dutch and "2 pomme de terre (grande taille)" in French (R-026 crit. 5)', () => {
     useLanguage('nl');
     expect(ingredientLine(line, 2, 2, potato, 'nl')).toBe('2 aardappel (groot)');
-    useLanguage('en');
-    expect(ingredientLine(line, 2, 2, potato, 'en')).toBe('2 potato (large)');
+    useLanguage('fr');
+    expect(ingredientLine(line, 2, 2, potato, 'fr')).toBe('2 pomme de terre (grande taille)');
+  });
+
+  it.each([
+    ['small', 'petite taille'],
+    ['medium', 'taille moyenne'],
+    ['large', 'grande taille'],
+  ] as const)('French size %s is "%s"', (size, label) => {
+    useLanguage('fr');
+    expect(ingredientLine({ name: 'x', quantity: 1, size }, 1, 1, undefined, 'fr')).toBe(`1 x (${label})`);
   });
 
   it('has no brackets without a size, and puts the size last after a unit', () => {
@@ -149,10 +158,10 @@ describe('ingredientLine with item and size (crit. 7, 8, 9)', () => {
   });
 
   it('has the three sizes and the label in both language files, with the same keys', () => {
-    for (const json of [nlJson, enJson] as Array<Record<string, string>>) {
+    for (const json of [nlJson, frJson] as Array<Record<string, string>>) {
       expect(json['form.size']).toBeTruthy();
     }
-    expect(Object.keys(nlJson).sort()).toEqual(Object.keys(enJson).sort());
+    expect(Object.keys(nlJson).sort()).toEqual(Object.keys(frJson).sort());
   });
 });
 

@@ -9,7 +9,7 @@ import {
 
 // T-020 / R-019: pure client logic of the suggestions. The module must load without Supabase env variables.
 const row = (name: string, matchKind: Suggestion['matchKind'], extra: Partial<Suggestion> = {}): Suggestion =>
-  ({ id: name, nameNl: name, nameEn: null, matched: name, matchKind, distance: null, similarity: 0.5, ...extra }) as Suggestion;
+  ({ id: name, nameNl: name, nameFr: null, matched: name, matchKind, distance: null, similarity: 0.5, ...extra }) as Suggestion;
 
 describe('didYouMean / exactHit (crit. 2, 5, 7)', () => {
   it('gives [] as soon as one row is exact, even with similar rows next to it', () => {

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import enJson from '../../src/i18n/en.json';
+import frJson from '../../src/i18n/fr.json';
 import nlJson from '../../src/i18n/nl.json';
 import {
   detectLanguage,
@@ -11,12 +11,13 @@ import {
   subscribe,
 } from '../../src/i18n/language';
 import { format, t } from '../../src/i18n/t';
+import { RETIRED_BROWSER_GB, RETIRED_BROWSER_US, RETIRED_LANG } from '../helpers/retired-lang';
 
-// T-018 / R-023 crit. 2, 3 and 4. The module state is shared between test files (vitest isolate:false),
-// so every test ends with the language back on Dutch.
+// T-018 / R-023 crit. 2, 3 and 4, changed by T-022 / R-026 crit. 2: the second language is French.
+// The module state is shared between test files (vitest isolate:false), so every test ends with the language back on Dutch.
 
 const nl = nlJson as Record<string, string>;
-const en = enJson as Record<string, string>;
+const fr = frJson as Record<string, string>;
 const KEY = 'smaakmaker.lang';
 
 function fakeStorage(initial: Record<string, string> = {}) {
@@ -29,13 +30,15 @@ function fakeStorage(initial: Record<string, string> = {}) {
   };
 }
 
+const browser = (...languages: string[]) => vi.stubGlobal('navigator', { languages, language: languages[0] });
+
 let doc: { documentElement: { lang: string }; title: string };
 
 beforeEach(() => {
   doc = { documentElement: { lang: '' }, title: '' };
   vi.stubGlobal('document', doc);
   vi.stubGlobal('localStorage', fakeStorage());
-  vi.stubGlobal('navigator', { languages: ['nl-BE'], language: 'nl-BE' });
+  browser('nl-BE');
 });
 
 afterEach(() => {
@@ -43,67 +46,90 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('detectLanguage (crit. 3: browser language starting with "nl" -> Dutch, else English)', () => {
+describe('detectLanguage (R-026 crit. 2: browser language starting with "fr" -> French, else Dutch)', () => {
   it.each([
+    [['fr-BE'], 'fr'],
+    [['FR'], 'fr'],
+    [['fr'], 'fr'],
     [['nl-BE'], 'nl'],
     [['nl'], 'nl'],
-    [['NL-nl'], 'nl'],
-    [['en-US'], 'en'],
-    [['fr-BE', 'nl-BE'], 'en'], // only the first language counts
-    [[], 'en'],
+    [[RETIRED_BROWSER_US], 'nl'],
+    [['de'], 'nl'],
+    [['nl-BE', 'fr-BE'], 'nl'], // only the first language counts
+    [[], 'nl'],
   ])('%j -> %s', (languages, expected) => {
     expect(detectLanguage(languages as string[])).toBe(expected);
   });
 });
 
-describe('loadLanguage (crit. 2 and 3)', () => {
+describe('loadLanguage (R-026 crit. 2)', () => {
   it('uses the saved choice, which wins over the browser language', () => {
-    vi.stubGlobal('localStorage', fakeStorage({ [KEY]: 'en' }));
-    vi.stubGlobal('navigator', { languages: ['nl-BE'], language: 'nl-BE' });
-    expect(loadLanguage()).toBe('en');
+    vi.stubGlobal('localStorage', fakeStorage({ [KEY]: 'fr' }));
+    browser('nl-BE');
+    expect(loadLanguage()).toBe('fr');
     vi.stubGlobal('localStorage', fakeStorage({ [KEY]: 'nl' }));
-    vi.stubGlobal('navigator', { languages: ['en-US'], language: 'en-US' });
+    browser('fr-BE');
     expect(loadLanguage()).toBe('nl');
   });
 
   it('follows the browser language without a saved choice', () => {
-    vi.stubGlobal('navigator', { languages: ['en-US'], language: 'en-US' });
-    expect(loadLanguage()).toBe('en');
-    vi.stubGlobal('navigator', { languages: ['nl-BE'], language: 'nl-BE' });
+    browser('fr-FR');
+    expect(loadLanguage()).toBe('fr');
+    browser('nl-BE');
+    expect(loadLanguage()).toBe('nl');
+    browser(RETIRED_BROWSER_GB);
     expect(loadLanguage()).toBe('nl');
   });
 
   it('falls back to navigator.language when navigator.languages is missing', () => {
-    vi.stubGlobal('navigator', { language: 'nl-NL' });
-    expect(loadLanguage()).toBe('nl');
+    vi.stubGlobal('navigator', { language: 'fr-BE' });
+    expect(loadLanguage()).toBe('fr');
     vi.stubGlobal('navigator', { language: 'de-DE' });
-    expect(loadLanguage()).toBe('en');
+    expect(loadLanguage()).toBe('nl');
   });
 
-  it.each(['fr', 'NL', '', 'null', ' en'])('ignores an invalid saved value %j as "no choice"', (bad) => {
-    vi.stubGlobal('localStorage', fakeStorage({ [KEY]: bad }));
-    vi.stubGlobal('navigator', { languages: ['en-US'], language: 'en-US' });
-    expect(loadLanguage()).toBe('en');
-    vi.stubGlobal('navigator', { languages: ['nl-BE'], language: 'nl-BE' });
+  // The old choice from before T-022 must not break anything: it counts as "no choice".
+  it('treats a retired saved choice as "no choice" and does not throw', () => {
+    vi.stubGlobal('localStorage', fakeStorage({ [KEY]: RETIRED_LANG }));
+    browser('fr-FR');
+    expect(() => loadLanguage()).not.toThrow();
+    expect(loadLanguage()).toBe('fr');
+    browser(RETIRED_BROWSER_GB);
     expect(loadLanguage()).toBe('nl');
+  });
+
+  it.each(['NL', '', 'null', ' fr', 'FR'])('ignores an invalid saved value %j as "no choice"', (bad) => {
+    vi.stubGlobal('localStorage', fakeStorage({ [KEY]: bad }));
+    browser('fr-BE');
+    expect(loadLanguage()).toBe('fr');
+    browser('nl-BE');
+    expect(loadLanguage()).toBe('nl');
+  });
+
+  it('initLanguage with a retired saved choice follows the browser and leaves <html lang> valid', () => {
+    vi.stubGlobal('localStorage', fakeStorage({ [KEY]: RETIRED_LANG }));
+    browser('fr-BE');
+    initLanguage();
+    expect(getLanguage()).toBe('fr');
+    expect(doc.documentElement.lang).toBe('fr');
   });
 });
 
 describe('setLanguage (crit. 2 and 4)', () => {
-  it('saves nl or en under smaakmaker.lang', () => {
+  it('saves nl or fr under smaakmaker.lang', () => {
     const store = fakeStorage();
     vi.stubGlobal('localStorage', store);
-    setLanguage('en');
-    expect(store.data.get(KEY)).toBe('en');
+    setLanguage('fr');
+    expect(store.data.get(KEY)).toBe('fr');
     setLanguage('nl');
     expect(store.data.get(KEY)).toBe('nl');
   });
 
   it('updates <html lang> and the page title to the chosen language', () => {
-    setLanguage('en');
-    expect(getLanguage()).toBe('en');
-    expect(doc.documentElement.lang).toBe('en');
-    expect(doc.title).toBe(en['app.title']);
+    setLanguage('fr');
+    expect(getLanguage()).toBe('fr');
+    expect(doc.documentElement.lang).toBe('fr');
+    expect(doc.title).toBe(fr['app.title']);
     setLanguage('nl');
     expect(doc.documentElement.lang).toBe('nl');
     expect(doc.title).toBe(nl['app.title']);
@@ -112,12 +138,12 @@ describe('setLanguage (crit. 2 and 4)', () => {
   it('tells subscribers at once, and stops after unsubscribing', () => {
     const seen: string[] = [];
     const off = subscribe(() => seen.push(getLanguage()));
-    setLanguage('en');
+    setLanguage('fr');
     setLanguage('nl');
-    expect(seen).toEqual(['en', 'nl']);
+    expect(seen).toEqual(['fr', 'nl']);
     off();
-    setLanguage('en');
-    expect(seen).toEqual(['en', 'nl']);
+    setLanguage('fr');
+    expect(seen).toEqual(['fr', 'nl']);
   });
 
   it('still switches when the storage cannot be used (private mode), without throwing', () => {
@@ -129,19 +155,19 @@ describe('setLanguage (crit. 2 and 4)', () => {
         throw new Error('denied');
       },
     });
-    expect(() => setLanguage('en')).not.toThrow();
-    expect(getLanguage()).toBe('en');
+    expect(() => setLanguage('fr')).not.toThrow();
+    expect(getLanguage()).toBe('fr');
     expect(() => loadLanguage()).not.toThrow();
   });
 });
 
 describe('initLanguage (crit. 3 and 4)', () => {
   it('sets the language from storage/browser, <html lang> and the title', () => {
-    vi.stubGlobal('navigator', { languages: ['en-GB'], language: 'en-GB' });
+    browser('fr-BE');
     initLanguage();
-    expect(getLanguage()).toBe('en');
-    expect(doc.documentElement.lang).toBe('en');
-    expect(doc.title).toBe(en['app.title']);
+    expect(getLanguage()).toBe('fr');
+    expect(doc.documentElement.lang).toBe('fr');
+    expect(doc.title).toBe(fr['app.title']);
   });
 });
 
@@ -153,20 +179,20 @@ describe('language state defaults', () => {
   });
 });
 
-describe('locale (crit. 6)', () => {
-  it('is nl-BE for Dutch and en-GB for English', () => {
+describe('locale (R-026 crit. 6)', () => {
+  it('is nl-BE for Dutch and fr-BE for French', () => {
     expect(locale()).toBe('nl-BE');
-    setLanguage('en');
-    expect(locale()).toBe('en-GB');
+    setLanguage('fr');
+    expect(locale()).toBe('fr-BE');
   });
 });
 
 describe('t and format follow the current language (crit. 4)', () => {
   it('t() returns the text of the chosen language straight after switching', () => {
     expect(t('auth.title')).toBe(nl['auth.title']);
-    setLanguage('en');
-    expect(t('auth.title')).toBe(en['auth.title']);
-    expect(t('nav.recipes')).toBe(en['nav.recipes']);
+    setLanguage('fr');
+    expect(t('auth.title')).toBe(fr['auth.title']);
+    expect(t('nav.recipes')).toBe(fr['nav.recipes']);
     setLanguage('nl');
     expect(t('auth.title')).toBe(nl['auth.title']);
   });
@@ -174,9 +200,9 @@ describe('t and format follow the current language (crit. 4)', () => {
   it('format() fills {name} placeholders, in both languages', () => {
     expect(format('time.hours', { h: 3 })).toBe('3 u');
     expect(format('form.step', { n: 2 })).toBe(nl['form.step'].replace('{n}', '2'));
-    setLanguage('en');
+    setLanguage('fr');
     expect(format('time.hours', { h: 3 })).toBe('3 h');
-    expect(format('photos.alt', { n: 1, title: 'Soep' })).toBe(en['photos.alt'].replace('{n}', '1').replace('{title}', 'Soep'));
+    expect(format('photos.alt', { n: 1, title: 'Soep' })).toBe(fr['photos.alt'].replace('{n}', '1').replace('{title}', 'Soep'));
   });
 
   it('format() fills a placeholder that occurs twice and leaves no braces behind', () => {

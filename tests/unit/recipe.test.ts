@@ -194,44 +194,47 @@ describe('formatQuantity (decimal comma, no trailing zeros)', () => {
 describe('quantities per language (R-023 crit. 6)', () => {
   afterEach(resetLanguage);
 
+  // R-026 crit. 6 (R-023): both languages show a decimal comma.
   it.each([
-    [0.25, '0,25', '0.25'],
-    [1.5, '1,5', '1.5'],
-    [2, '2', '2'],
-    [1000, '1000', '1000'], // no thousands separator: "1.000" / "1,000" would be ambiguous when typed again
-    [0.1 + 0.2, '0,3', '0.3'],
-  ])('formatQuantity(%s) is "%s" (nl) and "%s" (en)', (value, nlText, enText) => {
+    [0.25, '0,25'],
+    [1.5, '1,5'],
+    [2, '2'],
+    [1000, '1000'], // no thousands separator: "1.000" / "1,000" would be ambiguous when typed again
+    [0.1 + 0.2, '0,3'],
+  ])('formatQuantity(%s) is "%s" in nl and in fr', (value, text) => {
     useLanguage('nl');
-    expect(formatQuantity(value)).toBe(nlText);
-    useLanguage('en');
-    expect(formatQuantity(value)).toBe(enText);
+    expect(formatQuantity(value)).toBe(text);
+    useLanguage('fr');
+    expect(formatQuantity(value)).toBe(text);
   });
 
-  it.each(['nl', 'en'] as const)('parseQuantity in %s reads "1,5" and "1.5" as 1.5', (lang) => {
+  it.each(['nl', 'fr'] as const)('parseQuantity in %s reads "1,5", "1.5" and "0.25"/"0,25" alike', (lang) => {
     useLanguage(lang);
     expect(parseQuantity('1,5')).toEqual({ ok: true, value: 1.5 });
     expect(parseQuantity('1.5')).toEqual({ ok: true, value: 1.5 });
+    expect(parseQuantity('0.25')).toEqual({ ok: true, value: 0.25 });
+    expect(parseQuantity('0,25')).toEqual({ ok: true, value: 0.25 });
   });
 
-  it.each(['nl', 'en'] as const)('parseQuantity in %s refuses more than 2 decimals ("1,555")', (lang) => {
+  it.each(['nl', 'fr'] as const)('parseQuantity in %s refuses more than 2 decimals ("1,555")', (lang) => {
     useLanguage(lang);
     expect(parseQuantity('1,555').ok).toBe(false);
     expect(parseQuantity('1.555').ok).toBe(false);
   });
 
-  it('ingredientLine shows 1,5 in Dutch and 1.5 in English', () => {
+  it('ingredientLine shows 1,5 in Dutch and in French', () => {
     useLanguage('nl');
     expect(ingredientLine({ name: 'ei', quantity: 1 }, 4, 6)).toBe('1,5 ei');
-    useLanguage('en');
-    expect(ingredientLine({ name: 'ei', quantity: 1 }, 4, 6)).toBe('1.5 ei');
+    useLanguage('fr');
+    expect(ingredientLine({ name: 'ei', quantity: 1 }, 4, 6)).toBe('1,5 ei');
     expect(ingredientLine({ name: 'bloem', quantity: 200, unit: 'g' }, 4, 6)).toBe('300 g bloem');
   });
 
-  it('shows "< 0,01" in Dutch and "< 0.01" in English when the result rounds to 0', () => {
+  it('shows "< 0,01" in both languages when the result rounds to 0', () => {
     useLanguage('nl');
     expect(ingredientLine({ name: 'zout', quantity: 0.01 }, 99, 1)).toContain('< 0,01');
-    useLanguage('en');
-    expect(ingredientLine({ name: 'zout', quantity: 0.01 }, 99, 1)).toContain('< 0.01');
+    useLanguage('fr');
+    expect(ingredientLine({ name: 'zout', quantity: 0.01 }, 99, 1)).toContain('< 0,01');
   });
 });
 

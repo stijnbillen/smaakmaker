@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import en from '../../src/i18n/en.json' with { type: 'json' };
+import fr from '../../src/i18n/fr.json' with { type: 'json' };
 import nl from '../../src/i18n/nl.json' with { type: 'json' };
 import { waitForMail } from '../helpers/mailpit';
 import { backdateCodes, inviteValidAt, inviteValidAtUnknown, userExists, userIdByEmail } from '../helpers/pg';
@@ -49,19 +49,19 @@ async function codeUsedBy(code: string): Promise<string | null> {
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-/** Subject is "{nl} / {en}"; the Dutch heading comes first in the body; link and code are there. */
+/** Subject is "{nl} / {fr}"; the Dutch heading comes first in the body; link and code are there. */
 function expectBilingual(mail: Awaited<ReturnType<typeof waitForMail>>) {
-  expect(mail.subject).toBe(`${nl['email.subject']} / ${en['email.subject']}`);
+  expect(mail.subject).toBe(`${nl['email.subject']} / ${fr['email.subject']}`);
   const body = `${mail.html}\n${mail.text}`;
   const nlAt = Math.max(body.indexOf(nl['email.heading']), body.indexOf(escapeHtml(nl['email.heading'])));
-  const enAt = Math.max(body.indexOf(en['email.heading']), body.indexOf(escapeHtml(en['email.heading'])));
+  const frAt = Math.max(body.indexOf(fr['email.heading']), body.indexOf(escapeHtml(fr['email.heading'])));
   expect(nlAt).toBeGreaterThanOrEqual(0);
-  expect(enAt).toBeGreaterThanOrEqual(0);
+  expect(frAt).toBeGreaterThanOrEqual(0);
   // Compare within the HTML part only: that is where both blocks are laid out in order.
   const html = mail.html;
   const h = (s: string) => Math.max(html.indexOf(s), html.indexOf(escapeHtml(s)));
   expect(h(nl['email.heading'])).toBeGreaterThanOrEqual(0);
-  expect(h(nl['email.heading'])).toBeLessThan(h(en['email.heading']));
+  expect(h(nl['email.heading'])).toBeLessThan(h(fr['email.heading']));
   expect(mail.link).not.toBeNull();
   expect(mail.codes.length).toBeGreaterThan(0);
 }
@@ -136,8 +136,8 @@ describe('no account without a valid invite code (R-002 crit. 1)', () => {
     expect(await codeUsedBy(code)).toBe(verified.data.user!.id);
   });
 
-  // T-018 / R-023 crit. 7: the mail is bilingual, Dutch first; subject "{nl} / {en}".
-  it('the mail for a new account has the combined subject and the Dutch heading before the English one', async () => {
+  // R-026 crit. 6: the mail is bilingual, Dutch first; subject "{nl} / {fr}".
+  it('the mail for a new account has the combined subject and the Dutch heading before the French one', async () => {
     const code = await newInvite();
     const email = newEmail('bilingual');
     const sent = Date.now();
