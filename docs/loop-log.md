@@ -458,3 +458,4 @@
 - 2026-11-07 15:23 T-025 reviewer: GOEDGEKEURD
 - 2026-11-07 15:25 T-025 build: worker-crash (geen testfout), opnieuw
 - 2026-11-07 15:35 T-025 build: geslaagd
+- 2026-11-07 15:35 T-025 savepoint: gecommit
