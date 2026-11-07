@@ -16,6 +16,9 @@ Geschreven: `tests/helpers/png.ts` (nieuw), `tests/unit/app-icon.test.ts` (nieuw
 - "Zelf getekend, zonder snor": oordeel van de reviewer (screenshot van de 512-PNG), zoals in de brief.
 - Het script zelf draaien: bewust niet (Chromium nodig); versheid wordt via kleurvergelijking SVG/PNG met tokens bewaakt.
 
+## Herstelronde (blokkade ontwikkelaar: Playwright-run niet af te wachten)
+Geen fout in de tests gevonden; er is niets gewijzigd. Statisch nagelopen: alle imports (`readTokens`, `parseColor`, `decodePng`, `pixelAt`, `readPngSize`, `solidPng`) bestaan in `tests/helpers/`. De nieuwe e2e-test in `manifest.spec.ts` is licht (één `goto('/')` plus drie `GET`'s). De trage stap is de `webServer` van Playwright (`npm run build` plus preview, timeout 180 s) en de rest van de e2e-suite. Dat is geen testfout. Draai voor T-026 gericht: `npx vitest run tests/unit/app-icon.test.ts tests/unit/theme-color.test.ts tests/build/manifest.test.ts` en `npx playwright test tests/e2e/manifest.spec.ts`. Ik kon zelf niets draaien: de sessie weigert die commando's zonder goedkeuring.
+
 ## Opmerkingen voor de ontwikkelaar
 - `icon.svg` moet `fill`-attributen gebruiken (geen `style`/CSS) met de letterlijke tokenwaarden, in kleine of hoofdletters maakt niet uit.
 - Geen `stroke` anders dan `none`.

@@ -373,3 +373,13 @@
 - 2026-11-06 23:44 T-026 build: worker-crash (geen testfout), opnieuw
 - 2026-11-06 23:47 T-026 build: mislukt
 - 2026-11-06 23:47 T-026 stop: build of tests falen na 3 pogingen
+- 2026-11-06 23:47 - loop: geen taak meer
+- 2026-11-07 00:00 T-026 ontwikkelaar: BLOKKADE: volledige `npm test` (Playwright-deel) draait nog in de achtergrond en ik kan het resultaat niet afwachten
+- 2026-11-07 00:01 T-026 tester: KLAAR
+- 2026-11-07 00:04 T-026 ontwikkelaar: KLAAR
+- 2026-11-07 00:18 T-026 build: mislukt
+- 2026-11-07 09:12 T-026 ontwikkelaar: KLAAR
+- 2026-11-07 09:26 T-026 ontwikkelaar: KLAAR
+- 2026-11-07 09:34 T-026 build: geslaagd
+- 2026-11-07 09:35 T-026 reviewer: GOEDGEKEURD
+- 2026-11-07 09:44 T-026 build: geslaagd
