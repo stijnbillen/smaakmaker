@@ -436,3 +436,9 @@
 - 2026-11-07 13:16 T-025 ontwikkelaar: KLAAR
 - 2026-11-07 13:25 T-025 build: mislukt
 - 2026-11-07 13:25 T-025 stop: review niet goedgekeurd na 2 rondes
+- 2026-11-07 13:37 T-023 ontwikkelaar: KLAAR
+- 2026-11-07 13:39 T-023 build: worker-crash (geen testfout), opnieuw
+- 2026-11-07 13:48 T-023 build: geslaagd
+- 2026-11-07 13:50 T-023 reviewer: GOEDGEKEURD
+- 2026-11-07 13:59 T-023 build: mislukt
+- 2026-11-07 13:59 T-023 stop: eindcontrole faalt
