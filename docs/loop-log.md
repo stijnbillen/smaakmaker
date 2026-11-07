@@ -424,3 +424,15 @@
 - 2026-11-07 12:22 T-024 build: geslaagd
 - 2026-11-07 12:23 T-024 reviewer: GOEDGEKEURD
 - 2026-11-07 12:31 T-024 build: geslaagd
+- 2026-11-07 12:32 T-024 savepoint: gecommit
+- 2026-11-07 12:34 T-025 analist: KLAAR
+- 2026-11-07 12:36 T-025 tester: KLAAR
+- 2026-11-07 12:48 T-025 ontwikkelaar: BLOKKADE: test `tests/e2e/catalog-admin.spec.ts` gebruikt `getByRole('dialog')` terwijl `ConfirmDialog` een `alertdialog` is, de Franse synoniemselector `/synoni/` past niet bij "synonyme", beide crit. 3-varianten voegen hetzelfde item `qzvktomaat` toe, en de crit. 4-test controleert de databank zonder op de samenvoeging te wachten.
+- 2026-11-07 12:49 T-025 tester: KLAAR
+- 2026-11-07 13:04 T-025 ontwikkelaar: KLAAR
+- 2026-11-07 13:13 T-025 build: geslaagd
+- 2026-11-07 13:15 T-025 reviewer: BEVINDINGEN: 0/2
+- 2026-11-07 13:16 T-025 tester: KLAAR
+- 2026-11-07 13:16 T-025 ontwikkelaar: KLAAR
+- 2026-11-07 13:25 T-025 build: mislukt
+- 2026-11-07 13:25 T-025 stop: review niet goedgekeurd na 2 rondes

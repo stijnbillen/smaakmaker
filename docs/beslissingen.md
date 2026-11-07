@@ -406,3 +406,12 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **`search_term_info`:** aparte `security definer`-RPC (patroon van `suggest_ingredients`), één aanroep per veld; het zoeken wacht er niet op.
 - **"Al toegevoegd.":** het veld blijft ongewijzigd; de dubbele term gaat niet mee naar boven. `IngredientSearch` stuurt de ontdubbelde termen opnieuw omhoog zodra het antwoord binnen is.
 - **Mislukte ophaling** laat het zoeken ongemoeid: geen suggestie, geen melding.
+
+## T-025 — Beheer van de databank
+- **Alleen `security definer`-functies, geen tabelrechten:** `admin_list/update/merge/delete_catalog` controleren zelf `is_admin()` (`42501`); er is geen update- of delete-grant op de vier tabellen en geen update-policy op `recipes`. Samenvoegen wijzigt in een recept alleen `ingredient_id`/`unit_id`.
+- **Gedeelde vergelijking `catalog_match`** met limietparameter en synoniemen in het resultaat; `catalog_suggest` roept haar met 5 aan, zodat R-019 ongewijzigd blijft en de beheerlijst alle treffers toont. Zonder term sorteert de lijst op de sleutel van de getoonde naam in byte-volgorde (`collate "C"`), onafhankelijk van de databanktaal.
+- **Fouten als codes:** `23505` met het id van het andere item in `detail`, `23503` met het aantal recepten, `22023` voor samenvoegen met zichzelf; de client zet ze om naar teksten uit `nl.json`/`fr.json` (`catalogAdminLogic.ts`, zonder Supabase-import).
+- **Samenvoegen in één functie zonder foutafhandeling:** vergrendelen op id-volgorde (`for update`), recepten omzetten, A verwijderen, dan A's namen als synoniemen bij B; meer dan 20 synoniemen geeft `23514` en rolt alles terug. Gebruik telt verschillende recepten (`@>`-containment op de jsonb-regels).
+- **`recipes_check_catalog_refs` neemt `for key share`** op het item, zodat een gelijktijdig opgeslagen recept niet naar een item verwijst dat net verdwijnt.
+- **Samenvoegen kiest B in dezelfde lijst:** na "Samenvoegen met…" wordt de lijst (zonder A) de keuze van B; tikken op een item opent de bevestiging. Annuleren laat B gekozen, met een knop "Samenvoegen met B" om opnieuw te bevestigen.
+- **Lijst toont 40 items per keer ("Toon meer"):** de a11y-test eist dat elk bedienbaar element met Tab bereikbaar is binnen 80 stappen; de volledige lijst (±175) wordt wel in één keer opgehaald. Afwijking van het plan (geen paginering) om die test te halen.
