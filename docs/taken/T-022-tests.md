@@ -8,6 +8,7 @@ Vitest, Playwright en `supabase db reset` konden in deze sessie niet gedraaid wo
 - `RETIRED_*` verhuisd naar `tests/helpers/retired-lang.ts` (zonder imports): `language.ts` importeert vitest en `src/`, wat Playwright (`e2e/language.spec.ts`) niet kan laden.
 - `ingredientNameFields` in `recipe-form.ts`: regex `/^Ingr[eé]di[eé]nt/` dekt nu ook Frans "Ingrédient".
 - Daarna gemeld door ontwikkelaar: die regex miste `ë`, dus Nederlands "Ingrediënt" werd niet gevonden en veel e2e-tests liepen op een time-out. Regex is nu `/^Ingr[eéë]di[eéë]nt/`. Alleen de helper is aangepast; het getoetste gedrag is niet veranderd. Playwright niet gedraaid.
+- Gemeld door ontwikkelaar: `quantityFields`, `unitFields`, `sizeFields` zochten alleen op "Hoeveelheid|Quantity", "Eenheid|Unit", "Formaat|Size", dus 3 Franse tests in `ingredient-picker.spec.ts` faalden. Regexes uitgebreid met "Quantité", "Unité", "Taille". Zelfde soort gat gedicht in dezelfde helper: `catalogQuestion` (+ "Vouliez-vous|Nouvel ingrédient|Nouvelle unité"), "Nee" → ook "Non" in `answerQuestionsNo`, `stepFields` (+ "Étape"). Labels komen uit `fr.json`. Alleen helper aangepast, getoetst gedrag ongewijzigd. Playwright niet gedraaid (geen toestemming).
 - `english-terms.ts`: commentaar bevatte `"piece"` tussen aanhalingstekens en trof de eigen scan; herschreven.
 - `SAME_ALLOWED` in `i18n.test.ts`: niet-bestaande sleutel `time.grams` verwijderd. `npx tsc --noEmit` schoon; vitest/Playwright niet gedraaid.
 

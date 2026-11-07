@@ -383,3 +383,12 @@
 - 2026-11-07 09:34 T-026 build: geslaagd
 - 2026-11-07 09:35 T-026 reviewer: GOEDGEKEURD
 - 2026-11-07 09:44 T-026 build: geslaagd
+- 2026-11-07 09:44 T-026 savepoint: gecommit
+- 2026-11-07 09:55 T-022 ontwikkelaar: BLOKKADE: test `tests/helpers/recipe-form.ts` zoekt velden op Engelse labels (`Quantity`, `Unit`, `Size`) in plaats van `Quantit├®`, `Unit├®`, `Taille`, waardoor 3 Franse e2e-tests in `ingredient-picker.spec.ts` falen.
+- 2026-11-07 09:56 T-022 tester: KLAAR
+- 2026-11-07 10:08 T-022 ontwikkelaar: KLAAR
+- 2026-11-07 10:17 T-022 build: geslaagd
+- 2026-11-07 10:18 T-022 reviewer: GOEDGEKEURD
+- 2026-11-07 10:19 T-022 build: worker-crash (geen testfout), opnieuw
+- 2026-11-07 10:21 T-022 build: mislukt
+- 2026-11-07 10:21 T-022 stop: eindcontrole faalt
