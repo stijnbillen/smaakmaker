@@ -16,6 +16,11 @@ export function ProfilePage() {
           {t('profile.invitesLink')}
         </Link>
       )}
+      {isAdmin && (
+        <Link className="button-link button-link--quiet" to="/databank">
+          {t('profile.catalogLink')}
+        </Link>
+      )}
       <LanguageSwitch />
       {/* The auth state change then sends the user to the sign-in screen. */}
       <button type="button" onClick={() => void signOut()}>

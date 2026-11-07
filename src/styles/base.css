@@ -1137,3 +1137,143 @@ textarea[aria-invalid='true'] {
   color: var(--color-text-accent);
   overflow-wrap: anywhere;
 }
+
+/* Catalogue administration (R-022): list and edit panel stacked, no table, so 360 px never scrolls sideways. */
+.catalog-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.catalog-tab {
+  flex: 1;
+  margin: 0;
+  color: var(--color-text-accent);
+  background: transparent;
+  border: 2px solid var(--color-accent);
+}
+
+.catalog-tab[aria-selected='true'] {
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+}
+
+.catalog-list {
+  list-style: none;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.catalog-row {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.catalog-row-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  width: 100%;
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  color: var(--color-text-body);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-md);
+  overflow-wrap: anywhere;
+}
+
+.catalog-names {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.catalog-meta {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.catalog-editor {
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+.catalog-editor-label {
+  margin: var(--space-3) 0 var(--space-1);
+  font-weight: 600;
+}
+
+.catalog-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.catalog-chips li {
+  display: flex;
+  align-items: center;
+  max-width: 100%;
+  padding-left: var(--space-3);
+  background: var(--color-bg-sunken);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  overflow-wrap: anywhere;
+}
+
+.catalog-chip-remove {
+  margin: 0;
+  padding: 0;
+  color: var(--color-text-body);
+  background: transparent;
+  border: 0;
+}
+
+.catalog-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.catalog-add input {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+
+.catalog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.catalog-actions button,
+.catalog-add button {
+  margin: 0;
+}
+
+.catalog-merge-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-bg-sunken);
+  border-radius: var(--radius-md);
+}
+
+.catalog-merge-bar p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.catalog-merge-bar button {
+  margin: 0;
+}

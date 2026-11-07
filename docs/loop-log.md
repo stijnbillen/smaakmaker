@@ -450,3 +450,11 @@
 - 2026-11-07 14:41 T-023 build: geslaagd
 - 2026-11-07 14:43 T-023 reviewer: GOEDGEKEURD
 - 2026-11-07 14:52 T-023 build: geslaagd
+- 2026-11-07 14:52 T-023 savepoint: gecommit
+- 2026-11-07 15:01 T-025 ontwikkelaar: BLOKKADE: test tests/e2e/catalog-admin.spec.ts:157-158 verwacht 0 rijen voor "qzvkbrocolli-test" na samenvoegen, maar die naam wordt volgens crit. 4 een synoniem van B en staat dus in rij B.
+- 2026-11-07 15:01 T-025 tester: KLAAR
+- 2026-11-07 15:12 T-025 ontwikkelaar: KLAAR
+- 2026-11-07 15:21 T-025 build: geslaagd
+- 2026-11-07 15:23 T-025 reviewer: GOEDGEKEURD
+- 2026-11-07 15:25 T-025 build: worker-crash (geen testfout), opnieuw
+- 2026-11-07 15:35 T-025 build: geslaagd
