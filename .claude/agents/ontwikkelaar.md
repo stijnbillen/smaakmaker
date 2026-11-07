@@ -20,7 +20,8 @@ Regels:
 - Wijzig de tests van de tester niet om ze te laten slagen. Is een test fout, meld dat met reden; de tester of eigenaar beslist.
 - Een schemawijziging in een bestaande opslag is altijd een stapsgewijze migratie met een test op een snapshot van het oude schema, nooit wissen en opnieuw aanmaken.
 - Bouw alleen wat de taak vraagt. Geen extra functies, geen opruimwerk elders.
-- Controleer zelf met het bouwcommando uit de configuratie. Het script draait die controle daarna ook; zijn resultaat telt.
+- Draai tijdens het werk alleen de tests die bij je taak horen, niet het volledige bouwcommando: `npx tsc --noEmit`, `npx vitest run <bestanden>` en `npx playwright test <bestanden>` (de Playwright-config bouwt zelf). Het volledige bouwcommando duurt een kwartier en het script draait het daarna toch; zijn resultaat telt. Draai de volledige suite zelf hoogstens één keer, vlak voor je `KLAAR` meldt, en alleen als je het gedrag van andere schermen of van gedeelde code (`src/lib`, `src/components`, migraties) hebt gewijzigd.
+- Start nooit een lange test-run op de achtergrond en eindig niet zolang die nog loopt: zonder eindregel meldt het script een blokkade. Wacht op het resultaat, of draai een kleiner deel.
 - Architectuurkeuzes die je maakt, schrijf je na afloop in `docs/beslissingen.md` (wat en waarom, één of twee zinnen).
 - Commit niet. Het script maakt het savepoint.
 
