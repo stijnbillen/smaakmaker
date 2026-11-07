@@ -228,6 +228,8 @@
   "search.submit": "Rechercher",
   "search.tooMany": "10 ingrédients au maximum.",
   "search.matches": "{count} sur {total}",
+  "search.didYouMean": "Vouliez-vous dire {name} ?",
+  "search.duplicate": "Déjà ajouté.",
   "language.label": "Langue",
   "language.nl": "Nederlands",
   "language.fr": "Français",

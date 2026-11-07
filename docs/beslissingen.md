@@ -398,3 +398,11 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **Samenvoegen in `merge_seeded_names()`:** bevat de startlijsten en hernoemt, herschrijft recepten, verwijdert verouderde rijen en zet daarna pas de Franse naam (volgorde door de sleutel-trigger). Alleen de eigenaar kan ze uitvoeren; de migratie roept ze aan en de migratietest kan ze herhalen.
 - **Weergave via sleutel-opzoeking:** `useStoredNames` laadt de catalogi en toont opgeslagen namen in de taal van de lezer (onbekend: de opgeslagen tekst). Het overzicht zet een met de hand getypte Franse URL-naam om naar de canonieke naam voor de databankvraag, zonder herladen als de URL al canoniek is.
 - **Gedeelde helper** `src/lib/namedItems.ts` (`NamedItem`, `shownName`, `findItem`, `sortByShownName` met `Intl.Collator`, `addNamed`), zonder Supabase-import.
+
+## T-024 — Zoeken met synoniemen
+- **Herkennen in de databank:** `search_recipes` zoekt zelf het item bij elke term (`item_key` → `ingredient_keys`), zonder taalparameter. Resultaten zijn zo taalonafhankelijk, ook voor een met de hand getypte URL.
+- **Regel past bij een item** via de koppeling (`ingredient_id`), via de sleutel van de regeltekst (oude of vrije regels) of als deel van de tekst of van de actuele nl/fr-naam van het gekoppelde item. Synoniemen tellen alleen exact mee, anders vindt "oli" te veel.
+- **Groepen per item:** termen voor hetzelfde item vormen één groep; n telt groepen. De `22023`-controle op `p_min` gebruikt het aantal unieke sleutels en k wordt daarna teruggebracht tot n, zodat een race met het samenvoegen geen fout geeft.
+- **`search_term_info`:** aparte `security definer`-RPC (patroon van `suggest_ingredients`), één aanroep per veld; het zoeken wacht er niet op.
+- **"Al toegevoegd.":** het veld blijft ongewijzigd; de dubbele term gaat niet mee naar boven. `IngredientSearch` stuurt de ontdubbelde termen opnieuw omhoog zodra het antwoord binnen is.
+- **Mislukte ophaling** laat het zoeken ongemoeid: geen suggestie, geen melding.

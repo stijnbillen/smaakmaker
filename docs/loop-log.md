@@ -411,3 +411,16 @@
 - 2026-11-07 11:39 T-023 ontwikkelaar: KLAAR
 - 2026-11-07 11:41 T-023 build: mislukt
 - 2026-11-07 11:41 T-023 stop: review niet goedgekeurd na 2 rondes
+- 2026-11-07 11:44 T-024 analist: KLAAR
+- 2026-11-07 11:45 T-024 tester: KLAAR
+- 2026-11-07 11:51 T-024 ontwikkelaar: BLOKKADE: test `tests/db/recipe-search-synonyms.test.ts` regel 112 (term `feta${s}` kan `fetakaas${s}` niet vinden) en regel 244 (`'en'` botst met no-english.test.ts)
+- 2026-11-07 11:51 T-024 tester: KLAAR
+- 2026-11-07 12:00 T-024 ontwikkelaar: KLAAR
+- 2026-11-07 12:01 T-024 build: worker-crash (geen testfout), opnieuw
+- 2026-11-07 12:11 T-024 build: geslaagd
+- 2026-11-07 12:12 T-024 reviewer: BEVINDINGEN: 0/1
+- 2026-11-07 12:13 T-024 tester: KLAAR
+- 2026-11-07 12:13 T-024 ontwikkelaar: KLAAR
+- 2026-11-07 12:22 T-024 build: geslaagd
+- 2026-11-07 12:23 T-024 reviewer: GOEDGEKEURD
+- 2026-11-07 12:31 T-024 build: geslaagd

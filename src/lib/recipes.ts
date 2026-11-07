@@ -1,5 +1,6 @@
 import type { CatalogItem, CatalogLang } from './catalog';
 import { isConnectionError } from './connection';
+import type { TermInfo } from './ingredientSearch';
 import { copyPhoto, removePhotos, uploadPhoto } from './photos';
 import { toRow, type PhotoDraft, type RecipeDraft, type RecipeRecord, type StoredPhoto } from './recipe';
 import { supabase } from './supabase';
@@ -194,6 +195,29 @@ export async function fetchSuggestions(
         similarity: r.similarity,
       }));
   return { rows, error, status };
+}
+
+interface TermInfoRow {
+  term: string;
+  item_id: string | null;
+  suggestion_id: string | null;
+  suggestion_name: string | null;
+}
+
+/** Per search term: the catalogue item it names, or a "did you mean" suggestion (R-021). */
+export async function fetchTermInfo(
+  terms: string[],
+  lang: 'nl' | 'fr',
+): Promise<CallResult & { info: TermInfo[] }> {
+  const { data, error, status } = await supabase.rpc('search_term_info', { p_terms: terms, p_lang: lang });
+  const info: TermInfo[] = error
+    ? []
+    : ((data ?? []) as unknown as TermInfoRow[]).map((r) => ({
+        term: r.term,
+        itemId: r.item_id,
+        ...(r.suggestion_id && r.suggestion_name ? { suggestion: { id: r.suggestion_id, name: r.suggestion_name } } : {}),
+      }));
+  return { info, error, status };
 }
 
 /** All names of a tag group, in catalogue order: the choices in the form and the filter. */

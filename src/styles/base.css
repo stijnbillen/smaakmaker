@@ -1115,6 +1115,15 @@ textarea[aria-invalid='true'] {
   margin-top: var(--space-3);
 }
 
+/* "Bedoelde u <naam>?" under a field: wraps instead of widening the page on a 360 px screen. */
+.search-suggestion {
+  display: block;
+  max-width: 100%;
+  margin-top: var(--space-2);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
 .search-submit {
   min-width: var(--tap-min);
   margin-bottom: var(--space-4);

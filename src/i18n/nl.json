@@ -228,6 +228,8 @@
   "search.submit": "Zoeken",
   "search.tooMany": "Maximaal 10 ingrediënten.",
   "search.matches": "{count} van {total}",
+  "search.didYouMean": "Bedoelde u {name}?",
+  "search.duplicate": "Al toegevoegd.",
   "language.label": "Taal",
   "language.nl": "Nederlands",
   "language.fr": "Français",
