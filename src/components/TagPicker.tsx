@@ -1,5 +1,6 @@
 import { useEffect, useId, useState, type KeyboardEvent } from 'react';
 import { t, useLanguage } from '../i18n/t';
+import { findItem, type NamedItem } from '../lib/namedItems';
 import { fetchTags } from '../lib/recipes';
 import { addTag, TAGS_MAX_ITEMS, tagKey, toggleTag, validateTagName, type TagKind } from '../lib/tags';
 import { useConnection } from './ConnectionProvider';
@@ -23,7 +24,7 @@ export function TagPicker({ kind, label, hint, selected, onChange, tooMany, erro
   useLanguage();
   const { report, resolve } = useConnection();
   const base = useId();
-  const [catalog, setCatalog] = useState<string[]>([]);
+  const [catalog, setCatalog] = useState<NamedItem[]>([]);
   // Names added in this session stay as buttons when deselected again, so a mis-tap can be undone.
   const [added, setAdded] = useState<string[]>([]);
   const [text, setText] = useState('');
@@ -40,7 +41,7 @@ export function TagPicker({ kind, label, hint, selected, onChange, tooMany, erro
         return;
       }
       resolve(key);
-      setCatalog(res.names);
+      setCatalog(res.items);
     }
     void load();
     return () => {
@@ -49,9 +50,9 @@ export function TagPicker({ kind, label, hint, selected, onChange, tooMany, erro
     };
   }, [kind, key, report, resolve]);
 
-  // Catalogue first, then names added or selected that it does not know (yet); one button per key.
+  // Catalogue first, then names added or selected that it does not know (yet; one name, in both languages).
   const shown = [...catalog];
-  for (const name of [...selected, ...added]) if (!shown.some((n) => tagKey(n) === tagKey(name))) shown.push(name);
+  for (const name of [...selected, ...added]) if (!findItem(shown, name)) shown.push({ name, nameFr: null });
 
   function add() {
     if (!validateTagName(text).ok) {
@@ -64,7 +65,7 @@ export function TagPicker({ kind, label, hint, selected, onChange, tooMany, erro
       return;
     }
     const name = next.find((n) => !selected.includes(n)) ?? next[next.length - 1];
-    if (name && !shown.includes(name)) setAdded((list) => [...list, name]);
+    if (name && !findItem(shown, name)) setAdded((list) => [...list, name]);
     setError(null);
     setText('');
     onChange(next);
@@ -95,7 +96,7 @@ export function TagPicker({ kind, label, hint, selected, onChange, tooMany, erro
     <fieldset className="form-group">
       <legend>{label}</legend>
       <p className="field-hint">{hint}</p>
-      <TagChoices names={shown} selected={selected} onToggle={toggle} />
+      <TagChoices items={shown} selected={selected} onToggle={toggle} />
       <div className="field">
         <label htmlFor={inputId}>{t('form.tagNew')}</label>
         <div className="inline-add">

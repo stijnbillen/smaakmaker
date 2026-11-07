@@ -14,6 +14,7 @@ import { ingredientLine, sourceLink } from '../lib/recipe';
 import { signedUrls } from '../lib/photos';
 import { deleteRecipe, fetchFamily } from '../lib/recipes';
 import { useRecipe } from '../lib/useRecipe';
+import { useStoredNames } from '../lib/useStoredNames';
 import { familyView, variantSourceLine, type FamilyMember } from '../lib/variant';
 
 const DELETE_KEY = 'recipe-delete';
@@ -21,6 +22,7 @@ const FAMILY_KEY = 'recipe-family';
 
 export function RecipeDetailPage() {
   const lang = useLanguage();
+  const storedName = useStoredNames().shown;
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const { session, isAdmin } = useAuth();
@@ -204,7 +206,7 @@ export function RecipeDetailPage() {
           <h2>{t('tags.dish')}</h2>
           <ul className="equipment-tags" data-testid="recipe-dish-tags">
             {recipe.dishTags.map((name) => (
-              <li key={name}>{name}</li>
+              <li key={name}>{storedName('dish', name)}</li>
             ))}
           </ul>
         </section>
@@ -215,7 +217,7 @@ export function RecipeDetailPage() {
           <h2>{t('tags.trait')}</h2>
           <ul className="equipment-tags" data-testid="recipe-trait-tags">
             {recipe.traitTags.map((name) => (
-              <li key={name}>{name}</li>
+              <li key={name}>{storedName('trait', name)}</li>
             ))}
           </ul>
         </section>
@@ -226,7 +228,7 @@ export function RecipeDetailPage() {
           <h2>{t('recipe.equipment')}</h2>
           <ul className="equipment-tags" data-testid="recipe-equipment">
             {recipe.equipment.map((name) => (
-              <li key={name}>{name}</li>
+              <li key={name}>{storedName('equipment', name)}</li>
             ))}
           </ul>
         </section>

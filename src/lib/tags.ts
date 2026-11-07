@@ -2,7 +2,10 @@
 // reuse; this client side gives a message at the field and picks the right button.
 // No database import here: the unit tests load this file without a Supabase configuration.
 
+import { addNamed, type NamedItem } from './namedItems';
+
 export { TAGS_MAX_ITEMS } from './recipe';
+export { shownName, sortByShownName, type NamedItem } from './namedItems';
 export const TAG_NAME_MAX = 30;
 
 /** Groups of tags; a second group is added here and in the tag filter table. */
@@ -27,12 +30,9 @@ export function tagKey(name: string): string {
     .toLocaleLowerCase('nl');
 }
 
-/** Adds a typed name: an existing spelling (selected first, then catalogue) wins over the typed one. */
-export function addTag(selected: readonly string[], catalog: readonly string[], input: string): string[] {
-  const key = tagKey(input);
-  if (selected.some((name) => tagKey(name) === key)) return [...selected];
-  const known = catalog.find((name) => tagKey(name) === key);
-  return [...selected, known ?? input.trim()];
+/** Adds a typed name: the catalogue item with that Dutch or French name gives its canonical name. */
+export function addTag(selected: readonly string[], catalog: readonly NamedItem[], input: string): string[] {
+  return addNamed(selected, catalog, input);
 }
 
 export function toggleTag(selected: readonly string[], name: string): string[] {

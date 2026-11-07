@@ -1,7 +1,8 @@
 import { useEffect, useId, useState, type KeyboardEvent } from 'react';
 import { t, useLanguage } from '../i18n/t';
 import { addEquipment, EQUIPMENT_MAX_ITEMS, toggleEquipment, validateEquipmentName } from '../lib/equipment';
-import { fetchEquipmentInUse } from '../lib/recipes';
+import { findItem, type NamedItem } from '../lib/namedItems';
+import { fetchEquipmentChoices } from '../lib/recipes';
 import { useConnection } from './ConnectionProvider';
 import { EquipmentChoices } from './EquipmentChoices';
 
@@ -19,7 +20,7 @@ export function EquipmentPicker({ selected, onChange, tooMany }: EquipmentPicker
   useLanguage();
   const { report, resolve } = useConnection();
   const base = useId();
-  const [catalog, setCatalog] = useState<string[]>([]);
+  const [catalog, setCatalog] = useState<NamedItem[]>([]);
   // Names added in this session stay as buttons when deselected again, so a mis-tap can be undone.
   const [added, setAdded] = useState<string[]>([]);
   const [text, setText] = useState('');
@@ -28,14 +29,14 @@ export function EquipmentPicker({ selected, onChange, tooMany }: EquipmentPicker
   useEffect(() => {
     let active = true;
     async function load() {
-      const res = await fetchEquipmentInUse();
+      const res = await fetchEquipmentChoices();
       if (!active) return;
       if (res.error) {
         report(KEY, res.error, res.status, () => void load());
         return;
       }
       resolve(KEY);
-      setCatalog(res.names);
+      setCatalog(res.items);
     }
     void load();
     return () => {
@@ -46,7 +47,7 @@ export function EquipmentPicker({ selected, onChange, tooMany }: EquipmentPicker
 
   // Catalogue first, then names added or selected that it does not know (yet).
   const shown = [...catalog];
-  for (const name of [...selected, ...added]) if (!shown.includes(name)) shown.push(name);
+  for (const name of [...selected, ...added]) if (!findItem(shown, name)) shown.push({ name, nameFr: null });
 
   function add() {
     if (!validateEquipmentName(text).ok) {
@@ -58,8 +59,9 @@ export function EquipmentPicker({ selected, onChange, tooMany }: EquipmentPicker
       setError('equipmentTooMany');
       return;
     }
-    const name = next[next.length - 1];
-    if (!shown.includes(name)) setAdded((list) => [...list, name]);
+    // An item that was already selected leaves the list unchanged; its last entry is not a new one then.
+    const name = next.find((n) => !selected.includes(n)) ?? next[next.length - 1];
+    if (name && !findItem(shown, name)) setAdded((list) => [...list, name]);
     setError(null);
     setText('');
     onChange(next);
@@ -90,7 +92,7 @@ export function EquipmentPicker({ selected, onChange, tooMany }: EquipmentPicker
     <fieldset className="form-group">
       <legend>{t('form.equipment')}</legend>
       <p className="field-hint">{t('form.equipmentHint')}</p>
-      <EquipmentChoices names={shown} selected={selected} onToggle={toggle} />
+      <EquipmentChoices items={shown} selected={selected} onToggle={toggle} />
       <div className="field">
         <label htmlFor={inputId}>{t('form.equipmentNew')}</label>
         <div className="inline-add">

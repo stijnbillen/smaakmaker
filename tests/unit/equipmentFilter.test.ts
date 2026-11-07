@@ -77,7 +77,14 @@ describe('applyEquipmentFilter (R-008 crit. 4: "at least one" = overlaps)', () =
     const query = { overlaps: vi.fn().mockReturnValue(next) };
     const result = applyEquipmentFilter(query, ['Oven', 'Wok']);
     expect(query.overlaps).toHaveBeenCalledTimes(1);
-    expect(query.overlaps).toHaveBeenCalledWith('equipment', ['Oven', 'Wok']);
+    // T-023: passed as a quoted Postgres array literal (like tagFilter), so names with commas survive.
+    expect(query.overlaps).toHaveBeenCalledWith('equipment', '{"Oven","Wok"}');
     expect(result).toBe(next);
+  });
+
+  it('quotes names with commas, quotes, braces and backslashes', () => {
+    const query = { overlaps: vi.fn().mockReturnValue(null) };
+    applyEquipmentFilter(query as never, ['a, b', 'x"y', 'p}q', 'back\\slash']);
+    expect(query.overlaps).toHaveBeenCalledWith('equipment', '{"a, b","x\\"y","p}q","back\\\\slash"}');
   });
 });

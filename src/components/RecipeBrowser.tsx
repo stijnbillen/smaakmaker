@@ -7,6 +7,7 @@ import { FavoriteButton } from './FavoriteButton';
 import { IngredientSearch } from './IngredientSearch';
 import { ListState } from './ListState';
 import { TagFilter } from './TagFilter';
+import { useStoredNames } from '../lib/useStoredNames';
 import { RecipePhotoPlaceholder } from './RecipePhotoPlaceholder';
 import { TimeFilter } from './TimeFilter';
 import { t, useLanguage } from '../i18n/t';
@@ -99,6 +100,8 @@ interface RecipeBrowserProps {
 /** The recipe list with search, filters and sort. Shared by the overview and the favourites page. */
 export function RecipeBrowser({ favoritesOnly = false, title, loadingText, emptyText, connectionKey: KEY }: RecipeBrowserProps) {
   useLanguage();
+  const names = useStoredNames();
+  const storedName = names.shown;
   const { report, resolve } = useConnection();
   const [searchParams, setSearchParams] = useSearchParams();
   const [recipes, setRecipes] = useState<RecipeRow[] | null>(null);
@@ -121,6 +124,19 @@ export function RecipeBrowser({ favoritesOnly = false, title, loadingText, empty
   const tagFilter = useMemo(() => parseTagFilter(new URLSearchParams(query)), [query]);
   const sort = useMemo(() => parseSort(new URLSearchParams(query)), [query]);
   const search = useMemo(() => parseSearch(new URLSearchParams(query)), [query]);
+
+  // The database stores canonical (Dutch) names. A name in the URL that belongs to a catalogue item by its
+  // French name (typed by hand) is queried by the canonical name. Keyed by the resulting text, so a URL that is
+  // already canonical does not reload when the catalogue arrives.
+  const { canonical } = names;
+  const queryKey = JSON.stringify([
+    equipmentNames.map((n) => canonical('equipment', n)),
+    { dish: tagFilter.dish.map((n) => canonical('dish', n)), trait: tagFilter.trait.map((n) => canonical('trait', n)) },
+  ]);
+  const [queryEquipment, queryTags] = useMemo(
+    () => JSON.parse(queryKey) as [string[], TagFilterValue],
+    [queryKey],
+  );
 
   // Fetched on every mount, no client cache: other users' recipes must show after a reload.
   const load = useCallback(async () => {
@@ -159,8 +175,8 @@ export function RecipeBrowser({ favoritesOnly = false, title, loadingText, empty
     // The favourites restriction combines with "and" with every other filter.
     const scoped = favoritesOnly ? applyFavoritesOnly(ordered) : ordered;
     const { data, error, status } = await applyTagFilter(
-      applyEquipmentFilter(applyTimeFilter(scoped, filter), equipmentNames),
-      tagFilter,
+      applyEquipmentFilter(applyTimeFilter(scoped, filter), queryEquipment),
+      queryTags,
     );
     // A late answer after leaving the page, or for an older filter, must not report, resolve or set state.
     if (!active.current || mine !== requestId.current) return;
@@ -180,7 +196,7 @@ export function RecipeBrowser({ favoritesOnly = false, title, loadingText, empty
     const urls = await signedUrls(paths);
     if (!active.current || mine !== requestId.current) return;
     setPhotoUrls(urls);
-  }, [filter, equipmentNames, tagFilter, sort, search, favoritesOnly, KEY, report, resolve]);
+  }, [filter, queryEquipment, queryTags, sort, search, favoritesOnly, KEY, report, resolve]);
 
   useEffect(() => {
     active.current = true;
@@ -207,7 +223,7 @@ export function RecipeBrowser({ favoritesOnly = false, title, loadingText, empty
   // Read from the ref, not from the render: a quick second tap must build on the first.
   const toggleTagIn = (kind: TagKind, name: string) => {
     const latest = parseTagFilter(latestParams.current);
-    const same = latest[kind].find((n) => tagKey(n) === tagKey(name));
+    const same = latest[kind].find((n) => tagKey(canonical(kind, n)) === tagKey(canonical(kind, name)));
     const next: TagFilterValue = { ...latest, [kind]: toggleTag(latest[kind], same ?? name) };
     commit(tagsToSearchParams(next, latestParams.current));
   };
@@ -278,7 +294,7 @@ export function RecipeBrowser({ favoritesOnly = false, title, loadingText, empty
                     {r.equipment && r.equipment.length > 0 && (
                       <ul className="equipment-tags" data-testid="recipe-equipment">
                         {r.equipment.map((name) => (
-                          <li key={name}>{name}</li>
+                          <li key={name}>{storedName('equipment', name)}</li>
                         ))}
                       </ul>
                     )}

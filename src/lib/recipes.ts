@@ -3,6 +3,7 @@ import { isConnectionError } from './connection';
 import type { TermInfo } from './ingredientSearch';
 import { copyPhoto, removePhotos, uploadPhoto } from './photos';
 import { toRow, type PhotoDraft, type RecipeDraft, type RecipeRecord, type StoredPhoto } from './recipe';
+import type { NamedItem } from './namedItems';
 import { supabase } from './supabase';
 import type { MatchKind, SuggestKind, SuggestMode, Suggestion } from './suggest';
 import type { TagKind } from './tags';
@@ -155,10 +156,31 @@ export async function fetchFamily(familyId: string): Promise<CallResult & { memb
   return { members: error ? [] : ((data ?? []) as unknown as FamilyMember[]), error, status };
 }
 
-/** Catalogue names that are in at least one recipe: the choices in the form and the filter. */
-export async function fetchEquipmentInUse(): Promise<CallResult & { names: string[] }> {
-  const { data, error, status } = await supabase.rpc('equipment_in_use');
-  return { names: error ? [] : ((data ?? []) as unknown as string[]), error, status };
+const toItems = (rows: Array<{ name: string; name_fr: string | null }> | null): NamedItem[] =>
+  (rows ?? []).map((row) => ({ name: row.name, nameFr: row.name_fr }));
+
+/** The start list plus the equipment that is in at least one recipe: the choices in the form and the filter. */
+export async function fetchEquipmentChoices(): Promise<CallResult & { items: NamedItem[] }> {
+  const { data, error, status } = await supabase.rpc('equipment_choices');
+  return { items: error ? [] : toItems(data as Array<{ name: string; name_fr: string | null }> | null), error, status };
+}
+
+/** Every equipment item with both names: to show the names stored in a recipe in the reader's language. */
+export async function fetchEquipmentCatalog(): Promise<CallResult & { items: NamedItem[] }> {
+  const { data, error, status } = await supabase.from('equipment').select('name,name_fr').order('name_key');
+  return { items: error ? [] : toItems(data), error, status };
+}
+
+/** Every tag (both groups) with both names, for the same purpose. */
+export async function fetchTagCatalog(): Promise<CallResult & { items: Record<TagKind, NamedItem[]> }> {
+  const { data, error, status } = await supabase.from('tags').select('kind,name,name_fr');
+  const items: Record<TagKind, NamedItem[]> = { dish: [], trait: [] };
+  if (!error) {
+    for (const row of data ?? []) {
+      if (row.kind === 'dish' || row.kind === 'trait') items[row.kind as TagKind].push({ name: row.name, nameFr: row.name_fr });
+    }
+  }
+  return { items, error, status };
 }
 
 interface SuggestRow {
@@ -220,10 +242,10 @@ export async function fetchTermInfo(
   return { info, error, status };
 }
 
-/** All names of a tag group, in catalogue order: the choices in the form and the filter. */
-export async function fetchTags(kind: TagKind): Promise<CallResult & { names: string[] }> {
-  const { data, error, status } = await supabase.from('tags').select('name').eq('kind', kind).order('name_key');
-  return { names: error ? [] : (data ?? []).map((row) => row.name as string), error, status };
+/** All items of a tag group: the choices in the form and the filter (the component sorts them by shown name). */
+export async function fetchTags(kind: TagKind): Promise<CallResult & { items: NamedItem[] }> {
+  const { data, error, status } = await supabase.from('tags').select('name,name_fr').eq('kind', kind).order('name_key');
+  return { items: error ? [] : toItems(data), error, status };
 }
 
 /** Set when the database refused the recipe as too large (R-004): which part is too large. */

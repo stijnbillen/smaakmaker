@@ -1,24 +1,29 @@
+import { useLanguage } from '../i18n/t';
+import { findItem, shownName, sortByShownName, type NamedItem } from '../lib/namedItems';
+
 interface EquipmentChoicesProps {
-  names: readonly string[];
+  items: readonly NamedItem[];
   selected: readonly string[];
+  /** Gets the canonical name of the tapped item. */
   onToggle: (name: string) => void;
 }
 
-/** Toggle buttons for equipment names; shared by the recipe form and the overview filter. */
-export function EquipmentChoices({ names, selected, onToggle }: EquipmentChoicesProps) {
-  if (names.length === 0) return null;
+/** Toggle buttons for equipment, in the reader's language; shared by the recipe form and the overview filter. */
+export function EquipmentChoices({ items, selected, onToggle }: EquipmentChoicesProps) {
+  const lang = useLanguage();
+  if (items.length === 0) return null;
   return (
     <div className="choice-list">
-      {names.map((name) => (
+      {sortByShownName(items, lang).map((item) => (
         <button
-          key={name}
+          key={item.name}
           type="button"
           className="choice"
           data-tap-target
-          aria-pressed={selected.includes(name)}
-          onClick={() => onToggle(name)}
+          aria-pressed={selected.some((name) => findItem([item], name) !== undefined)}
+          onClick={() => onToggle(item.name)}
         >
-          {name}
+          {shownName(item, lang)}
         </button>
       ))}
     </div>

@@ -2,7 +2,10 @@
 // same limits and decides on reuse; this client side gives a message at the field and picks the right button.
 // No database import here: the unit tests load this file without a Supabase configuration.
 
+import { addNamed, type NamedItem } from './namedItems';
+
 export { EQUIPMENT_MAX_ITEMS } from './recipe';
+export { shownName, sortByShownName, type NamedItem } from './namedItems';
 export const EQUIPMENT_NAME_MAX = 30;
 
 /** Counts code points after trimming, like the database does with its trim and char_length. */
@@ -24,12 +27,9 @@ export function equipmentKey(name: string): string {
     .toLocaleLowerCase('nl');
 }
 
-/** Adds a typed name: an existing spelling (selected first, then catalogue) wins over the typed one. */
-export function addEquipment(selected: readonly string[], catalog: readonly string[], input: string): string[] {
-  const key = equipmentKey(input);
-  if (selected.some((name) => equipmentKey(name) === key)) return [...selected];
-  const known = catalog.find((name) => equipmentKey(name) === key);
-  return [...selected, known ?? input.trim()];
+/** Adds a typed name: the catalogue item with that Dutch or French name gives its canonical name. */
+export function addEquipment(selected: readonly string[], catalog: readonly NamedItem[], input: string): string[] {
+  return addNamed(selected, catalog, input);
 }
 
 export function toggleEquipment(selected: readonly string[], name: string): string[] {

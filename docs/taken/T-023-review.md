@@ -1,28 +1,28 @@
-# T-023 — review (ronde 3)
+# T-023 — review (ronde 4, na de mislukte eindcontrole)
 
 `CLAUDE.md` is niet gewijzigd. Ik zag geen kernbeslissing die geschonden wordt:
 - De client krijgt geen schrijfrecht op `tags` of `equipment`; de test controleert dat met 42501.
 - `merge_seeded_names()`, `merge_names_in_array()` en de resolvers zijn niet uitvoerbaar voor `anon` of `authenticated`.
 - `equipment_choices()` is `security invoker` en alleen uitvoerbaar voor `authenticated`.
-- Er komen geen nieuwe interfaceteksten bij.
+- `nl.json` en `fr.json` zijn niet gewijzigd; er komen geen nieuwe interfaceteksten bij.
 
-Het antwoord in `VRAGEN.md` (startlijst kookgerief NL/FR) is gevolgd.
+Het antwoord in `VRAGEN.md` (startlijst kookgerief NL/FR, optie 1) is gevolgd. De lijst in de migratie is gelijk aan die in het antwoord en aan R-024 crit. 3.
 
-De bevindingen uit ronde 2 zijn opgelost:
-- De sorteertest gebruikt nu kookplaat/oven tegenover four/plaque de cuisson, zowel in de unit-test als in de E2E.
-- De migratietest hernoemt nu ook de rij naar "Oven" en controleert daarna `oven`/`four`.
-- De kaart in het overzicht wordt getest op "four".
-- De telling die altijd slaagde, is weg.
-- De stille terugval in `useStoredNames` heeft nu een comment met het waarom.
+Wat er sinds ronde 3 veranderde:
+- De migratie heet nu `20261107110000_…`, omdat `20261107100000` al door T-024 gebruikt wordt. Die volgorde (eerst T-024, dan T-023) is in `docs/beslissingen.md` vastgelegd.
+- `merge_seeded_names()` maakt `name_fr` eerst leeg, zodat het opnieuw uitvoeren (in de migratietest) niet stukloopt op de sleutel-trigger.
+- De bevinding over `src/lib/recipes.ts` uit ronde 3 is opgelost: het bestand staat nu gestaged (`M `), niet meer als `UU`, en `stash@{1}` is weg. Alleen `stash@{0}` (T-025) staat er nog, en dat is een andere taak.
 
-Elk acceptatiecriterium van R-024 heeft minstens één test die faalt als het gedrag ontbreekt. Het zoeken op "pomme de terre" in beide talen staat in `tests/e2e/recipe-search-synonyms.spec.ts:69–72` (T-024).
+Elk acceptatiecriterium van R-024 heeft minstens één test die faalt als het gedrag ontbreekt:
+- crit. 1: `tests/e2e/bilingual-data.spec.ts:49–83`, en voor het zoeken op "pomme de terre" `tests/e2e/recipe-search-synonyms.spec.ts:69–72`;
+- crit. 2: de DB-test en de E2E-test;
+- crit. 3: de DB-test, inclusief de samenvoegtest met "Oven", "Four" en dubbele namen, en de E2E-test;
+- crit. 4 tot en met 7: telkens unit-, DB- en E2E-tests.
+
+De DB-tests passen de gedeelde catalogus tijdelijk aan, maar dat geeft geen botsing tussen testbestanden, want `vitest.config.ts` zet `fileParallelism: false`.
 
 ## Bevindingen
 
-### 1. src/lib/recipes.ts (git-index) — laag — ontwikkelaar
-**Probleem:** `git status` toont `UU src/lib/recipes.ts`. Het werk is teruggezet met een `stash pop`, en dat gaf een conflict. In de werkkopie is het conflict opgelost: er staan geen conflictmarkeringen meer en de diff tegen HEAD behoudt de code van T-024. De index staat echter nog op "unmerged", en `stash@{1}` ("T-023 niet geslaagd") staat er nog. Een commit die alleen gestagede bestanden meeneemt, faalt of laat dit bestand weg.
-**Voorstel:** markeer het bestand als opgelost met `git add src/lib/recipes.ts` vóór de commit. Verwijder daarna `stash@{1}`, want het werk zit nu in de werkkopie.
-
-### 2. tests/e2e/bilingual-data.spec.ts:86–88 — laag — tester
-**Probleem:** het comment zegt dat zoeken op "pomme de terre" "needs translated search (R-021, T-024), so it is not tested here". T-024 is intussen klaar en test dat al. Het comment is dus verouderd, en er staat niet bij waar die dekking dan wel zit.
-**Voorstel:** verwijs in het comment naar `recipe-search-synonyms.spec.ts`, of voeg "pomme de terre" toe aan deze test.
+### 1. tests/e2e/bilingual-data.spec.ts:87 — laag — tester
+**Probleem:** dit staat er nog uit ronde 3. Het comment zegt dat zoeken op "pomme de terre" "needs translated search (R-021, T-024), so it is not tested here". T-024 is klaar en test dat al in `recipe-search-synonyms.spec.ts:69–72`. Het comment is dus verouderd en zegt niet waar die dekking wel zit.
+**Voorstel:** verwijs in het comment naar `tests/e2e/recipe-search-synonyms.spec.ts`.
