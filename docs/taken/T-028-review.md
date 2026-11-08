@@ -1,18 +1,28 @@
-# T-028 — review (ronde 3)
+# T-028 — review (ronde 4)
 
-`CLAUDE.md` en `REQUIREMENTS.md` zijn niet gewijzigd. Geen kernbeslissing geschonden: alleen de anon-sleutel, een nieuwe migratie in `supabase/migrations/` (`20261108110000_sign_in_status.sql`, `security definer`, `search_path = ''`, alleen `execute` voor anon/authenticated), het slot blijft de trigger op `auth.users`, en `nl.json`/`fr.json` houden dezelfde sleutels.
+`CLAUDE.md` en `REQUIREMENTS.md` zijn niet gewijzigd. Er is geen kernbeslissing geschonden:
+- de client gebruikt alleen de anon-sleutel;
+- er is één nieuwe migratie in `supabase/migrations/` (`20261108110000_sign_in_status.sql`, `security definer`, `search_path = ''`, `execute` alleen voor anon/authenticated);
+- het slot blijft de trigger op `auth.users`;
+- `nl.json` en `fr.json` houden dezelfde sleutels (twee weg in beide, één tekst herschreven in beide).
 
-Bevinding 1 en 2 van de vorige ronde zijn opgelost. In `src/lib/auth.ts:61-63` geldt de `500` nu alleen bij `invited`, en `tests/unit/auth.test.ts:67-72` legt vast dat `member` + `500` `auth.error` geeft.
+Er staat geen blok voor T-028 in `VRAGEN.md`.
 
-De tests uit `stash@{0}` staan terug in de werkmap: e2e `auth.spec.ts`/`language.spec.ts`, db `sign-in-status.test.ts`/`admin.test.ts`, unit `sign-in-no-code.test.ts`/`i18n.test.ts` en helper `requestCode`. Elk criterium van `T-028.md` heeft een test: 1, 2, 3, 5, 6 en 7 nieuw, 4, 8 en 9 met de bestaande tests. Ik heb gecontroleerd dat de helpers en databankfuncties waar de tests op leunen bestaan: `normalizeEmail`, `setInvitationSentAt`, `createInvitation`, `getInvitation`, `countMails`, `authUser`, `seedLanguage`, `normalize_email`, `is_valid_email_shape` en `invitation_is_valid_at`. `check_invite` en `refresh_pending_invite` zijn in T-027 gedropt.
+De bevinding van ronde 3 is opgelost: in `docs/beslissingen.md:77` staat `invite-error` niet meer bij de geldige ids. `docs/beslissingen.md:431` heeft het kopje T-028, en `docs/online-zetten.md:23` vermeldt de migratie.
 
-Let op: volgens `T-028-tests.md` is niets gedraaid, alleen `tsc --noEmit`. Of de tests slagen, moet de bouwloop nog bevestigen.
+Volgens `docs/loop-log.md` is de build daarna geslaagd (2026-11-08 23:27). Ik heb de tests zelf niet gedraaid.
+
+Dekking per criterium van `T-028.md`:
+1. e2e NL/FR (`auth.spec.ts`: één textbox, geen code-knop, label of `input[name="invite"]`) en een unit-bronscan (`sign-in-no-code.test.ts`).
+2. db (a), (b) en (c), plus een rechtstreekse `signInWithOtp` na de opruiming (`sign-in-status.test.ts`). e2e (a) NL/FR en (b), met een telling van de `/auth/v1/otp`-requests.
+3. e2e met beide varianten (met en zonder mail van de beheerder, adres in hoofdletters en met spaties) tot `/welkom`. db: `accepted_at`, `list_invitations`, `member`, één rij in `auth.users`, en `createUser` faalt.
+4, 8, 9. De bestaande tests blijven gelden. Het pad van criterium 3 eindigt op `/welkom`.
+5. Nieuwe e2e zonder request naar `rpc/sign_in_status` of `/auth/v1/otp`. Franse variant in `language.spec.ts`.
+6. db: de functie geeft alleen een string met drie mogelijke waarden, ongeldige invoer geeft `unknown`, en de tabellen blijven dicht voor anon.
+7. db en e2e: link, precies één code van 6 cijfers, en een foute code geeft `auth.codeInvalid` zonder sessie.
+
+De unit-tests van `requestCode` en `verifyCode` dekken de punten uit de taak: normaliseren, `unknown` zonder GoTrue-aanroep, `shouldCreateUser` per status met `lang`, `otp_disabled` en `500` (alleen bij `invited`), en een verbindingsfout zonder veldmelding.
 
 ## Bevindingen
 
-### 1. Verouderde verwijzing naar `invite-error`
-- **Bestand:** `docs/beslissingen.md:77`
-- **Ernst:** laag
-- **Rol:** ontwikkelaar
-- **Probleem:** De lijst met vaste veldfout-ids noemt nog `invite-error`. Dat id bestaat niet meer sinds het codeveld uit `SignInPage.tsx` is gehaald.
-- **Voorstel:** `invite-error` uit die opsomming halen, met een korte verwijzing naar T-028.
+Geen.

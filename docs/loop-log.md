@@ -519,3 +519,8 @@
 - 2026-11-08 23:07 T-028 build: worker-crash (geen testfout), opnieuw
 - 2026-11-08 23:09 T-028 build: mislukt
 - 2026-11-08 23:09 T-028 stop: eindcontrole faalt
+- 2026-11-08 23:11 T-028 ontwikkelaar: KLAAR
+- 2026-11-08 23:27 T-028 build: geslaagd
+- 2026-11-08 23:29 T-028 reviewer: GOEDGEKEURD
+- 2026-11-08 23:45 T-028 build: mislukt
+- 2026-11-08 23:45 T-028 stop: eindcontrole faalt
