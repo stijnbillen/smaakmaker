@@ -56,7 +56,7 @@ Nieuw project: er zijn geen requirements met status "Bestaand", dus er is geen f
 ## Fase 6 — Uitnodigen per e-mail en overzicht
 
 - [x] **T-027** — R-027: Gebruikers uitnodigen met e-mailadres (afhankelijk van T-003, T-004, T-018). Vervangt de uitnodigingscodes in de databank en op het scherm Uitnodigingen; de mail gaat vanuit de browser van de beheerder, zonder geheime sleutel.
-- [ ] **T-028** — R-002: Aanmelden met e-mailadres, zonder uitnodigingscode (afhankelijk van T-027). Haalt veld, knop en code-logica uit het aanmeldscherm en uit `auth.ts`; een onbekend adres krijgt geen mail.
+- [!] **T-028** — R-002: Aanmelden met e-mailadres, zonder uitnodigingscode (afhankelijk van T-027). Haalt veld, knop en code-logica uit het aanmeldscherm en uit `auth.ts`; een onbekend adres krijgt geen mail. — reden: review niet goedgekeurd na 2 rondes
 - [!] **T-029** — R-028: Overzicht met verborgen filters en uitgebreid sorteren (afhankelijk van T-015, T-017, T-018) — reden: BLOKKADE: tests en helper `openFilters` van T-029 staan alleen in `stash@{0}` (niet in de werkmap) en `git stash apply` is geweigerd, dus ik kon de drie specs niet herstellen.
 
 ---

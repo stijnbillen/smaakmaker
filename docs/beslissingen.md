@@ -426,7 +426,14 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **Vormcheck van het adres in de databank** (`is_valid_email_shape`) heeft dezelfde regex als `isValidEmail`; `normalize_email` trimt alle witruimte en zet kleine letters, zoals de client.
 - **Intrekken** wist de uitnodiging en de onbevestigde gebruiker. Een verlopen of ingetrokken adres opnieuw uitnodigen maakt de rij weer geldig met een nieuwe `sent_at`.
 - **Taal in de mail:** de sjablonen kiezen met `.Data.lang` het Franse, Nederlandse of (zonder taal) tweetalige blok; `invite_user` zet de taal ook bij een al bestaande onbevestigde gebruiker. Het onderwerp blijft tweetalig ("{nl} / {fr}"); per taal sjabloneren is niet geprobeerd.
-- **Oude codes:** de tabel `invites` blijft als archief; onbevestigde gebruikers met een nog geldige code krijgen een rij in `invitations`. Het aanmeldscherm en `auth.ts` kennen nog codes tot de volgende taak: niet online zetten voor die klaar is.
+- **Oude codes:** de tabel `invites` blijft als archief; onbevestigde gebruikers met een nog geldige code krijgen een rij in `invitations`.
+
+## T-028 — Aanmelden met e-mailadres
+- **`sign_in_status(email)`** (anon mag aanroepen) geeft alleen `member`, `invited` of `unknown`; client en databank normaliseren het adres gelijk (`trim().toLowerCase()`). Het echte slot blijft de trigger op `auth.users`.
+- **`shouldCreateUser` alleen `true` bij een open uitnodiging**, zodat aanmelden ook werkt als de mail van de beheerder nooit vertrok.
+- **Opruimen bij `unknown`:** `sign_in_status` wist een onbevestigde gebruiker zonder geldige uitnodiging; bij `unknown` volgt geen GoTrue-aanroep, dus geen mail.
+- **Taal:** een uitgenodigde die zelf een code vraagt geeft zijn interfacetaal mee als `data.lang`; die telt alleen bij een nieuw aangemaakte gebruiker.
+- **Aanvaard risico:** `sign_in_status` laat adressen opsommen (niet meer dan `auth.unknownAddress` al verraadde, maar zonder rate limit).
 
 ## T-029 — Overzicht, filters en sorteren
 - **Sorteren in de client** met één pure functie `sortRecipes` (`src/lib/recipeSort.ts`): de lijst is toch volledig geladen, met en zonder zoeken gelden dezelfde regels, en een taalwissel sorteert opnieuw zonder verzoek. Komt er paginering, dan moet het naar de databank.

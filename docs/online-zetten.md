@@ -20,6 +20,7 @@ npx supabase db push
 - Providers > Email: "Confirm email" aan, OTP-lengte **6**.
 - Email Templates: plak de inhoud van `supabase/templates/confirmation.html` (onderwerp "Je code om aan te melden bij Smaakmaker") en `supabase/templates/magic_link.html` (zelfde onderwerp). De sjablonen kiezen de taal uit `user_metadata.lang`; maak ze opnieuw met `node scripts/make-email-templates.mjs` na een tekstwijziging.
 - Zet "Allow new users to sign up" (`enable_signup`) aan: de uitnodiging maakt het account via de publieke aanmeldaanroep, en de databank weigert wie niet is uitgenodigd.
+- De migratie `20261108110000_sign_in_status.sql` (vooraf-controle bij het aanmelden) hoort bij de te pushen migraties.
 - Eigen SMTP is nodig (stap 4): de standaardmail van Supabase haalt 20 uitnodigingen per dag niet.
 
 ## 4. E-mail via Gmail
