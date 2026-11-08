@@ -130,7 +130,9 @@ function Draai-Build($taak) {
     $ok = ($LASTEXITCODE -eq 0)
     # Een vitest-worker die op Windows bij het opstarten crasht (exitcode 3221226505) is geen testfout: alle
     # testbestanden die wel liepen slaagden. Dan één keer opnieuw, maar alleen als er geen test faalde.
-    if (-not $ok -and (Select-String -Path $bestand -Pattern 'Worker exited unexpectedly with exit code 3221226505' -Quiet) -and -not (Select-String -Path $bestand -Pattern '^\s*(FAIL|×)\s' -Quiet)) {
+    # Vitest meldt dit als "Worker exited unexpectedly with exit code 3221226505", Playwright als
+    # "worker process exited unexpectedly (code=3221226505".
+    if (-not $ok -and (Select-String -Path $bestand -Pattern 'Worker exited unexpectedly with exit code 3221226505', 'worker process exited unexpectedly \(code=3221226505' -Quiet) -and -not (Select-String -Path $bestand -Pattern '^\s*(FAIL|×)\s' -Quiet)) {
         Schrijf-Log $taak 'build' 'worker-crash (geen testfout), opnieuw'
         # De crash kan een test midden in zijn opruimstap gestopt hebben; testresten in de gedeelde databank laten de herhaling falen.
         npx supabase db reset --local *> $null
