@@ -427,3 +427,11 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **Intrekken** wist de uitnodiging en de onbevestigde gebruiker. Een verlopen of ingetrokken adres opnieuw uitnodigen maakt de rij weer geldig met een nieuwe `sent_at`.
 - **Taal in de mail:** de sjablonen kiezen met `.Data.lang` het Franse, Nederlandse of (zonder taal) tweetalige blok; `invite_user` zet de taal ook bij een al bestaande onbevestigde gebruiker. Het onderwerp blijft tweetalig ("{nl} / {fr}"); per taal sjabloneren is niet geprobeerd.
 - **Oude codes:** de tabel `invites` blijft als archief; onbevestigde gebruikers met een nog geldige code krijgen een rij in `invitations`. Het aanmeldscherm en `auth.ts` kennen nog codes tot de volgende taak: niet online zetten voor die klaar is.
+
+## T-029 — Overzicht, filters en sorteren
+- **Sorteren in de client** met één pure functie `sortRecipes` (`src/lib/recipeSort.ts`): de lijst is toch volledig geladen, met en zonder zoeken gelden dezelfde regels, en een taalwissel sorteert opnieuw zonder verzoek. Komt er paginering, dan moet het naar de databank.
+- **URL:** `sorteer` = `datum|beoordeling|titel|totaal|prep`, `richting` = `op|af`; standaardwaarden blijven weg. `beoordeling` blijft bestaan zodat oude links werken.
+- **Filterpaneel blijft gemonteerd** (`hidden`): open en dicht klappen herlaadt niets en de getypte tekst blijft. De open-toestand staat niet in de URL.
+- **Teller** bouwt op de bestaande parsers (`activeFilterCount`): zoeken, prep, totaal, gerecht, kenmerk en kookgerief tellen elk één.
+- **"Alles wissen" en `IngredientSearch`:** een `resetCount`-prop annuleert de debounce en leegt het veld, omdat de URL-waarde gelijk kan blijven terwijl er getypte tekst wacht.
+- **Alfabetisch:** `Intl.Collator(locale, { sensitivity: 'base' })`, gecachet per locale.

@@ -472,3 +472,11 @@
 - 2026-11-08 20:03 T-027 reviewer: GOEDGEKEURD
 - 2026-11-08 20:12 T-027 build: mislukt
 - 2026-11-08 20:12 T-027 stop: eindcontrole faalt
+- 2026-11-08 20:16 T-029 analist: KLAAR
+- 2026-11-08 20:22 T-029 tester: KLAAR
+- 2026-11-08 20:25 T-029 ontwikkelaar: BLOKKADE: test ÔÇö `tests/unit/i18n.test.ts` (snapshot nl-sleutels) botst met het schrappen van `overview.sortNewest` en de nieuwe tekst van `overview.sortRating`; en `createTestUser` in `tests/helpers/supabase-admin.ts` faalt met "Database error creating new user", waardoor de e2e niet draait.
+- 2026-11-08 20:25 T-029 tester: BLOKKADE: `createTestUser` faalt door de lokale Supabase-omgeving, niet door de testcode; draai `supabase db reset` en de e2e opnieuw.
+- 2026-11-08 20:28 T-029 ontwikkelaar: BLOKKADE: test tests/e2e/overview-filters.spec.ts:106 en :246 voegen een favoriet in met `user_id` via de gebruikersclient, maar `authenticated` heeft alleen `insert (recipe_id)` op `favorites` ("permission denied for table favorites"); gebruik `adminClient()` of laat `user_id` weg.
+- 2026-11-08 20:28 T-029 tester: KLAAR
+- 2026-11-08 20:35 T-029 ontwikkelaar: BLOKKADE: test bilingual-data.spec.ts:133, recipe-equipment.spec.ts:157 en recipe-search-synonyms.spec.ts:171 gebruiken een pagina uit `newContext()`/`newPage()` zonder `autoOpenFilters(page)` of `openFilters`, dus de filters zijn dicht; de tester moet daar `openFilters` aanroepen.
+- 2026-11-08 20:35 T-029 stop: BLOKKADE: test bilingual-data.spec.ts:133, recipe-equipment.spec.ts:157 en recipe-search-synonyms.spec.ts:171 gebruiken een pagina uit `newContext()`/`newPage()` zonder `autoOpenFilters(page)` of `openFilters`, dus de filters zijn dicht; de tester moet daar `openFilters` aanroepen.
