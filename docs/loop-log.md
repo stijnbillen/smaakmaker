@@ -487,3 +487,6 @@
 - 2026-11-08 21:02 T-027 build: geslaagd
 - 2026-11-08 21:04 T-027 reviewer: GOEDGEKEURD
 - 2026-11-08 21:16 T-027 build: geslaagd
+- 2026-11-08 21:16 T-027 savepoint: gecommit
+- 2026-11-08 21:17 T-029 tester: BLOKKADE: tests en helper `openFilters` van T-029 staan alleen in `stash@{0}` (niet in de werkmap) en `git stash apply` is geweigerd, dus ik kon de drie specs niet herstellen.
+- 2026-11-08 21:17 T-029 stop: BLOKKADE: tests en helper `openFilters` van T-029 staan alleen in `stash@{0}` (niet in de werkmap) en `git stash apply` is geweigerd, dus ik kon de drie specs niet herstellen.

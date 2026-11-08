@@ -31,3 +31,8 @@ Crit. 1, 2, 3, 4, 5 (combinatietest op `/favorieten`; de bestaande tests via `au
 - Exports `recipeSort.ts`: `DEFAULT_SORT`, `defaultDirection`, `changeField`, `parseSort`, `toSearchParams`, `sortRecipes(rows, sort, locale)`, types `SortField` (`created|rating|title|total|prep`), `SortDirection` (`asc|desc`), `RecipeSort`.
 - Exports `overviewFilters.ts`: `activeFilterCount`, `clearFilters`.
 - Rijen voor `sortRecipes`: `id`, `title`, `created_at`, `rating_avg`, `rating_count`, `prep_minutes`, `total_minutes`, optioneel `matchCount`.
+
+## Herstelronde (blokkade)
+- Gevraagd: `openFilters` toevoegen in bilingual-data.spec.ts:133, recipe-equipment.spec.ts:157, recipe-search-synonyms.spec.ts:171 (pagina uit newContext/newPage).
+- Niet uitgevoerd: de werkmap bevat `tests/helpers/overview.ts`, `tests/e2e/overview-filters.spec.ts`, `tests/unit/recipeSort.test.ts` en de `autoOpenFilters`-aanroepen niet. Ze staan alleen in `stash@{0}` ("T-029 niet geslaagd"); `git stash show/apply` werd geweigerd in deze sandbox.
+- Nodig: stash terugzetten (`git stash apply`) en deze taak opnieuw starten, of toestemming voor git stash.
