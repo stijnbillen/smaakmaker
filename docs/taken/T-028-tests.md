@@ -1,23 +1,12 @@
-# T-028 — tests
+# T-028 — tests (herstelronde na review)
 
-`npx tsc --noEmit` slaagt. Vitest en `playwright --list` kon ik niet draaien (commando's werden niet toegestaan in deze sessie): de ontwikkelaar draait ze eerst.
+## Toestand
+De werkmap is teruggezet naar de commit van vóór de bouw. Alle tests, helpers en code van T-028 staan alleen in `stash@{0}` ("On loop: T-028 niet geslaagd"; nieuwe bestanden in de derde ouder `stash@{0}^3`). `git` (checkout, show-tree) en `npx vitest` werden in deze sessie niet toegestaan, dus ik kon ze niet terughalen en niets draaien.
 
-## Gedekt
-| Criterium | Test |
-|---|---|
-| 1 | `tests/e2e/auth.spec.ts` (NL en FR: één tekstveld, knop, geen code-element) en `tests/unit/sign-in-no-code.test.ts` (sleutels weg, bronscan `src/`, `AuthField`) |
-| 2 | `tests/db/sign-in-status.test.ts` (a, b, c + directe `signInWithOtp` zonder mail) en e2e in `auth.spec.ts` (a in NL en FR, b; `#email-error`, `aria-invalid`, geen `/auth/v1/otp`, stap 1) |
-| 3 | db: open uitnodiging zonder gebruiker + met gebruiker; `accepted_at`, `list_invitations`, `'member'`, telling 1, `createUser` faalt. e2e: beide varianten in verse context, hoofdletters en spaties, einde op `/welkom` |
-| 4 | bestaande tests blijven; e2e-pad van 3 eindigt op `/welkom` |
-| 5 | e2e: `piet@` geeft geen request naar `rpc/sign_in_status` of `/auth/v1/otp`; `language.spec.ts` vervangen door `piet@` + `FR['auth.emailInvalid']` |
-| 6 | db: `sign_in_status` geeft alleen `member`/`invited`/`unknown`, ongeldige invoer `unknown`, tabellen blijven dicht voor anon |
-| 7 | db en e2e: link + precies 6 cijfers; foute code geeft `auth.codeInvalid` |
-| 8, 9 | bestaande tests |
-| unit `auth.ts` | `tests/unit/auth.test.ts`: normaliseren, `unknown`, `member`/`invited` + `lang`, 500/`otp_disabled`, verbindingsfout, overige fouten |
+## Gedaan
+- `tests/unit/auth.test.ts` opnieuw geschreven (gemockte `supabase` en `getLanguage`), met de review-bevinding: `member` + GoTrue `500` geeft `auth.error`; `invited` + `500` en `otp_disabled` geven `auth.unknownAddress`. Verder: normaliseren, `unknown` zonder GoTrue-aanroep, `shouldCreateUser` + `data.lang`, verbindingsfout zonder veldmelding, `verifyCode`.
+- Niet gedraaid. Faalt tegen de huidige `src/lib/auth.ts` (nog de oude, met codes) tot de ontwikkelaar klaar is; dat is verwacht.
 
-Andere aanpassingen: uitzondering `replacedByT028` in `tests/unit/i18n.test.ts` (alleen `auth.haveInvite`, `auth.inviteLabel`, `auth.unknownAddress`; `auth.intro` blijft strikt gelijk, want die verwijst niet naar een uitnodigingscode); `check_invite` weg uit `tests/db/admin.test.ts`; helper `requestCode` in `tests/helpers/supabase-admin.ts`.
-
-## Niet gedekt
-- Docs (`beslissingen.md`, `online-zetten.md`): geen testwerk.
-- De mailcontrole op "geen mail sinds het begin" gebruikt `countMails` (vóór/na), niet een tijdstempel; gelijkwaardig.
-- `refresh_pending_invite`/`check_invite` in de databank zelf: de brief eist alleen dat ze uit `src/` verdwijnen.
+## Nog te herstellen uit de stash (niet gedaan)
+`tests/e2e/auth.spec.ts`, `tests/e2e/language.spec.ts`, `tests/helpers/supabase-admin.ts` (helper `requestCode`), `tests/unit/i18n.test.ts` (`replacedByT028`), `tests/db/admin.test.ts`, en de nieuwe `tests/db/sign-in-status.test.ts` en `tests/unit/sign-in-no-code.test.ts`. Herstel: `git checkout 'stash@{0}' -- <tracked>` en `git checkout 'stash@{0}^3' -- <nieuwe bestanden>`.
+Let op: `tests/unit/auth.test.ts` uit de stash (derde ouder) bestond ook; de nieuwe versie hierboven vervangt hem en bevat de extra `500`-case.

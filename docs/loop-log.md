@@ -499,3 +499,5 @@
 - 2026-11-08 21:38 T-028 ontwikkelaar: KLAAR
 - 2026-11-08 21:50 T-028 build: mislukt
 - 2026-11-08 21:50 T-028 stop: review niet goedgekeurd na 2 rondes
+- 2026-11-08 21:53 T-028 tester: BLOKKADE: werkmap bevat de T-028-tests niet meer (alleen in `stash@{0}`), en `git`-herstel en `npx vitest` werden niet toegestaan, dus alleen `tests/unit/auth.test.ts` is opnieuw geschreven en niets is gedraaid.
+- 2026-11-08 21:53 T-028 stop: BLOKKADE: werkmap bevat de T-028-tests niet meer (alleen in `stash@{0}`), en `git`-herstel en `npx vitest` werden niet toegestaan, dus alleen `tests/unit/auth.test.ts` is opnieuw geschreven en niets is gedraaid.
