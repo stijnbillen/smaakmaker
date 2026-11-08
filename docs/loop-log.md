@@ -506,3 +506,16 @@
 - 2026-11-08 22:19 T-029 build: geslaagd
 - 2026-11-08 22:21 T-029 reviewer: GOEDGEKEURD
 - 2026-11-08 22:33 T-029 build: geslaagd
+- 2026-11-08 22:33 T-029 savepoint: gecommit
+- 2026-11-08 22:35 T-028 ontwikkelaar: BLOKKADE: test ÔÇö `tests/unit/i18n.test.ts` mist de T-028-uitzondering (`replacedByT028`) en `tests/e2e/language.spec.ts:379` gebruikt de verwijderde sleutel `auth.haveInvite`; de overige T-028-tests (e2e `auth.spec.ts`, `tests/db/sign-in-status.test.ts`, helper, `sign-in-no-code.test.ts`) staan alleen in `stash@{0}` en moeten door de tester worden hersteld.
+- 2026-11-08 22:36 T-028 tester: KLAAR
+- 2026-11-08 22:39 T-028 ontwikkelaar: KLAAR
+- 2026-11-08 22:41 T-028 build: worker-crash (geen testfout), opnieuw
+- 2026-11-08 22:43 T-028 build: mislukt
+- 2026-11-08 22:45 T-028 ontwikkelaar: KLAAR
+- 2026-11-08 22:47 T-028 build: worker-crash (geen testfout), opnieuw
+- 2026-11-08 23:04 T-028 build: geslaagd
+- 2026-11-08 23:05 T-028 reviewer: GOEDGEKEURD
+- 2026-11-08 23:07 T-028 build: worker-crash (geen testfout), opnieuw
+- 2026-11-08 23:09 T-028 build: mislukt
+- 2026-11-08 23:09 T-028 stop: eindcontrole faalt

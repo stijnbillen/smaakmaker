@@ -1,19 +1,18 @@
-# T-028 — review
+# T-028 — review (ronde 3)
 
-`CLAUDE.md` en `REQUIREMENTS.md` zijn niet gewijzigd. Geen kernbeslissing geschonden: alleen anon-sleutel, nieuwe migratie in `supabase/migrations/`, het slot blijft de trigger op `auth.users`, sleutels in `nl.json`/`fr.json` blijven gelijk.
+`CLAUDE.md` en `REQUIREMENTS.md` zijn niet gewijzigd. Geen kernbeslissing geschonden: alleen de anon-sleutel, een nieuwe migratie in `supabase/migrations/` (`20261108110000_sign_in_status.sql`, `security definer`, `search_path = ''`, alleen `execute` voor anon/authenticated), het slot blijft de trigger op `auth.users`, en `nl.json`/`fr.json` houden dezelfde sleutels.
+
+Bevinding 1 en 2 van de vorige ronde zijn opgelost. In `src/lib/auth.ts:61-63` geldt de `500` nu alleen bij `invited`, en `tests/unit/auth.test.ts:67-72` legt vast dat `member` + `500` `auth.error` geeft.
+
+De tests uit `stash@{0}` staan terug in de werkmap: e2e `auth.spec.ts`/`language.spec.ts`, db `sign-in-status.test.ts`/`admin.test.ts`, unit `sign-in-no-code.test.ts`/`i18n.test.ts` en helper `requestCode`. Elk criterium van `T-028.md` heeft een test: 1, 2, 3, 5, 6 en 7 nieuw, 4, 8 en 9 met de bestaande tests. Ik heb gecontroleerd dat de helpers en databankfuncties waar de tests op leunen bestaan: `normalizeEmail`, `setInvitationSentAt`, `createInvitation`, `getInvitation`, `countMails`, `authUser`, `seedLanguage`, `normalize_email`, `is_valid_email_shape` en `invitation_is_valid_at`. `check_invite` en `refresh_pending_invite` zijn in T-027 gedropt.
+
+Let op: volgens `T-028-tests.md` is niets gedraaid, alleen `tsc --noEmit`. Of de tests slagen, moet de bouwloop nog bevestigen.
 
 ## Bevindingen
 
-### 1. Een `500` voor een bestaand lid wordt "Geen account met dit e-mailadres"
-- **Bestand:** `src/lib/auth.ts:61-63`
-- **Ernst:** middel
-- **Rol:** ontwikkelaar
-- **Probleem:** Elke `500` van GoTrue wordt nu `auth.unknownAddress`, ook als `sign_in_status` `'member'` gaf. Vroeger gold de `500`-regel alleen voor een aanvraag met uitnodigingscode (`inviteCode && e.status === 500`). GoTrue geeft ook `500` als de mail niet vertrekt (SMTP-fout: "Error sending magic link email"). `docs/online-zetten.md` stap 4 voorziet eigen SMTP via Gmail, dus die fout kan echt optreden. Een bestaand lid krijgt dan de melding dat hij geen account heeft en een beheerder om een uitnodiging moet vragen. Dat is fout en stuurt hem de verkeerde kant op. Het risico in `T-028.md` ("Wedloop") rekent met de oude situatie, toen de regel alleen voor uitnodigingen gold.
-- **Voorstel:** De `500` alleen als `auth.unknownAddress` lezen als `invited === true`, want alleen dan kan de trigger weigeren. Bij `'member'` geeft een `500` gewoon `auth.error`. `otp_disabled` en "signups not allowed" blijven voor beide gevallen `auth.unknownAddress`.
-
-### 2. Geen test voor een `500` bij een lid
-- **Bestand:** `tests/unit/auth.test.ts:83-93`
+### 1. Verouderde verwijzing naar `invite-error`
+- **Bestand:** `docs/beslissingen.md:77`
 - **Ernst:** laag
-- **Rol:** tester
-- **Probleem:** De `it.each` voor `500`/`otp_disabled` test alleen met de status `'invited'`. Niets legt vast hoe een `500` bij `'member'` wordt gelezen, waardoor bevinding 1 onopgemerkt bleef.
-- **Voorstel:** Een geval toevoegen: status `'member'`, GoTrue geeft `{ status: 500 }`, verwacht `message: 'auth.error'`. Het bestaande geval met `'invited'` blijft `auth.unknownAddress`.
+- **Rol:** ontwikkelaar
+- **Probleem:** De lijst met vaste veldfout-ids noemt nog `invite-error`. Dat id bestaat niet meer sinds het codeveld uit `SignInPage.tsx` is gehaald.
+- **Voorstel:** `invite-error` uit die opsomming halen, met een korte verwijzing naar T-028.

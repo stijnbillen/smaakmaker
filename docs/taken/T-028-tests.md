@@ -1,12 +1,18 @@
-# T-028 — tests (herstelronde na review)
-
-## Toestand
-De werkmap is teruggezet naar de commit van vóór de bouw. Alle tests, helpers en code van T-028 staan alleen in `stash@{0}` ("On loop: T-028 niet geslaagd"; nieuwe bestanden in de derde ouder `stash@{0}^3`). `git` (checkout, show-tree) en `npx vitest` werden in deze sessie niet toegestaan, dus ik kon ze niet terughalen en niets draaien.
+# T-028 — tests (herstel uit stash)
 
 ## Gedaan
-- `tests/unit/auth.test.ts` opnieuw geschreven (gemockte `supabase` en `getLanguage`), met de review-bevinding: `member` + GoTrue `500` geeft `auth.error`; `invited` + `500` en `otp_disabled` geven `auth.unknownAddress`. Verder: normaliseren, `unknown` zonder GoTrue-aanroep, `shouldCreateUser` + `data.lang`, verbindingsfout zonder veldmelding, `verifyCode`.
-- Niet gedraaid. Faalt tegen de huidige `src/lib/auth.ts` (nog de oude, met codes) tot de ontwikkelaar klaar is; dat is verwacht.
+Uit `stash@{0}` (via `git show`) teruggezet in de werkmap:
+- `tests/e2e/auth.spec.ts` (criteria 1, 2, 3, 5, 7), `tests/e2e/language.spec.ts` (vervangt de oude invite-code-test door `piet@` + `FR['auth.emailInvalid']`; geen `auth.haveInvite` meer), `tests/helpers/supabase-admin.ts` (helper `requestCode`), `tests/db/admin.test.ts` (`check_invite` weg).
+- `tests/db/sign-in-status.test.ts` en `tests/unit/sign-in-no-code.test.ts` (criteria 1-bronscan, 2, 3-db, 6) uit `stash@{0}^3`.
+- `tests/unit/i18n.test.ts`: uitzondering `replacedByT028` (`auth.haveInvite`, `auth.inviteLabel`, `auth.unknownAddress`) erbij, en de T-029-uitzondering (`changedByT029`, in HEAD aanwezig maar niet in de stash) behouden.
+- `tests/unit/auth.test.ts` (al in werkmap): unit-tests van `requestCode`/`verifyCode`, inclusief `member` + `500` → `auth.error`.
 
-## Nog te herstellen uit de stash (niet gedaan)
-`tests/e2e/auth.spec.ts`, `tests/e2e/language.spec.ts`, `tests/helpers/supabase-admin.ts` (helper `requestCode`), `tests/unit/i18n.test.ts` (`replacedByT028`), `tests/db/admin.test.ts`, en de nieuwe `tests/db/sign-in-status.test.ts` en `tests/unit/sign-in-no-code.test.ts`. Herstel: `git checkout 'stash@{0}' -- <tracked>` en `git checkout 'stash@{0}^3' -- <nieuwe bestanden>`.
-Let op: `tests/unit/auth.test.ts` uit de stash (derde ouder) bestond ook; de nieuwe versie hierboven vervangt hem en bevat de extra `500`-case.
+## Gecontroleerd
+- `npx tsc --noEmit`: geen fouten.
+- `haveInvite`/`inviteLabel`/`invite-error` komen in `tests/` en `src/` alleen nog voor in de bronscan-test en de oude fixture `nl-before-T-018.json` (bedoeld).
+
+## Niet gedraaid
+`npx vitest run` en `npx playwright test --list` werden in deze sessie niet toegestaan. Dus niet bevestigd dat de unit-, db- en e2e-tests slagen; de ontwikkelaar/bouwloop draait ze met `BouwCommando`.
+
+## Dekking
+Criteria 1–3, 5–7 gedekt (e2e/db/unit). Criteria 4, 8, 9: bestaande tests blijven gelden, geen nieuwe tests.
