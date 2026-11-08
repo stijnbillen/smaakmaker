@@ -480,3 +480,10 @@
 - 2026-11-08 20:28 T-029 tester: KLAAR
 - 2026-11-08 20:35 T-029 ontwikkelaar: BLOKKADE: test bilingual-data.spec.ts:133, recipe-equipment.spec.ts:157 en recipe-search-synonyms.spec.ts:171 gebruiken een pagina uit `newContext()`/`newPage()` zonder `autoOpenFilters(page)` of `openFilters`, dus de filters zijn dicht; de tester moet daar `openFilters` aanroepen.
 - 2026-11-08 20:35 T-029 stop: BLOKKADE: test bilingual-data.spec.ts:133, recipe-equipment.spec.ts:157 en recipe-search-synonyms.spec.ts:171 gebruiken een pagina uit `newContext()`/`newPage()` zonder `autoOpenFilters(page)` of `openFilters`, dus de filters zijn dicht; de tester moet daar `openFilters` aanroepen.
+- 2026-11-08 20:35 - loop: geen taak meer
+- 2026-11-08 20:38 T-027 ontwikkelaar: KLAAR
+- 2026-11-08 20:50 T-027 build: mislukt
+- 2026-11-08 20:50 T-027 ontwikkelaar: KLAAR
+- 2026-11-08 21:02 T-027 build: geslaagd
+- 2026-11-08 21:04 T-027 reviewer: GOEDGEKEURD
+- 2026-11-08 21:16 T-027 build: geslaagd

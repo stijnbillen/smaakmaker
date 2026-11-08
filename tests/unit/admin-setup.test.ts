@@ -28,11 +28,13 @@ describe('first administrator is set outside the app (R-017 crit. 4)', () => {
     for (const p of paths) expect(p, p).not.toMatch(/admin|beheerder|beheer/i);
   });
 
-  it('docs/beheer.md describes the SQL for the first invite and the first administrator', () => {
+  // T-027 / R-027: codes are gone; the first invitation is a row for an e-mail address.
+  it('docs/beheer.md describes the SQL for the first invitation and the first administrator', () => {
     expect(existsSync('docs/beheer.md')).toBe(true);
     const doc = readFileSync('docs/beheer.md', 'utf8');
-    expect(doc).toMatch(/insert into public\.invites/i);
-    expect(doc).toMatch(/generate_invite_code\(\)/);
+    expect(doc).toMatch(/insert into public\.invitations/i);
+    expect(doc).not.toMatch(/generate_invite_code\(\)/);
+    expect(doc).not.toMatch(/insert into public\.invites\b/i);
     expect(doc).toMatch(/select public\.grant_admin\(/i);
   });
 });

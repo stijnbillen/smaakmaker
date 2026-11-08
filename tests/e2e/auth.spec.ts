@@ -1,19 +1,17 @@
 import { expect, test, type Page } from '@playwright/test';
-import { countMails, waitForMail } from '../helpers/mailpit';
+import { waitForMail } from '../helpers/mailpit';
 import { backdateCodes } from '../helpers/pg';
 import { signInViaStorage, storageKey } from '../helpers/session';
 import {
-  adminClient,
   assertSupabaseUp,
-  createInvite,
   createTestUser,
   deleteTestUser,
   insertRecipe,
-  uniqueEmail,
   type TestUser,
 } from '../helpers/supabase-admin';
 
-// T-003 / R-002 interface tests. Mails come from the local Mailpit (supabase start).
+// T-003 / R-002 interface tests. T-027: the scenarios with an invitation code are gone (the code no longer
+// exists); signing in as an invited person is changed in the next task. Mails come from the local Mailpit (supabase start).
 const NOT_VALID = 'Deze code is niet geldig.';
 const REQUEST_BUTTON = 'Stuur mij een code';
 
@@ -32,21 +30,7 @@ test.afterAll(async () => {
 });
 
 const emailField = (page: Page) => page.getByLabel('E-mailadres');
-const inviteField = (page: Page) => page.getByLabel('Uitnodigingscode', { exact: true });
 const mailCodeField = (page: Page) => page.getByLabel('Code uit de e-mail');
-
-/** Opens the "new account" mode: either a switch/tab or the field is already there. */
-async function openInviteMode(page: Page) {
-  if (await inviteField(page).isVisible()) return;
-  const toggle = page
-    .getByRole('switch', { name: /uitnodigingscode|nieuw account/i })
-    .or(page.getByRole('checkbox', { name: /uitnodigingscode|nieuw account/i }))
-    .or(page.getByRole('tab', { name: /nieuw account/i }))
-    .or(page.getByRole('radio', { name: /nieuw account/i }))
-    .or(page.getByRole('button', { name: /uitnodigingscode|nieuw account/i }));
-  await toggle.first().click();
-  await expect(inviteField(page)).toBeVisible();
-}
 
 async function requestCode(page: Page, email: string) {
   await emailField(page).fill(email);
@@ -62,24 +46,6 @@ async function submitMailCode(page: Page, code: string) {
 async function storedSession(page: Page): Promise<string | null> {
   return page.evaluate((k) => window.localStorage.getItem(k), storageKey());
 }
-
-test.describe('geen account zonder geldige code (crit. 1)', () => {
-  test('a made-up code and a used code give "Deze code is niet geldig." and send no mail', async ({ page }) => {
-    await page.goto('/aanmelden');
-    await openInviteMode(page);
-
-    for (const code of ['VERZONNEN12345', named.inviteCode]) {
-      const email = uniqueEmail('geenmail');
-      await emailField(page).fill(email);
-      await inviteField(page).fill(code);
-      await page.getByRole('button', { name: REQUEST_BUTTON }).click();
-      await expect(page.getByText(NOT_VALID)).toBeVisible();
-      await expect(inviteField(page)).toHaveAttribute('aria-invalid', 'true');
-      await expect(mailCodeField(page)).toHaveCount(0);
-      expect(await countMails(email), `no mail for code ${code}`).toBe(0);
-    }
-  });
-});
 
 test.describe('ongeldig e-mailadres (crit. 4)', () => {
   test('"piet@" shows a message at the field and sends no request to /auth/v1/otp', async ({ page }) => {
@@ -190,26 +156,6 @@ test.describe('aanmelden met de code uit de e-mail (crit. 6)', () => {
     await expect(page.getByText(NOT_VALID)).toBeVisible();
     await expect(page).toHaveURL(/\/aanmelden$/);
     expect(await storedSession(page)).toBeNull();
-  });
-
-  test('a new account with a valid invite code and the code from the mail signs in', async ({ page }) => {
-    const invite = await createInvite();
-    const email = uniqueEmail('nieuw');
-    await page.goto('/aanmelden');
-    await openInviteMode(page);
-    await inviteField(page).fill(invite);
-    const sent = Date.now();
-    await requestCode(page, email);
-    const mail = await waitForMail(email, { sinceMs: sent });
-    await submitMailCode(page, mail.codes[0]);
-    await expect(page).toHaveURL(/\/welkom$/); // brand-new user has no name yet
-    // clean up through the test helper's service client
-    const admin = adminClient();
-    const id = (await page.evaluate((k) => JSON.parse(window.localStorage.getItem(k) ?? '{}').user?.id, storageKey())) as
-      | string
-      | undefined;
-    if (id) await admin.auth.admin.deleteUser(id);
-    await admin.from('invites').delete().eq('code', invite);
   });
 
   test('the login link from the mail signs in inside a new browser context', async ({ page, browser }) => {

@@ -12,6 +12,15 @@ const TEMPLATES = ['supabase/templates/confirmation.html', 'supabase/templates/m
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+/** Splits a template into its three branches: French, Dutch, and the bilingual fallback (T-027). */
+function branches(html: string): { fr: string; nl: string; fallback: string } {
+  const m = /\{\{ if eq \.Data\.lang "fr" \}\}([\s\S]*?)\{\{ else if eq \.Data\.lang "nl" \}\}([\s\S]*?)\{\{ else \}\}([\s\S]*?)\{\{ end \}\}/.exec(
+    html,
+  );
+  if (!m) return { fr: '', nl: '', fallback: '' };
+  return { fr: m[1], nl: m[2], fallback: m[3] };
+}
+
 // T-003 crit. 6 (R-002): the mail has the link AND the 6-digit code, and all texts come from nl.json.
 describe('e-mail templates (R-002 crit. 6)', () => {
   for (const file of TEMPLATES) {
@@ -58,8 +67,9 @@ describe('e-mail templates (R-002 crit. 6)', () => {
         }
       });
 
-      it(`${file}: Dutch heading comes before the French heading`, () => {
-        const html = readFileSync(file, 'utf8');
+      // T-027 / R-027 crit. 3: without a language (existing users) the mail stays bilingual, Dutch first.
+      it(`${file}: in the fallback block the Dutch heading comes before the French heading`, () => {
+        const html = branches(readFileSync(file, 'utf8')).fallback;
         const nlAt = html.indexOf(escapeHtml(flat['email.heading']));
         const frAt = html.indexOf(escapeHtml(frFlat['email.heading']));
         expect(nlAt).toBeGreaterThanOrEqual(0);
@@ -67,14 +77,36 @@ describe('e-mail templates (R-002 crit. 6)', () => {
         expect(nlAt).toBeLessThan(frAt);
       });
 
-      it(`${file}: each language block has its own link and code, with lang attributes`, () => {
+      it(`${file}: every block has its own link and code, with lang attributes`, () => {
         const html = readFileSync(file, 'utf8');
-        expect(html.match(/\{\{ \.ConfirmationURL \}\}/g)?.length).toBe(2);
-        expect(html.match(/\{\{ \.Token \}\}/g)?.length).toBe(2);
+        // French block + Dutch block + the two blocks of the fallback
+        expect(html.match(/\{\{ \.ConfirmationURL \}\}/g)?.length).toBe(4);
+        expect(html.match(/\{\{ \.Token \}\}/g)?.length).toBe(4);
         expect(html).toMatch(/lang="nl"/);
-        expect(html).toMatch(/<div lang="fr"/);
+        expect(html).toMatch(/lang="fr"/);
         expect(html).not.toMatch(new RegExp(`lang="${'e'}n"`));
-        expect(html.indexOf('lang="nl"')).toBeLessThan(html.indexOf('lang="fr"'));
+      });
+
+      // T-027 / R-027 crit. 3: "in de taal van de beheerder" = the template follows user_metadata.lang.
+      it(`${file}: lang fr gives only the French block, lang nl only the Dutch block, anything else both`, () => {
+        const html = readFileSync(file, 'utf8');
+        expect(html).toContain('{{ if eq .Data.lang "fr" }}');
+        expect(html).toContain('{{ else if eq .Data.lang "nl" }}');
+        expect(html).toContain('{{ else }}');
+        expect(html).toContain('{{ end }}');
+        const b = branches(html);
+        const has = (part: string, value: string) => part.includes(value) || part.includes(escapeHtml(value));
+        for (const key of Object.keys(frFlat).filter((k) => k.startsWith('email.') && k !== 'email.subject')) {
+          expect(has(b.fr, frFlat[key]), `fr branch has fr:${key}`).toBe(true);
+          expect(has(b.nl, flat[key]), `nl branch has nl:${key}`).toBe(true);
+          expect(has(b.fallback, frFlat[key]) && has(b.fallback, flat[key]), `fallback has both:${key}`).toBe(true);
+        }
+        expect(has(b.fr, flat['email.heading'])).toBe(false);
+        expect(has(b.nl, frFlat['email.heading'])).toBe(false);
+        for (const part of [b.fr, b.nl]) {
+          expect(part.match(/\{\{ \.ConfirmationURL \}\}/g)?.length).toBe(1);
+          expect(part.match(/\{\{ \.Token \}\}/g)?.length).toBe(1);
+        }
       });
     }
 

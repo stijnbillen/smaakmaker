@@ -20,14 +20,24 @@ const block = (texts) => `<h1 style="font-family:Georgia,'Times New Roman',serif
     <p style="font-size:32px;font-weight:600;letter-spacing:6px;margin:8px 0 24px;">{{ .Token }}</p>
     <p style="color:#6b5648;font-size:14px;">${esc(texts['email.ignore'])}</p>`;
 
+// T-027 / R-027: the template follows user_metadata.lang (set by the invitation): "fr" gives the French block,
+// "nl" the Dutch block, anything else (existing users without a language) the bilingual mail, Dutch first.
 const html = `<!doctype html>
 <html lang="nl">
   <body style="margin:0;padding:24px;background:#fbf5ea;color:#2b1d14;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;line-height:1.45;">
+    {{ if eq .Data.lang "fr" }}
+    <div lang="fr">
+    ${block(fr)}
+    </div>
+    {{ else if eq .Data.lang "nl" }}
+    ${block(nl)}
+    {{ else }}
     ${block(nl)}
     <hr style="border:0;border-top:1px solid #d9ccb6;margin:32px 0;">
     <div lang="fr">
     ${block(fr)}
     </div>
+    {{ end }}
   </body>
 </html>
 `;

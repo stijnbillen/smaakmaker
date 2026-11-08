@@ -2,22 +2,25 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import fr from '../../src/i18n/fr.json' with { type: 'json' };
 import nl from '../../src/i18n/nl.json' with { type: 'json' };
 import { waitForMail } from '../helpers/mailpit';
-import { backdateCodes, inviteValidAt, inviteValidAtUnknown, userExists, userIdByEmail } from '../helpers/pg';
+import { authUser, backdateCodes, userExists, userIdByEmail } from '../helpers/pg';
 import {
   adminClient,
   anonClient,
   assertSupabaseUp,
-  createInvite,
+  createInvitation,
   createTestUser,
+  deleteInvitations,
   deleteTestUser,
+  getInvitation,
+  requestInviteMail,
   uniqueEmail,
   validRecipe,
   type TestUser,
 } from '../helpers/supabase-admin';
 
-// T-003 / R-002. Everything runs against the local Supabase; mails come from the local Mailpit.
+// T-003 / R-002, changed by T-027 / R-027: the invite codes are gone, an invitation is a row per e-mail address.
+// Everything runs against the local Supabase; mails come from the local Mailpit.
 const createdEmails: string[] = [];
-const createdCodes: string[] = [];
 const users: TestUser[] = [];
 
 function newEmail(label: string): string {
@@ -26,41 +29,16 @@ function newEmail(label: string): string {
   return e;
 }
 
-async function newInvite(opts: { createdAt?: Date } = {}): Promise<string> {
-  const code = await createInvite(opts);
-  createdCodes.push(code);
-  return code;
-}
-
-/** Asks for a mail as the app does for a new account. */
-function requestNewAccount(email: string, inviteCode?: string) {
-  return anonClient().auth.signInWithOtp({
-    email,
-    options: { shouldCreateUser: true, ...(inviteCode ? { data: { invite_code: inviteCode } } : {}) },
-  });
-}
-
-async function codeUsedBy(code: string): Promise<string | null> {
-  const r = await adminClient().from('invites').select('used_by').eq('code', code).single();
-  expect(r.error).toBeNull();
-  return (r.data as { used_by: string | null }).used_by;
-}
-
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /** Subject is "{nl} / {fr}"; the Dutch heading comes first in the body; link and code are there. */
 function expectBilingual(mail: Awaited<ReturnType<typeof waitForMail>>) {
   expect(mail.subject).toBe(`${nl['email.subject']} / ${fr['email.subject']}`);
-  const body = `${mail.html}\n${mail.text}`;
-  const nlAt = Math.max(body.indexOf(nl['email.heading']), body.indexOf(escapeHtml(nl['email.heading'])));
-  const frAt = Math.max(body.indexOf(fr['email.heading']), body.indexOf(escapeHtml(fr['email.heading'])));
-  expect(nlAt).toBeGreaterThanOrEqual(0);
-  expect(frAt).toBeGreaterThanOrEqual(0);
-  // Compare within the HTML part only: that is where both blocks are laid out in order.
   const html = mail.html;
   const h = (s: string) => Math.max(html.indexOf(s), html.indexOf(escapeHtml(s)));
   expect(h(nl['email.heading'])).toBeGreaterThanOrEqual(0);
+  expect(h(fr['email.heading'])).toBeGreaterThanOrEqual(0);
   expect(h(nl['email.heading'])).toBeLessThan(h(fr['email.heading']));
   expect(mail.link).not.toBeNull();
   expect(mail.codes.length).toBeGreaterThan(0);
@@ -77,76 +55,70 @@ afterAll(async () => {
     const id = await userIdByEmail(e);
     if (id) await admin.auth.admin.deleteUser(id);
   }
-  for (const c of createdCodes) await admin.from('invites').delete().eq('code', c);
+  await deleteInvitations(createdEmails);
 });
 
-describe('no account without a valid invite code (R-002 crit. 1)', () => {
-  it('OTP request with an unknown code creates no user', async () => {
-    const email = newEmail('unknown');
-    await requestNewAccount(email, 'ONBEKENDE-CODE-123');
+describe('no account without a valid invitation (R-002 crit. 1, R-027)', () => {
+  it('OTP request for an address without invitation creates no user', async () => {
+    const email = newEmail('zonder');
+    await requestInviteMail(email);
     expect(await userExists(email)).toBe(false);
   });
 
-  it('OTP request without a code creates no user', async () => {
-    const email = newEmail('nocode');
-    await requestNewAccount(email);
+  it('OTP request for an address whose invitation is 7 days and 1 second old creates no user', async () => {
+    const email = newEmail('verlopen');
+    await createInvitation(email, { sentAt: new Date(Date.now() - (7 * 24 * 3600 + 1) * 1000) });
+    await requestInviteMail(email);
     expect(await userExists(email)).toBe(false);
   });
 
-  it('OTP request with an already used code creates no user', async () => {
-    const owner = await createTestUser('owner'); // spends its own invite
-    users.push(owner);
-    const email = newEmail('used');
-    await requestNewAccount(email, owner.inviteCode);
-    expect(await userExists(email)).toBe(false);
-  });
-
-  it('the trigger also refuses admin.createUser without a valid code', async () => {
+  it('the trigger also refuses admin.createUser without an invitation, and with an expired one', async () => {
     const admin = adminClient();
-    const noCode = newEmail('admin-nocode');
-    const r1 = await admin.auth.admin.createUser({ email: noCode, email_confirm: true });
+    const none = newEmail('admin-zonder');
+    const r1 = await admin.auth.admin.createUser({ email: none, email_confirm: true });
     expect(r1.error).not.toBeNull();
-    expect(await userExists(noCode)).toBe(false);
+    expect(await userExists(none)).toBe(false);
 
-    const bad = newEmail('admin-badcode');
-    const r2 = await admin.auth.admin.createUser({
-      email: bad,
-      email_confirm: true,
-      user_metadata: { invite_code: 'BESTAAT-NIET' },
-    });
+    const old = newEmail('admin-oud');
+    await createInvitation(old, { sentAt: new Date(Date.now() - (7 * 24 * 3600 + 1) * 1000) });
+    const r2 = await admin.auth.admin.createUser({ email: old, email_confirm: true });
     expect(r2.error).not.toBeNull();
-    expect(await userExists(bad)).toBe(false);
+    expect(await userExists(old)).toBe(false);
   });
 
-  it('a valid code creates the user; after confirmation the code is used by that user', async () => {
-    const code = await newInvite();
-    const email = newEmail('valid');
+  it('a valid invitation creates an unconfirmed user; after confirmation the invitation counts as accepted by that user', async () => {
+    const email = newEmail('geldig');
+    await createInvitation(email);
     const sent = Date.now();
-    const res = await requestNewAccount(email, code);
+    const res = await requestInviteMail(email);
     expect(res.error).toBeNull();
     expect(await userExists(email)).toBe(true);
-    // a typo in the address must not burn the code: still unused before confirmation
-    expect(await codeUsedBy(code)).toBeNull();
+    // a typo in the address must not burn the invitation: still open before confirmation
+    expect((await getInvitation(email))?.accepted_at).toBeNull();
 
     const mail = await waitForMail(email, { sinceMs: sent });
-    const client = anonClient();
-    const verified = await client.auth.verifyOtp({ email, token: mail.codes[0], type: 'email' });
+    const verified = await anonClient().auth.verifyOtp({ email, token: mail.codes[0], type: 'email' });
     expect(verified.error).toBeNull();
     expect(verified.data.session).not.toBeNull();
-    expect(await codeUsedBy(code)).toBe(verified.data.user!.id);
+    const row = await getInvitation(email);
+    expect(row?.accepted_at).not.toBeNull();
+    expect(row?.accepted_by).toBe(verified.data.user!.id);
   });
 
-  // R-026 crit. 6: the mail is bilingual, Dutch first; subject "{nl} / {fr}".
-  it('the mail for a new account has the combined subject and the Dutch heading before the French one', async () => {
-    const code = await newInvite();
-    const email = newEmail('bilingual');
+  it('an invitation can be accepted once: a second confirmation for the same address makes no second account', async () => {
+    const email = newEmail('eenmalig');
+    await createInvitation(email);
     const sent = Date.now();
-    expect((await requestNewAccount(email, code)).error).toBeNull();
+    expect((await requestInviteMail(email)).error).toBeNull();
     const mail = await waitForMail(email, { sinceMs: sent });
-    expectBilingual(mail);
+    const ok = await anonClient().auth.verifyOtp({ email, token: mail.codes[0], type: 'email' });
+    expect(ok.error).toBeNull();
+    const accounts = await adminClient().auth.admin.listUsers({ perPage: 1000 });
+    expect(accounts.data.users.filter((u) => u.email === email)).toHaveLength(1);
   });
 
-  it('the mail for an existing account (magic link template) is bilingual too', async () => {
+  // R-026 crit. 6: the mail is bilingual, Dutch first; subject "{nl} / {fr}" (for users without a language).
+  it('the mail for an existing account (magic link template) is bilingual: Dutch heading before the French one', async () => {
     const user = await createTestUser('bilingualold');
     users.push(user);
     const sent = Date.now();
@@ -156,171 +128,18 @@ describe('no account without a valid invite code (R-002 crit. 1)', () => {
     expectBilingual(mail);
   });
 
-  it('check_invite answers only yes or no, for the public roles', async () => {
-    const fresh = await newInvite();
-    const owner = await createTestUser('checkowner');
-    users.push(owner);
-    const anon = anonClient();
-    const ok = await anon.rpc('check_invite', { code: fresh });
-    expect(ok.error).toBeNull();
-    expect(ok.data).toBe(true);
-    const unknown = await anon.rpc('check_invite', { code: 'ONBEKEND-XYZ' });
-    expect(unknown.data).toBe(false);
-    const used = await anon.rpc('check_invite', { code: owner.inviteCode });
-    expect(used.data).toBe(false);
-  });
-});
-
-describe('invite is single use and expires after 7 days (R-002 crit. 2)', () => {
-  it('invite_is_valid_at: exactly 7 x 24 h is still valid, 1 second later is not', async () => {
-    const code = await newInvite();
-    expect(await inviteValidAt(code, '7 days')).toBe(true);
-    expect(await inviteValidAt(code, '7 days 1 second')).toBe(false);
-    expect(await inviteValidAt(code, '0 seconds')).toBe(true);
-  });
-
-  it('invite_is_valid_at: unknown and used codes are never valid', async () => {
-    expect(await inviteValidAtUnknown('ONBEKEND-XYZ')).toBe(false);
-    const owner = await createTestUser('spent');
-    users.push(owner);
-    expect(await inviteValidAt(owner.inviteCode, '0 seconds')).toBe(false);
-  });
-
-  it('a code created 7 days and 1 second ago is refused when making an account', async () => {
-    const code = await newInvite({ createdAt: new Date(Date.now() - (7 * 24 * 3600 + 1) * 1000) });
-    const viaApi = newEmail('expired-otp');
-    await requestNewAccount(viaApi, code);
-    expect(await userExists(viaApi)).toBe(false);
-
-    const viaAdmin = newEmail('expired-admin');
-    const r = await adminClient().auth.admin.createUser({
-      email: viaAdmin,
-      email_confirm: true,
-      user_metadata: { invite_code: code },
-    });
-    expect(r.error).not.toBeNull();
-    expect(await userExists(viaAdmin)).toBe(false);
-  });
-
-  it('two requests with one code: the first to confirm gets the account, the second stays without session', async () => {
-    const code = await newInvite();
-    const first = newEmail('race1');
-    const second = newEmail('race2');
+  // R-027 crit. 3: the template follows user_metadata.lang; the invited user has it from the invitation mail.
+  it('a new invited user with lang fr gets a mail with the French block and without the Dutch heading', async () => {
+    const email = newEmail('frmail');
+    await createInvitation(email, { lang: 'fr' });
     const sent = Date.now();
-    expect((await requestNewAccount(first, code)).error).toBeNull();
-    expect((await requestNewAccount(second, code)).error).toBeNull();
-    const mail1 = await waitForMail(first, { sinceMs: sent });
-    const mail2 = await waitForMail(second, { sinceMs: sent });
-
-    const c1 = anonClient();
-    const ok = await c1.auth.verifyOtp({ email: first, token: mail1.codes[0], type: 'email' });
-    expect(ok.error).toBeNull();
-    expect(ok.data.session).not.toBeNull();
-
-    const c2 = anonClient();
-    const late = await c2.auth.verifyOtp({ email: second, token: mail2.codes[0], type: 'email' });
-    expect(late.error).not.toBeNull();
-    expect(late.data.session).toBeNull();
-    expect((await c2.auth.getSession()).data.session).toBeNull();
-    expect(await codeUsedBy(code)).toBe(ok.data.user!.id);
+    expect((await requestInviteMail(email, 'fr')).error).toBeNull();
+    expect((await authUser(email))?.lang).toBe('fr');
+    const mail = await waitForMail(email, { sinceMs: sent });
+    const has = (s: string) => mail.html.includes(s) || mail.html.includes(escapeHtml(s));
+    expect(has(fr['email.heading'])).toBe(true);
+    expect(has(nl['email.heading'])).toBe(false);
   });
-
-  // Review T-003 finding 1: the loser of a race (or anyone whose first code got spent/expired before
-  // confirming) must not stay locked out; a new request with a new valid code must give an account.
-  it('a loser of the race can still sign up later with a new valid code', async () => {
-    const codeA = await newInvite();
-    const codeB = await newInvite();
-    const winner = newEmail('retry-winner');
-    const loser = newEmail('retry-loser');
-    const sent = Date.now();
-    expect((await requestNewAccount(winner, codeA)).error).toBeNull();
-    expect((await requestNewAccount(loser, codeA)).error).toBeNull();
-    const winMail = await waitForMail(winner, { sinceMs: sent });
-    const loseMail = await waitForMail(loser, { sinceMs: sent });
-
-    const win = await anonClient().auth.verifyOtp({ email: winner, token: winMail.codes[0], type: 'email' });
-    expect(win.error).toBeNull();
-    const late = await anonClient().auth.verifyOtp({ email: loser, token: loseMail.codes[0], type: 'email' });
-    expect(late.error).not.toBeNull();
-    expect(await codeUsedBy(codeA)).toBe(win.data.user!.id);
-
-    // second attempt with a fresh code
-    const sent2 = Date.now();
-    expect((await requestNewAccount(loser, codeB)).error).toBeNull();
-    const mail2 = await waitForMail(loser, { sinceMs: sent2 });
-    const retry = await anonClient().auth.verifyOtp({ email: loser, token: mail2.codes[0], type: 'email' });
-    expect(retry.error).toBeNull();
-    expect(retry.data.session).not.toBeNull();
-    expect(await codeUsedBy(codeB)).toBe(retry.data.user!.id);
-  });
-
-  // Review T-003 round 2, finding A: expiry has no database event, so the invite must run out by time
-  // alone (no UPDATE on invites: that would fire the cleanup trigger and hide the client path).
-  // Code A is valid for ~7 s after its first request, then expires while the user is still unconfirmed.
-  async function expireWithoutEvent(email: string) {
-    const codeA = await newInvite({ createdAt: new Date(Date.now() - 7 * 24 * 3600 * 1000 + 7000) });
-    const codeB = await newInvite();
-    const sent = Date.now();
-    expect((await requestNewAccount(email, codeA)).error).toBeNull();
-    expect(await userExists(email)).toBe(true); // created while A was still valid
-    await waitForMail(email, { sinceMs: sent });
-    const wait = Date.now() - sent;
-    await new Promise((r) => setTimeout(r, Math.max(0, 8000 - wait))); // past the 7-day edge
-    return { codeA, codeB };
-  }
-
-  it('a code that expired between request and confirmation does not lock the address out (client path)', async () => {
-    const email = newEmail('retry-expired');
-    const { codeA, codeB } = await expireWithoutEvent(email);
-
-    // exactly what requestCode in src/lib/auth.ts does: check, refresh_pending_invite, then the OTP request
-    const anon = anonClient();
-    expect((await anon.rpc('check_invite', { code: codeB })).data).toBe(true);
-    const refresh = await anon.rpc('refresh_pending_invite', { p_email: email, p_code: codeB });
-    expect(refresh.error).toBeNull();
-
-    const sent2 = Date.now();
-    expect((await requestNewAccount(email, codeB)).error).toBeNull();
-    const mail2 = await waitForMail(email, { sinceMs: sent2 });
-    const ok = await anonClient().auth.verifyOtp({ email, token: mail2.codes[0], type: 'email' });
-    expect(ok.error).toBeNull();
-    expect(ok.data.session).not.toBeNull();
-    expect(await codeUsedBy(codeB)).toBe(ok.data.user!.id);
-    expect(await codeUsedBy(codeA)).toBeNull();
-  }, 40_000);
-
-  // Review T-003 round 3, finding C: cleanup is per address. Another unconfirmed address whose code also
-  // expired must stay untouched when someone else refreshes theirs.
-  it('refresh_pending_invite leaves an unconfirmed user on another address alone', async () => {
-    const other = newEmail('retry-expired-other');
-    const mine = newEmail('retry-expired-mine');
-    const codeOther = await newInvite({ createdAt: new Date(Date.now() - 7 * 24 * 3600 * 1000 + 7000) });
-    const codeMine = await newInvite({ createdAt: new Date(Date.now() - 7 * 24 * 3600 * 1000 + 7000) });
-    const codeNew = await newInvite();
-    const sent = Date.now();
-    expect((await requestNewAccount(other, codeOther)).error).toBeNull();
-    expect((await requestNewAccount(mine, codeMine)).error).toBeNull();
-    expect(await userExists(other)).toBe(true);
-    expect(await userExists(mine)).toBe(true);
-    await new Promise((r) => setTimeout(r, Math.max(0, 8000 - (Date.now() - sent)))); // both codes expired now
-
-    const refresh = await anonClient().rpc('refresh_pending_invite', { p_email: mine, p_code: codeNew });
-    expect(refresh.error).toBeNull();
-    expect(await userExists(other)).toBe(true); // untouched: different address
-  }, 40_000);
-
-  // Negative control: proves the test above depends on refresh_pending_invite. Without the call the
-  // stale pending user keeps code A and cannot confirm; that is the lock-out the fix removes.
-  it('control: without refresh_pending_invite the expired pending address stays locked', async () => {
-    const email = newEmail('retry-expired-ctl');
-    const { codeB } = await expireWithoutEvent(email);
-    const sent2 = Date.now();
-    await requestNewAccount(email, codeB);
-    const mail2 = await waitForMail(email, { sinceMs: sent2 });
-    const r = await anonClient().auth.verifyOtp({ email, token: mail2.codes[0], type: 'email' });
-    expect(r.data.session).toBeNull();
-    expect(await codeUsedBy(codeB)).toBeNull();
-  }, 40_000);
 });
 
 describe('display name 2 to 40 characters (R-002 crit. 3)', () => {
@@ -403,31 +222,31 @@ describe('nothing readable or writable without signing in (R-002 crit. 5)', () =
     expect(r.error).not.toBeNull();
   });
 
-  it('invites is fully closed for the anonymous role', async () => {
+  it('invitations is closed for the anonymous role: no read, no insert, no update', async () => {
     const anon = anonClient();
-    expect((await anon.from('invites').select('*')).data ?? []).toHaveLength(0);
-    expect((await anon.from('invites').insert({ code: 'ANONIEMECODE1' })).error).not.toBeNull();
-    expect((await anon.from('invites').update({ used_by: u.id }).eq('code', u.inviteCode)).error).not.toBeNull();
-    const check = await adminClient().from('invites').select('used_by').eq('code', u.inviteCode).single();
-    expect(check.data?.used_by).toBe(u.id);
+    const before = await getInvitation(u.email);
+    expect((await anon.from('invitations').select('*')).data ?? []).toHaveLength(0);
+    expect((await anon.from('invitations').insert({ email: newEmail('anoniem') })).error).not.toBeNull();
+    const upd = await anon.from('invitations').update({ accepted_by: null }).eq('email', u.email).select();
+    expect(upd.data ?? []).toHaveLength(0);
+    expect(await getInvitation(u.email)).toEqual(before);
   });
 
-  it('invites is closed for signed-in users too: no read, no insert', async () => {
-    expect((await u.client.from('invites').select('*')).data ?? []).toHaveLength(0);
-    const ins = await u.client.from('invites').insert({ code: 'EIGENCODE1234' });
+  it('invitations is closed for signed-in users too: no read, no insert', async () => {
+    expect((await u.client.from('invitations').select('*')).data ?? []).toHaveLength(0);
+    const ins = await u.client.from('invitations').insert({ email: newEmail('eigen') });
     expect(ins.error).not.toBeNull();
   });
 });
 
 describe('the mail has the link and a 6-digit code (R-002 crit. 6)', () => {
   it('new user: confirmation mail with a /auth/v1/verify link and one distinct 6-digit code', async () => {
-    const code = await newInvite();
     const email = newEmail('mail-new');
+    await createInvitation(email);
     const sent = Date.now();
-    expect((await requestNewAccount(email, code)).error).toBeNull();
+    expect((await requestInviteMail(email)).error).toBeNull();
     const mail = await waitForMail(email, { sinceMs: sent });
     expect(mail.link).toMatch(/\/auth\/v1\/verify/);
-    // the bilingual mail repeats the same code once per language
     expect(new Set(mail.codes).size).toBe(1);
     expect(mail.codes[0]).toMatch(/^\d{6}$/);
   });

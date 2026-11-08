@@ -78,34 +78,117 @@ export function uniqueEmail(label: string): string {
   return `${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.test`;
 }
 
-// Invite code alphabet without look-alike characters (T-003 risk: codes must be long and random).
-const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+// T-027 / R-027: invitations are per e-mail address (the invite codes of T-003 are gone).
+// The tables are closed for anon and authenticated, so tests prepare and read them with the service client.
 
-export function randomInviteCode(length = 12): string {
-  let out = '';
-  for (let i = 0; i < length; i++) out += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)];
-  return out;
+/** Invitation row as the database stores it (only the columns the tests read). */
+export interface InvitationRow {
+  email: string;
+  invited_by: string | null;
+  lang: string | null;
+  sent_at: string;
+  accepted_at: string | null;
+  accepted_by: string | null;
 }
 
+/** Normalised address, the way the database stores it. */
+export const normalizeEmail = (email: string): string => email.trim().toLowerCase();
+
 /**
- * Creates an invite through the service client (invites is closed for the public roles).
- * `createdAt` back-dates it (expiry runs 7 days from there); `usedBy` marks it as spent by that user.
- * The update for `usedBy` fires the invite sweep trigger, so only pass confirmed users.
+ * Puts an invitation row in place through the service client.
+ * `sentAt` back-dates it (validity runs 7 days from there).
  */
-export async function createInvite(opts: { createdAt?: Date; usedBy?: string } = {}): Promise<string> {
-  const code = randomInviteCode();
-  const row: Record<string, unknown> = { code };
-  if (opts.createdAt) row.created_at = opts.createdAt.toISOString();
-  const ins = await adminClient().from('invites').insert(row);
+export async function createInvitation(
+  email: string,
+  opts: { sentAt?: Date; invitedBy?: string; lang?: 'nl' | 'fr' } = {},
+): Promise<void> {
+  const row: Record<string, unknown> = { email: normalizeEmail(email) };
+  if (opts.sentAt) row.sent_at = opts.sentAt.toISOString();
+  if (opts.invitedBy) row.invited_by = opts.invitedBy;
+  if (opts.lang) row.lang = opts.lang;
+  const ins = await adminClient().from('invitations').insert(row);
   if (ins.error) throw ins.error;
-  if (opts.usedBy) {
-    const upd = await adminClient()
-      .from('invites')
-      .update({ used_by: opts.usedBy, used_at: new Date().toISOString() })
-      .eq('code', code);
-    if (upd.error) throw upd.error;
-  }
-  return code;
+}
+
+/** Reads one invitation (or null) with the service client. */
+export async function getInvitation(email: string): Promise<InvitationRow | null> {
+  const res = await adminClient()
+    .from('invitations')
+    .select('email,invited_by,lang,sent_at,accepted_at,accepted_by')
+    .eq('email', normalizeEmail(email))
+    .maybeSingle();
+  if (res.error) throw res.error;
+  return (res.data as InvitationRow | null) ?? null;
+}
+
+/** Moves the `sent_at` of an invitation (service role), to test the 7-day edge. */
+export async function setInvitationSentAt(email: string, sentAt: Date): Promise<void> {
+  const upd = await adminClient()
+    .from('invitations')
+    .update({ sent_at: sentAt.toISOString() })
+    .eq('email', normalizeEmail(email))
+    .select('email');
+  if (upd.error) throw upd.error;
+  if ((upd.data ?? []).length !== 1) throw new Error(`invitation for ${email} not found`);
+}
+
+/** Number of rows in invitation_sends for an administrator (the 20-per-24-hours counter). */
+export async function countInvitationSends(adminId: string): Promise<number> {
+  const res = await adminClient().from('invitation_sends').select('id', { count: 'exact', head: true }).eq('admin_id', adminId);
+  if (res.error) throw res.error;
+  return res.count ?? 0;
+}
+
+/** Number of invitation_sends rows for an address. */
+export async function countSendsTo(email: string): Promise<number> {
+  const res = await adminClient()
+    .from('invitation_sends')
+    .select('id', { count: 'exact', head: true })
+    .eq('email', normalizeEmail(email));
+  if (res.error) throw res.error;
+  return res.count ?? 0;
+}
+
+/** Number of rows in invitations (service role). */
+export async function countInvitations(): Promise<number> {
+  const res = await adminClient().from('invitations').select('email', { count: 'exact', head: true });
+  if (res.error) throw res.error;
+  return res.count ?? 0;
+}
+
+/** Fills the send counter of an administrator: `count` sends, all made at `sentAt` (default: now). */
+export async function seedInvitationSends(adminId: string, count: number, sentAt: Date = new Date()): Promise<void> {
+  const rows = Array.from({ length: count }, () => ({
+    admin_id: adminId,
+    email: uniqueEmail('seed'),
+    sent_at: sentAt.toISOString(),
+  }));
+  const ins = await adminClient().from('invitation_sends').insert(rows);
+  if (ins.error) throw ins.error;
+}
+
+/** The mail request the app's invite mailer does: public key only, creates the user when an invitation exists. */
+export function requestInviteMail(email: string, lang: 'nl' | 'fr' = 'nl') {
+  return anonClient().auth.signInWithOtp({ email, options: { shouldCreateUser: true, data: { lang } } });
+}
+
+/** Calls an invitation function as the given signed-in (or anonymous) client. Parameter names: p_email, p_lang. */
+export function inviteRpc(
+  client: SupabaseClient,
+  fn: 'invite_user' | 'resend_invitation',
+  email: string,
+  lang: 'nl' | 'fr' = 'nl',
+) {
+  return client.rpc(fn, { p_email: email, p_lang: lang });
+}
+
+/** Removes invitations and send records for addresses (cleanup; the users themselves are removed elsewhere). */
+export async function deleteInvitations(emails: string[]): Promise<void> {
+  const list = emails.map(normalizeEmail);
+  if (list.length === 0) return;
+  const admin = adminClient();
+  await admin.from('invitation_sends').delete().in('email', list);
+  await admin.from('invitations').delete().in('email', list);
 }
 
 /** Makes a user administrator the way the app never can: a direct insert with the service client. */
@@ -118,8 +201,6 @@ export interface TestUser {
   id: string;
   email: string;
   password: string;
-  /** The invite code that was spent on this user. */
-  inviteCode: string;
   displayName: string | null;
   /** Client signed in as this user, using only the public key. */
   client: SupabaseClient;
@@ -127,7 +208,8 @@ export interface TestUser {
 }
 
 /**
- * Creates a confirmed user the way the invite trigger demands (valid invite in user_metadata).
+ * Creates a confirmed user the way the invite trigger demands (an invitation row for the address;
+ * a user created already confirmed accepts it at once).
  * `displayName: null` gives a user who has not chosen a name yet (lands on /welkom).
  */
 export async function createTestUser(
@@ -137,12 +219,11 @@ export async function createTestUser(
   const admin = adminClient();
   const email = uniqueEmail(label);
   const password = `pw-${Math.random().toString(36).slice(2)}-Aa1!`;
-  const inviteCode = await createInvite();
+  await createInvitation(email);
   const created = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
-    user_metadata: { invite_code: inviteCode },
   });
   if (created.error || !created.data.user) throw created.error ?? new Error('createUser failed');
   const displayName = opts.displayName === undefined ? `Test ${label}` : opts.displayName;
@@ -157,7 +238,6 @@ export async function createTestUser(
     id: created.data.user.id,
     email,
     password,
-    inviteCode,
     displayName,
     client,
     session: signedIn.data.session,
@@ -282,6 +362,7 @@ export async function deleteTestUser(user: TestUser): Promise<void> {
   for (const row of mine.data ?? []) await removeRecipeFiles((row as { id: string }).id);
   // recipes.author_id references auth.users; remove rows first in case there is no cascade.
   await admin.from('recipes').delete().eq('author_id', user.id);
+  await admin.from('invitation_sends').delete().eq('admin_id', user.id);
   await admin.auth.admin.deleteUser(user.id);
-  await admin.from('invites').delete().eq('code', user.inviteCode);
+  await deleteInvitations([user.email]);
 }

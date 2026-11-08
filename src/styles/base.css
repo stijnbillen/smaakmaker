@@ -676,25 +676,14 @@ textarea[aria-invalid='true'] {
   border-radius: var(--radius-md);
 }
 
-.invite-code {
-  font-family: var(--font-mono);
-  font-size: var(--font-size-lg);
-  font-weight: 700;
-  letter-spacing: 0.08em;
+.invite-form {
+  display: grid;
+  gap: var(--space-3);
 }
 
-.invite-status {
-  padding: 0 var(--space-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  font-size: var(--font-size-sm);
+.invite-email {
   font-weight: 600;
-  background: var(--color-bg-sunken);
-}
-
-.invite-status--open {
-  color: var(--color-text-accent);
-  border-color: var(--color-accent);
+  overflow-wrap: anywhere;
 }
 
 .invite-meta {
@@ -703,8 +692,12 @@ textarea[aria-invalid='true'] {
   color: var(--color-text-muted);
 }
 
-.invite-copy {
-  margin-left: auto;
+.invite-actions {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
 
 /* List states */

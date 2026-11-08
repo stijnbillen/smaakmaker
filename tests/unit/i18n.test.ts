@@ -124,8 +124,12 @@ describe('nl.json and fr.json are in line (R-026 crit. 1)', () => {
 describe('nl.json stays as before T-018 (R-023 crit. 8)', () => {
   it('every existing key has exactly the same value; new keys are allowed', () => {
     const now = nl as TextMap;
+    // T-027 (R-027) replaces the invitation codes by e-mail invitations: those invites.* keys
+    // are removed or reworded on purpose. Every other key must still be untouched.
+    const replacedByT027 = (k: string) =>
+      /^invites\.(new|copy|copied|usedBy|unknownUser|expiresOn|empty|status\..+)$/.test(k);
     const changed = Object.entries(nlBefore as TextMap)
-      .filter(([k, v]) => now[k] !== v)
+      .filter(([k, v]) => !replacedByT027(k) && now[k] !== v)
       .map(([k]) => k);
     expect(changed).toEqual([]);
   });
@@ -192,17 +196,32 @@ describe('no literal visible text in components (R-023 crit. 5)', () => {
     expect(leaked).toEqual([]);
   });
 
-  it('invite status from the database is shown only through invites.status.* keys', () => {
-    // The status words come from the database ("open"/"gebruikt"/"verlopen"); they must never be rendered as they are.
-    for (const f of SRC.filter((p) => /[\\/](pages|components)[\\/]/.test(p))) {
-      const code = readFileSync(f, 'utf8');
-      expect(code, f).not.toMatch(/\{\s*invite\.status\s*\}/);
-      expect(code, f).not.toMatch(/\{\s*status\s*\}/);
+  // T-027 / R-027: the code screen is replaced by the e-mail screen; old keys out, new keys in both languages.
+  it('the invite texts of the e-mail screen exist in both languages and the code texts are gone', () => {
+    for (const k of [
+      'invites.emailLabel',
+      'invites.submit',
+      'invites.sent',
+      'invites.sentOn',
+      'invites.validUntil',
+      'invites.resend',
+      'invites.revoke',
+      'invites.revokeQuestion',
+      'invites.revokeConfirm',
+      'invites.invalidEmail',
+      'invites.alreadyMember',
+      'invites.rateLimited',
+      'invites.mailFailed',
+      'invites.error',
+    ]) {
+      expect((nl as TextMap)[k], `nl ${k}`).toBeTruthy();
+      expect((fr as TextMap)[k], `fr ${k}`).toBeTruthy();
     }
-    for (const k of ['open', 'used', 'expired']) {
-      expect((nl as TextMap)[`invites.status.${k}`], k).toBeTruthy();
-      expect((fr as TextMap)[`invites.status.${k}`], k).toBeTruthy();
+    for (const k of ['new', 'copy', 'copied', 'usedBy', 'unknownUser', 'expiresOn', 'status.open', 'status.used', 'status.expired']) {
+      expect((nl as TextMap)[`invites.${k}`], `nl ${k}`).toBeUndefined();
+      expect((fr as TextMap)[`invites.${k}`], `fr ${k}`).toBeUndefined();
     }
+    expect((nl as TextMap)['invites.empty']).toBe('Geen openstaande uitnodigingen.');
   });
 });
 

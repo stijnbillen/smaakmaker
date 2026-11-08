@@ -68,14 +68,34 @@ export async function backdateCodes(email: string): Promise<void> {
   }
 }
 
-/** Calls the pure validity function; `offset` is an SQL interval added to the invite's created_at. */
-export async function inviteValidAt(code: string, offset: string): Promise<boolean> {
+/**
+ * T-027: calls the pure validity function for the invitation of `email`;
+ * `offset` is an SQL interval added to its sent_at (e.g. '7 days', '7 days 1 second').
+ */
+export async function invitationValidAt(email: string, offset: string): Promise<boolean> {
   const rows = await sql<{ v: boolean }>(
-    `select public.invite_is_valid_at(code, created_at + interval ${lit(offset)}) as v
-     from public.invites where code = ${lit(code)}`,
+    `select public.invitation_is_valid_at(email, sent_at + interval ${lit(offset)}) as v
+     from public.invitations where email = ${lit(email)}`,
   );
-  if (rows.length !== 1) throw new Error(`invite ${code} niet gevonden`);
+  if (rows.length !== 1) throw new Error(`invitation ${email} niet gevonden`);
   return rows[0].v;
+}
+
+/** Same function with an explicit moment (ISO string), e.g. the sent_at from before a resend. */
+export async function invitationValidAtMoment(email: string, at: string): Promise<boolean> {
+  const rows = await sql<{ v: boolean }>(
+    `select public.invitation_is_valid_at(${lit(email)}, ${lit(at)}::timestamptz) as v`,
+  );
+  return rows[0].v;
+}
+
+/** auth.users facts of an address, or null when there is no such user. */
+export async function authUser(email: string): Promise<{ id: string; confirmed: boolean; lang: string | null } | null> {
+  const rows = await sql<{ id: string; confirmed: boolean; lang: string | null }>(
+    `select id, email_confirmed_at is not null as confirmed, raw_user_meta_data->>'lang' as lang
+     from auth.users where email = ${lit(email)}`,
+  );
+  return rows[0] ?? null;
 }
 
 /**
@@ -93,7 +113,8 @@ export async function setPhotoSize(path: string, bytes: number | null): Promise<
   if (rows.length !== 1) throw new Error(`photo ${path} not found in storage.objects`);
 }
 
-export async function inviteValidAtUnknown(code: string): Promise<boolean> {
-  const rows = await sql<{ v: boolean }>(`select public.invite_is_valid_at(${lit(code)}, now()) as v`);
+/** The validity function for an address without invitation: never valid. */
+export async function invitationValidAtUnknown(email: string): Promise<boolean> {
+  const rows = await sql<{ v: boolean }>(`select public.invitation_is_valid_at(${lit(email)}, now()) as v`);
   return rows[0].v;
 }

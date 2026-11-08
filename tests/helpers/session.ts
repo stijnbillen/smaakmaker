@@ -18,6 +18,11 @@ export async function signInViaStorage(page: Page, session: Session): Promise<vo
   );
 }
 
+/** Chooses the interface language before the app starts (same storage key as src/i18n/language.ts). */
+export async function seedLanguage(page: Page, lang: 'nl' | 'fr'): Promise<void> {
+  await page.addInitScript(([k, v]) => window.localStorage.setItem(k, v), ['smaakmaker.lang', lang] as [string, string]);
+}
+
 /** Opens a screen with the session its route needs (see `AppRoute.auth`). */
 export async function signInForRoute(
   page: Page,
