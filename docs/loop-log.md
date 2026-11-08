@@ -459,3 +459,16 @@
 - 2026-11-07 15:25 T-025 build: worker-crash (geen testfout), opnieuw
 - 2026-11-07 15:35 T-025 build: geslaagd
 - 2026-11-07 15:35 T-025 savepoint: gecommit
+- 2026-11-08 19:22 T-027 analist: KLAAR
+- 2026-11-08 19:28 T-027 tester: KLAAR
+- 2026-11-08 19:37 T-027 ontwikkelaar: BLOKKADE: test tests/unit/i18n.test.ts "nl.json stays as before T-018" eist dat de verwijderde/gewijzigde invites.*-sleutels uit fixture nl-before-T-018.json ongewijzigd blijven, wat T-027 en de eigen test over `invites.new` e.a. tegenspreekt.
+- 2026-11-08 19:37 T-027 tester: KLAAR
+- 2026-11-08 19:39 T-027 ontwikkelaar: KLAAR
+- 2026-11-08 19:49 T-027 build: geslaagd
+- 2026-11-08 19:51 T-027 reviewer: BEVINDINGEN: 0/1
+- 2026-11-08 19:51 T-027 tester: KLAAR
+- 2026-11-08 19:51 T-027 ontwikkelaar: KLAAR
+- 2026-11-08 20:01 T-027 build: geslaagd
+- 2026-11-08 20:03 T-027 reviewer: GOEDGEKEURD
+- 2026-11-08 20:12 T-027 build: mislukt
+- 2026-11-08 20:12 T-027 stop: eindcontrole faalt

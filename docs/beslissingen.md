@@ -417,3 +417,13 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **`recipes_check_catalog_refs` neemt `for key share`** op het item, zodat een gelijktijdig opgeslagen recept niet naar een item verwijst dat net verdwijnt.
 - **Samenvoegen kiest B in dezelfde lijst:** na "Samenvoegen met…" wordt de lijst (zonder A) de keuze van B; tikken op een item opent de bevestiging. Annuleren laat B gekozen, met een knop "Samenvoegen met B" om opnieuw te bevestigen.
 - **Lijst toont 40 items per keer ("Toon meer"):** de a11y-test eist dat elk bedienbaar element met Tab bereikbaar is binnen 80 stappen; de volledige lijst (±175) wordt wel in één keer opgehaald. Afwijking van het plan (geen paginering) om die test te halen.
+
+## T-027 — Uitnodigen met e-mailadres
+- **Mail vanuit de browser, zonder geheime sleutel:** na de RPC stuurt een aparte, sessieloze Supabase-client (eigen `storageKey`, anon-sleutel) `signInWithOtp({ shouldCreateUser: true, data: { lang } })`. De sessie van de beheerder blijft ongemoeid. Wie niet is uitgenodigd krijgt geen account: de trigger op `auth.users` weigert dat.
+- **RPC eerst, mail daarna:** mislukt de mail, dan blijft de uitnodiging staan en telt de poging mee; de beheerder ziet `invites.mailFailed` en kan opnieuw mailen.
+- **Foutcodes (SQLSTATE):** `42501` geen beheerder, `IV001` ongeldig adres, `IV002` heeft al een account, `IV003` limiet, `IV004` geen open uitnodiging om opnieuw te mailen.
+- **Limiet 20 per 24 uur per beheerder:** telling over `invitation_sends` onder een `pg_advisory_xact_lock` per beheerder, zodat twee gelijktijdige aanroepen bij 19 niet allebei slagen. De 7 dagen en de 24 uur tellen met de grens inbegrepen.
+- **Vormcheck van het adres in de databank** (`is_valid_email_shape`) heeft dezelfde regex als `isValidEmail`; `normalize_email` trimt alle witruimte en zet kleine letters, zoals de client.
+- **Intrekken** wist de uitnodiging en de onbevestigde gebruiker. Een verlopen of ingetrokken adres opnieuw uitnodigen maakt de rij weer geldig met een nieuwe `sent_at`.
+- **Taal in de mail:** de sjablonen kiezen met `.Data.lang` het Franse, Nederlandse of (zonder taal) tweetalige blok; `invite_user` zet de taal ook bij een al bestaande onbevestigde gebruiker. Het onderwerp blijft tweetalig ("{nl} / {fr}"); per taal sjabloneren is niet geprobeerd.
+- **Oude codes:** de tabel `invites` blijft als archief; onbevestigde gebruikers met een nog geldige code krijgen een rij in `invitations`. Het aanmeldscherm en `auth.ts` kennen nog codes tot de volgende taak: niet online zetten voor die klaar is.

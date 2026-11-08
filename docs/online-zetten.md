@@ -18,7 +18,9 @@ npx supabase db push
 ## 3. Aanmelden instellen (Authentication)
 - URL Configuration: **Site URL** = het adres van de app (stap 5), bv. `https://smaakmaker.pages.dev`. Zet hetzelfde adres in de Redirect URLs.
 - Providers > Email: "Confirm email" aan, OTP-lengte **6**.
-- Email Templates: plak de inhoud van `supabase/templates/confirmation.html` (onderwerp "Je code om aan te melden bij Smaakmaker") en `supabase/templates/magic_link.html` (zelfde onderwerp).
+- Email Templates: plak de inhoud van `supabase/templates/confirmation.html` (onderwerp "Je code om aan te melden bij Smaakmaker") en `supabase/templates/magic_link.html` (zelfde onderwerp). De sjablonen kiezen de taal uit `user_metadata.lang`; maak ze opnieuw met `node scripts/make-email-templates.mjs` na een tekstwijziging.
+- Zet "Allow new users to sign up" (`enable_signup`) aan: de uitnodiging maakt het account via de publieke aanmeldaanroep, en de databank weigert wie niet is uitgenodigd.
+- Eigen SMTP is nodig (stap 4): de standaardmail van Supabase haalt 20 uitnodigingen per dag niet.
 
 ## 4. E-mail via Gmail
 Doe deze stap vóór het sjabloon-deel van stap 3: Supabase Cloud laat je de mailsjablonen pas aanpassen na het instellen van eigen SMTP. Gmail verstuurt zelf en ondertekent de mails, dus ze komen aan (Brevo met een Gmail-adres als afzender wordt geweigerd door Google, Yahoo en Microsoft).
@@ -44,9 +46,9 @@ Cloudflare maakt nieuwe projecten als Worker met statische bestanden. `wrangler.
 
 ## 6. Eerste beheerder
 Zie `docs/beheer.md`. Draai de SQL in de SQL-editor van het Supabase-dashboard:
-1. `insert into public.invites (code) values (public.generate_invite_code()) returning code;`
-2. Meld je in de app aan met die code en je e-mailadres.
+1. `insert into public.invitations (email) values ('jouw@adres.be');` (kleine letters)
+2. Vraag in de app een code aan met dat e-mailadres en meld je aan.
 3. `select public.grant_admin('jouw@adres.be');`
 
 ## 7. Controle op je gsm
-Open het adres, meld je aan, voeg een recept met foto toe, kies "Toevoegen aan startscherm". Maak daarna als beheerder een code aan voor een tweede persoon.
+Open het adres, meld je aan, voeg een recept met foto toe, kies "Toevoegen aan startscherm". Nodig daarna als beheerder een tweede persoon uit met een e-mailadres.
