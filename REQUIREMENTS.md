@@ -59,12 +59,14 @@ Afspraken die voor alle requirements gelden:
   - [ ] De naam van de app in het manifest en op het beginscherm blijft "Smaakmaker".
 - **Buiten scope:** Een snor of tekst in het icoon, een logo in het hoofdscherm, een animatie, een splash-scherm.
 
-### R-002 — Aanmelden met uitnodigingscode
+### R-002 — Aanmelden met e-mailadres
 - **Status:** Goedgekeurd
-- **Beschrijving:** Alleen wie een uitnodigingscode heeft, kan een account maken. Aanmelden gaat met e-mailadres (inloglink per e-mail, geen wachtwoord).
+- **Wijziging (2026-11-08):** uitnodigingscodes vervallen; een beheerder nodigt uit met een e-mailadres (R-027). Het aanmeldscherm kent geen uitnodigingscode meer.
+- **Beschrijving:** Alleen wie is uitgenodigd (R-027) of al een account heeft, kan zich aanmelden. Aanmelden gaat met e-mailadres (inloglink en code per e-mail, geen wachtwoord). Het aanmeldscherm is voor iedereen hetzelfde: e-mailadres, "Stuur mij een code", dan het veld "Code uit de e-mail".
 - **Acceptatiecriteria:**
-  - [ ] Zonder geldige uitnodigingscode kan geen account worden gemaakt; een ongeldige of gebruikte code geeft "Deze code is niet geldig.".
-  - [ ] Een code is eenmalig bruikbaar en vervalt 7 dagen na aanmaken (op 7 × 24 uur precies is ze nog geldig, 1 seconde later niet meer).
+  - [ ] Het aanmeldscherm toont geen veld of knop voor een uitnodigingscode.
+  - [ ] Een adres dat geen account heeft en niet is uitgenodigd (of waarvan de uitnodiging is verlopen of ingetrokken) krijgt geen mail en geen account; de bestaande melding voor een onbekend adres verschijnt.
+  - [ ] Een uitgenodigd adres vraagt zijn code aan zoals een bestaande gebruiker en is na de juiste code aangemeld; de uitnodiging telt dan als gebruikt en een tweede account met dat adres kan niet.
   - [ ] Een gebruiker geeft bij het eerste aanmelden een weergavenaam van 2–40 tekens op; 1 of 41 tekens wordt geweigerd.
   - [ ] Een ongeldig e-mailadres wordt geweigerd met een melding bij het veld.
   - [ ] Zonder aanmelding zijn recepten, reviews en foto's niet leesbaar of schrijfbaar (ook niet rechtstreeks via de databank-API).
@@ -75,13 +77,32 @@ Afspraken die voor alle requirements gelden:
 
 ### R-017 — Beheerder
 - **Status:** Goedgekeurd
-- **Beschrijving:** Een of meer gebruikers zijn beheerder. Een beheerder maakt uitnodigingscodes en kan ongewenste inhoud verwijderen.
+- **Wijziging (2026-11-08):** uitnodigingscodes zijn vervangen door uitnodigingen per e-mailadres (R-027).
+- **Beschrijving:** Een of meer gebruikers zijn beheerder. Een beheerder nodigt gebruikers uit met hun e-mailadres en kan ongewenste inhoud verwijderen.
 - **Acceptatiecriteria:**
   - [ ] Alleen een beheerder ziet en kan het scherm "Uitnodigingen" gebruiken; een gewone gebruiker krijgt via de databank-API een weigering.
-  - [ ] Een beheerder maakt een code aan en ziet per code: status (open, gebruikt, verlopen), gebruiker en vervaldatum.
+  - [ ] Het scherm "Uitnodigingen" werkt zoals beschreven in R-027.
   - [ ] Een beheerder kan elk recept en elke review verwijderen (met bevestiging); een gewone gebruiker alleen de eigen.
   - [ ] De eerste beheerder wordt buiten de app ingesteld (databankinstelling), niet via een publiek scherm.
 - **Buiten scope:** Gebruikers blokkeren of verwijderen, meldfunctie voor gebruikers.
+
+### R-027 — Gebruikers uitnodigen met e-mailadres
+- **Status:** Goedgekeurd
+- **Beschrijving:** Een beheerder nodigt een nieuwe gebruiker uit door een e-mailadres in te typen. De uitgenodigde krijgt meteen een e-mail met een logincode, zoals een bestaande gebruiker bij het aanmelden. Dit vervangt de uitnodigingscodes.
+- **Acceptatiecriteria:**
+  - [ ] Alleen een beheerder kan uitnodigen; een gewone gebruiker of een niet-aangemelde die de aanroep rechtstreeks via de databank-API doet, wordt geweigerd.
+  - [ ] De beheerder typt een e-mailadres in het scherm "Uitnodigingen"; een ongeldig adres wordt geweigerd met een melding bij het veld.
+  - [ ] Bij een geldig adres verstuurt de app meteen een mail met logincode (inloglink en 6 cijfers) naar dat adres, in de taal van de beheerder.
+  - [ ] Een uitnodiging is 7 × 24 uur geldig: op precies 7 × 24 uur kan de uitgenodigde zich nog aanmelden, 1 seconde later niet meer.
+  - [ ] Het scherm toont de openstaande uitnodigingen met e-mailadres en datum; een uitnodiging verdwijnt uit de lijst zodra de uitgenodigde zich heeft aangemeld of ze is verlopen.
+  - [ ] De beheerder kan een uitnodiging intrekken (met bevestiging): dat adres kan zich daarna niet meer aanmelden.
+  - [ ] De beheerder kan opnieuw mailen: dat stuurt een nieuwe logincode en de 7 dagen beginnen opnieuw.
+  - [ ] Een adres dat al een account heeft, wordt niet uitgenodigd; de beheerder ziet een melding en er gaat geen mail uit.
+  - [ ] Een adres dat al is uitgenodigd en nog openstaat, opnieuw invoeren geldt als opnieuw mailen.
+  - [ ] Een beheerder kan hoogstens 20 uitnodigingen (inclusief opnieuw mailen) per 24 uur versturen; de 21e wordt in de databank geweigerd met een duidelijke melding.
+  - [ ] Hoofdletters in het adres maken geen verschil ("Jan@Mail.be" = "jan@mail.be"); spaties rond het adres worden genegeerd.
+  - [ ] De uitnodigingen werken zonder geheime sleutel in de client.
+- **Buiten scope:** Uitnodigen door gewone gebruikers, meerdere adressen tegelijk uitnodigen, een eigen tekst in de uitnodigingsmail.
 
 ---
 
@@ -307,6 +328,30 @@ Een gedeelde databank van ingrediënten en eenheden, zodat "broccoli", "brocoli"
 
 ---
 
+### R-028 — Overzicht: verborgen filters en sorteren
+- **Status:** Goedgekeurd
+- **Beschrijving:** In het overzicht en bij de favorieten nemen de filters weinig plaats in: ze zitten achter een knop. Sorteren is altijd zichtbaar en uitgebreid met meer velden en een richting. Filters en sorteerkeuze zijn in beide talen netjes uitgelijnd.
+- **Acceptatiecriteria:**
+  - [ ] Bij het openen van het overzicht of de favorieten zijn alleen de knop "Filters", het sorteren en de lijst zichtbaar; zoeken op ingrediënten, tijd, gerecht, kenmerk en kookgerief staan achter de knop. Dat geldt ook als er filters actief zijn in de URL.
+  - [ ] Een tik op "Filters" klapt de filters open onder de knop, nog een tik klapt ze dicht; de knop heeft `aria-expanded`. Open en dicht klappen wijzigt geen filter en laadt de lijst niet opnieuw.
+  - [ ] Zijn er filters actief, dan toont de knop het aantal ("Filters (2)"); zonder actieve filters alleen "Filters". Het zoeken op ingrediënten telt als één filter, elke tijdgrens, elke gekozen tag-groep en het kookgerief tellen elk als één filter.
+  - [ ] In de open filters staat een knop "Alles wissen", alleen zichtbaar als er een filter of zoekopdracht actief is; ze wist zoeken en alle filters, niet het sorteren.
+  - [ ] Zoeken en alle filters werken ongewijzigd (R-007 t/m R-011, R-009, R-014), ook binnen de favorieten.
+  - [ ] Elk filterveld heeft zijn label boven het veld en neemt de volle breedte; de twee tijdvelden staan onder elkaar. In het Nederlands en het Frans beginnen alle velden op dezelfde lijn en hebben ze dezelfde breedte, ongeacht de lengte van het label (Playwright, 360 px, beide talen).
+  - [ ] Tags en kookgerief staan als chips die doorlopen naar de volgende regel; op 360 px is er geen horizontaal scrollen, in beide talen.
+  - [ ] Het sorteren staat altijd zichtbaar boven de lijst, naast de knop "Filters". Velden: aanmaakdatum (standaard), aantal sterren, alfabetisch, totale tijd, preptijd.
+  - [ ] Een richtingsknop naast het sorteerveld wisselt tussen oplopend en aflopend. Standaardrichting: aflopend bij aanmaakdatum en aantal sterren, oplopend bij alfabetisch, totale tijd en preptijd; bij een ander veld kiezen wordt die standaard gezet. Het overzicht toont zonder keuze: aanmaakdatum aflopend (nieuwste eerst).
+  - [ ] Aantal sterren sorteert op het gemiddelde; recepten zonder review staan onderaan, in beide richtingen; bij gelijk gemiddelde komt het recept met de meeste reviews eerst.
+  - [ ] Alfabetisch sorteert op titel in de taal van de lezer, zonder verschil in hoofdletters of accenten.
+  - [ ] Totale tijd en preptijd: recepten zonder tijd staan onderaan, in beide richtingen.
+  - [ ] Bij elke gelijke waarde komt het nieuwste recept eerst.
+  - [ ] Het gekozen veld en de richting staan in de URL (zoals het sorteren nu); een ongeldige waarde in de URL valt terug op de standaard.
+  - [ ] Bij een zoekopdracht op ingrediënten staan de treffers nog altijd eerst (R-009), daarna geldt het gekozen sorteren.
+  - [ ] Alle nieuwe teksten staan in `nl.json` en `fr.json` met dezelfde sleutels.
+- **Buiten scope:** Filters of sorteerkeuze onthouden tussen sessies, opgeslagen filters, sorteren op aantal reviews of auteur.
+
+---
+
 ## Reviews en favorieten
 
 ### R-012 — Reviews
@@ -317,7 +362,7 @@ Een gedeelde databank van ingrediënten en eenheden, zodat "broccoli", "brocoli"
   - [ ] Tekst is optioneel, hoogstens 500 tekens; 501 tekens wordt geweigerd.
   - [ ] Een gebruiker heeft per recept hoogstens één review, ook op het eigen recept; een tweede toevoegen kan niet, maar de bestaande aanpassen of verwijderen wel.
   - [ ] Het recept toont het gemiddelde (afgerond op 1 decimaal, bv. 4,3) en het aantal reviews; zonder reviews staat er "Nog geen reviews" en geen gemiddelde.
-  - [ ] Het overzicht toont het gemiddelde en kan sorteren op beoordeling (aflopend; recepten zonder review staan onderaan).
+  - [ ] Het overzicht toont het gemiddelde en kan sorteren op beoordeling (aflopend; recepten zonder review staan onderaan). Wijziging 2026-11-08: sorteren op "aantal sterren", oplopend en aflopend, staat in R-028.
   - [ ] Reviews staan nieuwste eerst, met auteur en datum.
   - [ ] Een gebruiker kan alleen eigen reviews wijzigen of verwijderen; een beheerder kan elke review verwijderen. Het verwijderen van een recept verwijdert zijn reviews.
   - [ ] Reviews tellen niet mee in de grootte-limiet van het recept (R-004).
@@ -398,7 +443,7 @@ Een gedeelde databank van ingrediënten en eenheden, zodat "broccoli", "brocoli"
 ## Beslissingen
 Door de eigenaar gekozen (2026-11-01):
 - **Platform (R-001):** web-app (PWA), niet native.
-- **Aanmelden (R-002):** uitnodigingscode + e-mail; inloglink én code van 6 cijfers in dezelfde mail zodat het ook werkt in de geïnstalleerde app op iPhone (2026-11-01).
+- **Aanmelden (R-002):** e-mail (uitnodigingscode vervangen door uitnodiging per e-mail, R-027, 2026-11-08); inloglink én code van 6 cijfers in dezelfde mail zodat het ook werkt in de geïnstalleerde app op iPhone (2026-11-01).
 - **Grootte (R-004, R-005):** 2 MB per recept, maximaal 3 foto's.
 - **Tags (R-010, R-011):** startlijst, gebruikers voegen toe.
 - **Rechten (R-003, R-017):** alleen eigen recepten wijzigen; beheerder kan alles verwijderen. Wie iets wil aanpassen aan andermans recept, maakt een variant.
@@ -420,6 +465,10 @@ Door de eigenaar gekozen (2026-11-06, tweede ronde):
 - **Bewerken van een recept:** bestond al (R-003); geen nieuwe requirement.
 - **Tweede taal (R-026, 2026-11-06):** Frans in plaats van Engels, voor de hele app; kookgerief krijgt een startlijst met Nederlandse en Franse namen (R-024).
 - **Icoon (R-025):** een koksmuts, zonder snor (2026-11-06).
+
+Door de eigenaar gekozen (2026-11-08, derde ronde):
+- **Uitnodigen (R-027, R-002, R-017):** uitnodigingscodes vervallen; een beheerder nodigt uit met een e-mailadres en de uitgenodigde krijgt meteen een mail met logincode. Alleen beheerders mogen uitnodigen (niet alle gebruikers). Uitnodiging 7 dagen geldig; lijst met intrekken en opnieuw mailen. Limiet 20 uitnodigingen per beheerder per 24 uur (voorstel van de assistent, door de eigenaar goedgekeurd).
+- **Overzicht (R-028):** filters (ook het zoeken op ingrediënten) achter een knop "Filters" die onder de knop openklapt; sorteren altijd zichtbaar met vijf velden (aanmaakdatum, aantal sterren, alfabetisch, totale tijd, preptijd) en een richting; tijdvelden onder elkaar zodat Franse labels de uitlijning niet breken; bij een zoekopdracht blijven treffers eerst, "Alles wissen" wist ook het zoeken.
 
 Standaardkeuzes die ik zelf invulde (niet apart besproken; pas aan als ze niet kloppen):
 - Aanmelden zonder wachtwoord via inloglink; code eenmalig, 7 dagen geldig; weergavenaam 2–40 tekens (R-002).
