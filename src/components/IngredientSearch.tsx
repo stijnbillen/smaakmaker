@@ -48,6 +48,8 @@ interface IngredientSearchProps {
   /** The search as the page holds it (from the URL). */
   value: SearchValue;
   onChange: (value: SearchValue) => void;
+  /** Goes up when the page clears the search from outside ("Alles wissen"): the fields empty and a pending pause is dropped. */
+  resetCount?: number;
 }
 
 /** Comparable text of a search; "all" and a minimum of n give the same key. */
@@ -59,7 +61,7 @@ const joinTerms = (terms: string[]) => terms.join(', ');
  * Ingredient search (R-009): "with" and "without" fields, "at least k" and a button. The typed text is local;
  * only the parsed terms go up, after a pause in typing or at once on submit. Reusable for the favourites list.
  */
-export function IngredientSearch({ value, onChange }: IngredientSearchProps) {
+export function IngredientSearch({ value, onChange, resetCount = 0 }: IngredientSearchProps) {
   const lang = useLanguage();
   const [withText, setWithText] = useState(() => joinTerms(value.with));
   const [withoutText, setWithoutText] = useState(() => joinTerms(value.without));
@@ -116,6 +118,18 @@ export function IngredientSearch({ value, onChange }: IngredientSearchProps) {
     setWithText(joinTerms(latest.current.value.with));
     setWithoutText(joinTerms(latest.current.value.without));
   }, [valueKey, debouncer]);
+
+  // The URL value can stay the same while typed text still waits for the pause, so a reset needs its own signal.
+  const seenReset = useRef(resetCount);
+  useEffect(() => {
+    if (seenReset.current === resetCount) return;
+    seenReset.current = resetCount;
+    debouncer.cancel();
+    inFlight.current = [];
+    lastEmitted.current = keyOf({ with: [], without: [], min: null });
+    setWithText('');
+    setWithoutText('');
+  }, [resetCount, debouncer]);
 
   const typeWith = (text: string) => {
     setWithText(text);

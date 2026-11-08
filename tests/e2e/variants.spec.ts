@@ -20,6 +20,10 @@ import {
 } from '../helpers/supabase-admin';
 import { sql } from '../helpers/pg';
 import { photoGroup, photoRemoveButtons, photosOf, recipeIdFromUrl } from '../helpers/photos';
+import { autoOpenFilters } from '../helpers/overview';
+
+// T-029: filters sit behind the "Filters" button; open them after every visit of `/` or `/favorieten`.
+test.beforeEach(({ page }) => autoOpenFilters(page));
 
 // T-014 / R-006 (interface, 360 x 640, local Supabase). Recipes are made through the API (PostgREST + Storage),
 // the app is only used for the screens under test.

@@ -10,7 +10,9 @@ import { TagFilter } from './TagFilter';
 import { useStoredNames } from '../lib/useStoredNames';
 import { RecipePhotoPlaceholder } from './RecipePhotoPlaceholder';
 import { TimeFilter } from './TimeFilter';
-import { t, useLanguage } from '../i18n/t';
+import { SortControl } from './SortControl';
+import { locale } from '../i18n/language';
+import { format, t, useLanguage } from '../i18n/t';
 import {
   applyEquipmentFilter,
   hasEquipmentFilter,
@@ -25,13 +27,9 @@ import {
   toSearchParams as searchToSearchParams,
   type IngredientSearch as IngredientSearchValue,
 } from '../lib/ingredientSearch';
-import {
-  formatRating,
-  parseSort,
-  reviewCountText,
-  toSearchParams as sortToSearchParams,
-  type ReviewSort,
-} from '../lib/reviews';
+import { activeFilterCount, clearFilters } from '../lib/overviewFilters';
+import { parseSort, sortRecipes, toSearchParams as sortToSearchParams, type RecipeSort } from '../lib/recipeSort';
+import { formatRating, reviewCountText } from '../lib/reviews';
 import { signedUrls } from '../lib/photos';
 import type { StoredPhoto } from '../lib/recipe';
 import { supabase } from '../lib/supabase';
@@ -99,7 +97,7 @@ interface RecipeBrowserProps {
 
 /** The recipe list with search, filters and sort. Shared by the overview and the favourites page. */
 export function RecipeBrowser({ favoritesOnly = false, title, loadingText, emptyText, connectionKey: KEY }: RecipeBrowserProps) {
-  useLanguage();
+  const language = useLanguage();
   const names = useStoredNames();
   const storedName = names.shown;
   const { report, resolve } = useConnection();
@@ -110,6 +108,10 @@ export function RecipeBrowser({ favoritesOnly = false, title, loadingText, empty
   const [photoUrls, setPhotoUrls] = useState<Map<string, string>>(new Map());
   // Any failed load (connection or other) stops the loading state; the banner or message takes over.
   const [errored, setErrored] = useState(false);
+  // Filters panel: local state, never in the URL. The panel stays mounted when closed, so nothing reloads.
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  // Goes up on "Alles wissen"; the ingredient search empties its fields and drops a pending pause.
+  const [resetCount, setResetCount] = useState(0);
 
   const active = useRef(true);
   // Numbers the requests: a slow answer for an earlier filter must not overwrite the current list.
@@ -148,29 +150,20 @@ export function RecipeBrowser({ favoritesOnly = false, title, loadingText, empty
       shownSearch.current = searchKey;
       setRecipes(null);
     }
-    // Rating sort: best average first, more reviews first on a tie, newest last; no reviews at the bottom.
-    const byRating = <T extends { order(column: string, options?: { ascending?: boolean; nullsFirst?: boolean }): T }>(q: T): T =>
-      sort === 'rating'
-        ? q.order('rating_avg', { ascending: false, nullsFirst: false }).order('rating_count', { ascending: false })
-        : q;
+    // No ordering here: the list is sorted in the client (sortRecipes), search matches first.
     let ordered;
     if (hasSearch(search)) {
       // "All" (k >= n) goes as null, so the database picks k = n itself and a client/database difference in
       // de-duplicating rare characters cannot fail the plain case.
       const n = search.with.length;
       const pMin = search.min === null || search.min >= n ? null : search.min;
-      // Matches first (R-009), then the chosen sort, then newest. Sorted here: the order after PostgREST filters is not guaranteed.
-      ordered = byRating(
-        supabase.rpc('search_recipes', { p_terms: search.with, p_without: search.without, p_min: pMin }).order('match_count', { ascending: false }),
-      ).order('created_at', { ascending: false });
+      ordered = supabase.rpc('search_recipes', { p_terms: search.with, p_without: search.without, p_min: pMin });
     } else {
-      ordered = byRating(
-        supabase
-          .from('recipes')
-          .select(
-            'id,title,created_at,prep_minutes,total_minutes,equipment,photos,rating_avg,rating_count,family_id,is_favorite,author:profiles!recipes_author_profile_fkey(display_name)',
-          ),
-      ).order('created_at', { ascending: false });
+      ordered = supabase
+        .from('recipes')
+        .select(
+          'id,title,created_at,prep_minutes,total_minutes,equipment,photos,rating_avg,rating_count,family_id,is_favorite,author:profiles!recipes_author_profile_fkey(display_name)',
+        );
     }
     // The favourites restriction combines with "and" with every other filter.
     const scoped = favoritesOnly ? applyFavoritesOnly(ordered) : ordered;
@@ -196,7 +189,7 @@ export function RecipeBrowser({ favoritesOnly = false, title, loadingText, empty
     const urls = await signedUrls(paths);
     if (!active.current || mine !== requestId.current) return;
     setPhotoUrls(urls);
-  }, [filter, queryEquipment, queryTags, sort, search, favoritesOnly, KEY, report, resolve]);
+  }, [filter, queryEquipment, queryTags, search, favoritesOnly, KEY, report, resolve]);
 
   useEffect(() => {
     active.current = true;
@@ -218,7 +211,11 @@ export function RecipeBrowser({ favoritesOnly = false, title, loadingText, empty
   };
   const changeFilter = (next: TimeFilterValue) => commit(toSearchParams(next, latestParams.current));
   const changeSearch = (next: IngredientSearchValue) => commit(searchToSearchParams(next, latestParams.current));
-  const changeSort = (next: ReviewSort) => commit(sortToSearchParams(next, latestParams.current));
+  const changeSort = (next: RecipeSort) => commit(sortToSearchParams(next, latestParams.current));
+  const clearAll = () => {
+    setResetCount((n) => n + 1);
+    commit(clearFilters(latestParams.current));
+  };
   const changeEquipment = (next: string[]) => commit(equipmentToSearchParams(next, latestParams.current));
   // Read from the ref, not from the render: a quick second tap must build on the first.
   const toggleTagIn = (kind: TagKind, name: string) => {
@@ -228,31 +225,51 @@ export function RecipeBrowser({ favoritesOnly = false, title, loadingText, empty
     commit(tagsToSearchParams(next, latestParams.current));
   };
 
+  // Sorted again on a language change: the title order depends on the language.
+  const sorted = useMemo(
+    () => (recipes ? sortRecipes(recipes, sort, locale()) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [recipes, sort, language],
+  );
+  const filterCount = activeFilterCount(searchParams);
+
   return (
     <main className="page">
       <h1>{title}</h1>
-      <IngredientSearch value={search} onChange={changeSearch} />
-      <TimeFilter value={filter} onChange={changeFilter} />
-      <TagFilter kind="dish" label={t('tags.dish')} value={tagFilter.dish} onToggle={(name) => toggleTagIn('dish', name)} />
-      <TagFilter kind="trait" label={t('tags.trait')} value={tagFilter.trait} onToggle={(name) => toggleTagIn('trait', name)} />
-      <EquipmentFilter value={equipmentNames} onChange={changeEquipment} />
-      <div className="field sort-field">
-        <label htmlFor="recipe-sort">{t('overview.sort')}</label>
-        <select id="recipe-sort" value={sort} onChange={(e) => changeSort(e.target.value === 'rating' ? 'rating' : 'newest')}>
-          <option value="newest">{t('overview.sortNewest')}</option>
-          <option value="rating">{t('overview.sortRating')}</option>
-        </select>
+      <div className="overview-toolbar">
+        <button
+          type="button"
+          className="button-quiet filters-toggle"
+          aria-expanded={filtersOpen}
+          aria-controls="overview-filters"
+          onClick={() => setFiltersOpen((open) => !open)}
+        >
+          {filterCount > 0 ? format('overview.filtersCount', { n: filterCount }) : t('overview.filters')}
+        </button>
+        <SortControl value={sort} onChange={changeSort} />
+      </div>
+      <div id="overview-filters" className="overview-filters" hidden={!filtersOpen}>
+        <IngredientSearch value={search} onChange={changeSearch} resetCount={resetCount} />
+        <TimeFilter value={filter} onChange={changeFilter} />
+        <TagFilter kind="dish" label={t('tags.dish')} value={tagFilter.dish} onToggle={(name) => toggleTagIn('dish', name)} />
+        <TagFilter kind="trait" label={t('tags.trait')} value={tagFilter.trait} onToggle={(name) => toggleTagIn('trait', name)} />
+        <EquipmentFilter value={equipmentNames} onChange={changeEquipment} />
+        {filterCount > 0 && (
+          <button type="button" className="button-quiet" onClick={clearAll}>
+            {t('overview.clearAll')}
+          </button>
+        )}
       </div>
       {failed && <p>{t('overview.error')}</p>}
       {/* Loading only while nothing is known yet and no error is shown. */}
       {!errored && (
         <ListState
-          items={recipes}
+          items={sorted}
           loadingText={loadingText}
           emptyText={hasTimeFilter(filter) || hasEquipmentFilter(equipmentNames) || hasTagFilter(tagFilter) || hasSearch(search) ? t('overview.noMatch') : emptyText}
         >
           <ul className="recipe-list">
-            {recipes?.map((r) => {
+            {sorted?.map((r) => {
               const main = mainPhoto(r.photos);
               const src = main ? photoUrls.get(main) : undefined;
               return (

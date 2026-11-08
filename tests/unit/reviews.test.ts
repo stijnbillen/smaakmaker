@@ -3,7 +3,7 @@ import fr from '../../src/i18n/fr.json';
 import nlJson from '../../src/i18n/nl.json';
 import { resetLanguage, useLanguage } from '../helpers/language';
 import { canDeleteReview, canEditReview } from '../../src/lib/permissions';
-import { formatRating, MAX_REVIEW_LENGTH, parseSort, reviewCountText, toSearchParams, validateReview } from '../../src/lib/reviews';
+import { formatRating, MAX_REVIEW_LENGTH, reviewCountText, validateReview } from '../../src/lib/reviews';
 
 // T-016 / R-012 logic.
 describe('validateReview (crit. 1 and 2)', () => {
@@ -87,27 +87,7 @@ describe('canEditReview / canDeleteReview (crit. 7)', () => {
   });
 });
 
-// Crit. 5: the sort lives in the URL as ?sorteer=beoordeling; an unknown value means the default.
-describe('sort parameter (crit. 5)', () => {
-  it('puts the rating sort in the URL and reads it back', () => {
-    const rating = parseSort(new URLSearchParams('sorteer=beoordeling'));
-    const params = toSearchParams(rating, new URLSearchParams());
-    expect(params.get('sorteer')).toBe('beoordeling');
-    expect(parseSort(params)).toBe(rating);
-  });
-  it('falls back to the default for an unknown value', () => {
-    expect(parseSort(new URLSearchParams('sorteer=onzin'))).toBe(parseSort(new URLSearchParams()));
-  });
-  it('differs between default and rating', () => {
-    expect(parseSort(new URLSearchParams('sorteer=beoordeling'))).not.toBe(parseSort(new URLSearchParams()));
-  });
-  it('keeps other filters when the sort changes', () => {
-    const base = new URLSearchParams('soort=hoofd&gerief=oven');
-    const params = toSearchParams(parseSort(new URLSearchParams('sorteer=beoordeling')), base);
-    expect(params.get('soort')).toBe('hoofd');
-    expect(params.get('gerief')).toBe('oven');
-  });
-});
+// The sort parameter tests moved to recipeSort.test.ts (T-029).
 
 // R-001 / R-012: all visible texts live in nl.json.
 describe('nl.json review texts', () => {
@@ -127,8 +107,7 @@ describe('nl.json review texts', () => {
     'reviews.duplicate': 'Je hebt dit recept al beoordeeld.',
     'reviews.deleteFailed': 'Verwijderen mislukt.',
     'overview.sort': 'Sorteren',
-    'overview.sortNewest': 'Nieuwste',
-    'overview.sortRating': 'Beoordeling',
+    'overview.sortRating': 'Aantal sterren',
   };
   for (const [key, text] of Object.entries(expected)) {
     it(key + ' = ' + text, () => expect(nl[key]).toBe(text));

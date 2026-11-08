@@ -333,7 +333,7 @@ test.describe('crit. 5: overview', () => {
     expect(order).toEqual(['A', 'D', 'C', 'B']);
   });
 
-  test('the sort choice survives a reload; an unknown value gives "Nieuwste"; filter and sort do not wipe each other', async ({ page }) => {
+  test('the sort choice survives a reload; an unknown value gives "Aanmaakdatum"; filter and sort do not wipe each other', async ({ page }) => {
     await signInViaStorage(page, u1.session);
     await page.goto('/?sorteer=beoordeling');
     const sort = page.getByLabel(nl['overview.sort'], { exact: true });
@@ -342,10 +342,11 @@ test.describe('crit. 5: overview', () => {
     await expect(sort.locator('option:checked')).toHaveText(nl['overview.sortRating']);
 
     await page.goto('/?sorteer=onzin');
-    await expect(sort.locator('option:checked')).toHaveText(nl['overview.sortNewest']);
+    await expect(sort.locator('option:checked')).toHaveText(nl['overview.sortCreated']);
 
+    // The sort stays visible with the filters closed (R-028); the time filter in the URL needs no open panel.
     await page.goto('/?sorteer=beoordeling&totaal=60');
-    await sort.selectOption({ label: nl['overview.sortNewest'] });
+    await sort.selectOption({ label: nl['overview.sortCreated'] });
     await expect(page).toHaveURL(/totaal=60/);
     await sort.selectOption({ label: nl['overview.sortRating'] });
     await expect(page).toHaveURL(/totaal=60/);

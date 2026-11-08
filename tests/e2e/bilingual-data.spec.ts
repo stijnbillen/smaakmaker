@@ -4,6 +4,10 @@ import frJson from '../../src/i18n/fr.json' with { type: 'json' };
 import { sql } from '../helpers/pg';
 import { signInViaStorage } from '../helpers/session';
 import { assertSupabaseUp, createTestUser, deleteTestUser, insertRecipe, type TestUser } from '../helpers/supabase-admin';
+import { autoOpenFilters, openFilters } from '../helpers/overview';
+
+// T-029: filters sit behind the "Filters" button; open them after every visit of `/` or `/favorieten`.
+test.beforeEach(({ page }) => autoOpenFilters(page));
 
 // T-023 / R-024: tags, equipment and ingredients show themselves in the language of the reader. Viewport 360 x 640.
 const fr = frJson as Record<string, string>;
@@ -135,6 +139,7 @@ test.describe('crit. 3: equipment start list is always a choice', () => {
 
     const nlPage = await page.context().newPage();
     await start(nlPage, 'nl', '/');
+    await openFilters(nlPage); // a page from newPage() is not wrapped by autoOpenFilters
     await expect(button(nlPage, 'nl', 'filter.equipment', 'oven')).toBeVisible();
     await expect(button(nlPage, 'nl', 'filter.equipment', 'airfryer')).toBeVisible();
   });

@@ -32,7 +32,16 @@ Crit. 1, 2, 3, 4, 5 (combinatietest op `/favorieten`; de bestaande tests via `au
 - Exports `overviewFilters.ts`: `activeFilterCount`, `clearFilters`.
 - Rijen voor `sortRecipes`: `id`, `title`, `created_at`, `rating_avg`, `rating_count`, `prep_minutes`, `total_minutes`, optioneel `matchCount`.
 
-## Herstelronde (blokkade)
+## Herstelronde 2 (tests opnieuw opgebouwd)
+- De werkmap bevatte de T-029-tests niet meer; `git stash apply` en `git apply` worden geweigerd. `git stash show -p stash@{2}` werkte wel, maar toont geen ongetrackte bestanden. Daarom zijn de ongetrackte bestanden opnieuw geschreven en de getrackte wijzigingen met de hand teruggezet:
+  - nieuw: `tests/helpers/overview.ts`, `tests/unit/recipeSort.test.ts`, `tests/unit/overviewFilters.test.ts`, `tests/e2e/overview-filters.spec.ts`;
+  - aangepast: de negen e2e-specs (`autoOpenFilters` in `beforeEach`), `reviews.spec.ts` (`sortCreated`), `reviews.test.ts` (sorteertests weg, "Aantal sterren"), `i18n.test.ts` (uitzondering voor `overview.sortNewest` en `overview.sortRating`, naast die van T-027).
+- Gevraagde `openFilters` voor pagina's uit `newContext()`/`newPage()`: toegevoegd in `bilingual-data.spec.ts` (nlPage), `recipe-equipment.spec.ts` (p2) en in de `open()`-helper van `recipe-search-synonyms.spec.ts`.
+- `openFilters` is idempotent (opent alleen als `aria-expanded` niet `true` is).
+- Uitgevoerd: `npx tsc --noEmit` geeft alleen de ontbrekende modules `recipeSort` en `overviewFilters` (testnaad voor de ontwikkelaar) en de `implicit any` die daaruit volgt. `vitest` en `playwright --list` werden niet toegestaan; die zijn dus niet gedraaid.
+- Testnamen en e2e-specs zijn opnieuw geschreven; de dekking is die van de lijst hierboven (crit. 11 taalwissel zonder verzoek blijft niet als e2e gedekt). Extra aanname: optie-waarde `rating` van het sorteerveld blijft bestaan (bestaande test in `recipe-search.spec.ts`).
+
+## Herstelronde (blokkade, vorige poging)
 - Gevraagd: `openFilters` toevoegen in bilingual-data.spec.ts:133, recipe-equipment.spec.ts:157, recipe-search-synonyms.spec.ts:171 (pagina uit newContext/newPage).
 - Niet uitgevoerd: de werkmap bevat `tests/helpers/overview.ts`, `tests/e2e/overview-filters.spec.ts`, `tests/unit/recipeSort.test.ts` en de `autoOpenFilters`-aanroepen niet. Ze staan alleen in `stash@{0}` ("T-029 niet geslaagd"); `git stash show/apply` werd geweigerd in deze sandbox.
 - Nodig: stash terugzetten (`git stash apply`) en deze taak opnieuw starten, of toestemming voor git stash.

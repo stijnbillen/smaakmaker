@@ -128,8 +128,11 @@ describe('nl.json stays as before T-018 (R-023 crit. 8)', () => {
     // are removed or reworded on purpose. Every other key must still be untouched.
     const replacedByT027 = (k: string) =>
       /^invites\.(new|copy|copied|usedBy|unknownUser|expiresOn|empty|status\..+)$/.test(k);
+    // T-029 (R-028) changes two sort texts on purpose: "Nieuwste" is dropped (the default sort is now
+    // "Aanmaakdatum") and "Beoordeling" becomes "Aantal sterren". Every other key stays as it was.
+    const changedByT029 = new Set(['overview.sortNewest', 'overview.sortRating']);
     const changed = Object.entries(nlBefore as TextMap)
-      .filter(([k, v]) => !replacedByT027(k) && now[k] !== v)
+      .filter(([k, v]) => !replacedByT027(k) && !changedByT029.has(k) && now[k] !== v)
       .map(([k]) => k);
     expect(changed).toEqual([]);
   });

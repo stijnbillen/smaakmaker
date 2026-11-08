@@ -36,7 +36,7 @@ function TimeSelect({ label, value, onChange }: SelectProps) {
 export function TimeFilter({ value, onChange }: TimeFilterProps) {
   useLanguage();
   return (
-    <div className="time-filter field-pair">
+    <div className="time-filter">
       <TimeSelect label="filter.maxPrep" value={value.maxPrep} onChange={(maxPrep) => onChange({ ...value, maxPrep })} />
       <TimeSelect label="filter.maxTotal" value={value.maxTotal} onChange={(maxTotal) => onChange({ ...value, maxTotal })} />
     </div>

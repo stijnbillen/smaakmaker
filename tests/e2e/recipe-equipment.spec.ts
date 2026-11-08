@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { autoOpenFilters, openFilters } from '../helpers/overview';
 import {
   equipmentAddButton,
   equipmentChoice,
@@ -28,6 +29,7 @@ test.afterAll(async () => {
 });
 
 test.beforeEach(async ({ page }) => {
+  autoOpenFilters(page); // T-029: filters sit behind the "Filters" button
   await signInViaStorage(page, user.session);
 });
 
@@ -171,6 +173,7 @@ test.describe('crit. 2: choose existing or add new; an existing name is reused',
       await p2.goto('/nieuw');
       await expect(equipmentChoice(p2, name)).toHaveAttribute('aria-pressed', 'false');
       await p2.goto('/');
+      await openFilters(p2); // a page from newContext() is not wrapped by autoOpenFilters
       await expect(filterButton(p2, name)).toBeVisible();
     } finally {
       await ctx.close();

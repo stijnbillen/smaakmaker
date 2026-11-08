@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { autoOpenFilters, openFilters } from '../helpers/overview';
 import { nl } from '../helpers/recipe-form';
 import frJson from '../../src/i18n/fr.json' with { type: 'json' };
 import { signInViaStorage } from '../helpers/session';
@@ -26,6 +27,7 @@ test.afterAll(async () => {
 });
 
 test.beforeEach(async ({ page }) => {
+  autoOpenFilters(page); // T-029: filters sit behind the "Filters" button
   s = Array.from({ length: 8 }, () => String.fromCharCode(97 + Math.floor(Math.random() * 26))).join('');
   await signInViaStorage(page, user.session);
 });
@@ -42,6 +44,7 @@ const matchesText = (lang: Lang, count: number, total: number) =>
 async function open(page: Page, lang: Lang, path = '/') {
   if (lang === 'fr') await page.addInitScript(() => window.localStorage.setItem('smaakmaker.lang', 'fr'));
   await page.goto(path);
+  await openFilters(page); // also for pages from newContext(), which autoOpenFilters does not wrap
   await expect(withField(page, lang)).toBeVisible();
 }
 

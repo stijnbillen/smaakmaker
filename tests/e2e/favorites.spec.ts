@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page, type Route } from '@playwright/test';
+import { autoOpenFilters } from '../helpers/overview';
 import { nl } from '../helpers/recipe-form';
 import { signInViaStorage } from '../helpers/session';
 import {
@@ -29,6 +30,7 @@ test.afterAll(async () => {
 });
 
 test.beforeEach(async ({ page }) => {
+  autoOpenFilters(page); // T-029: filters sit behind the "Filters" button
   s = Array.from({ length: 8 }, () => String.fromCharCode(97 + Math.floor(Math.random() * 26))).join('');
   await signInViaStorage(page, a.session);
 });

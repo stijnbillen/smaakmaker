@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { autoOpenFilters } from '../helpers/overview';
 import {
   fillRecipe,
   isRecipePost,
@@ -24,6 +25,7 @@ test.afterAll(async () => {
 });
 
 test.beforeEach(async ({ page }) => {
+  autoOpenFilters(page); // T-029: filters sit behind the "Filters" button
   await signInViaStorage(page, user.session);
 });
 
