@@ -442,3 +442,6 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **Teller** bouwt op de bestaande parsers (`activeFilterCount`): zoeken, prep, totaal, gerecht, kenmerk en kookgerief tellen elk één.
 - **"Alles wissen" en `IngredientSearch`:** een `resetCount`-prop annuleert de debounce en leegt het veld, omdat de URL-waarde gelijk kan blijven terwijl er getypte tekst wacht.
 - **Alfabetisch:** `Intl.Collator(locale, { sensitivity: 'base' })`, gecachet per locale.
+
+## T-028 — vitest-pool
+- Vitest draait met `pool: 'threads'` in plaats van forks: een geforkt proces crashte willekeurig op Windows (exitcode 3221226505) en een herhaling op een vuile databank gaf dan valse fouten.
