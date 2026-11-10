@@ -126,13 +126,15 @@ describe('nl.json stays as before T-018 (R-023 crit. 8)', () => {
     const now = nl as TextMap;
     // T-027 (R-027) replaces the invitation codes by e-mail invitations: those invites.* keys
     // are removed or reworded on purpose. Every other key must still be untouched.
+    // T-028 (R-002) takes the invitation code out of the sign-in screen: two keys go, one text loses its question.
     const replacedByT027 = (k: string) =>
       /^invites\.(new|copy|copied|usedBy|unknownUser|expiresOn|empty|status\..+)$/.test(k);
+    const replacedByT028 = (k: string) => ['auth.haveInvite', 'auth.inviteLabel', 'auth.unknownAddress'].includes(k);
     // T-029 (R-028) changes two sort texts on purpose: "Nieuwste" is dropped (the default sort is now
     // "Aanmaakdatum") and "Beoordeling" becomes "Aantal sterren". Every other key stays as it was.
     const changedByT029 = new Set(['overview.sortNewest', 'overview.sortRating']);
     const changed = Object.entries(nlBefore as TextMap)
-      .filter(([k, v]) => !replacedByT027(k) && !changedByT029.has(k) && now[k] !== v)
+      .filter(([k, v]) => !replacedByT027(k) && !replacedByT028(k) && !changedByT029.has(k) && now[k] !== v)
       .map(([k]) => k);
     expect(changed).toEqual([]);
   });

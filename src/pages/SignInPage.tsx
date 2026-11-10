@@ -19,8 +19,6 @@ export function SignInPage() {
   const { report, resolve } = useConnection();
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [email, setEmail] = useState('');
-  const [withInvite, setWithInvite] = useState(false);
-  const [inviteCode, setInviteCode] = useState('');
   const [mailCode, setMailCode] = useState('');
   const [errors, setErrors] = useState<Errors>({});
   const [busy, setBusy] = useState(false);
@@ -54,16 +52,7 @@ export function SignInPage() {
       setErrors({ email: 'auth.emailInvalid' });
       return;
     }
-    const invite = withInvite ? inviteCode.trim() : '';
-    if (withInvite && invite === '') {
-      setErrors({ invite: 'auth.codeInvalid' });
-      return;
-    }
-    void run(
-      () => requestCode(address, { inviteCode: invite || undefined }),
-      sendCode,
-      () => setStep('code'),
-    );
+    void run(() => requestCode(address), sendCode, () => setStep('code'));
   }
 
   function submitMailCode() {
@@ -120,37 +109,6 @@ export function SignInPage() {
                   </p>
                 )}
               </div>
-              <button
-                type="button"
-                className="button-link--quiet"
-                aria-expanded={withInvite}
-                onClick={() => setWithInvite((v) => !v)}
-              >
-                {t('auth.haveInvite')}
-              </button>
-              {withInvite && (
-                <div className="field">
-                  <label>
-                    {t('auth.inviteLabel')}
-                    <input
-                      type="text"
-                      name="invite"
-                      autoComplete="off"
-                      autoCapitalize="characters"
-                      spellCheck={false}
-                      value={inviteCode}
-                      onChange={(e) => setInviteCode(e.target.value)}
-                      aria-invalid={errors.invite ? true : undefined}
-                      aria-describedby={errors.invite ? 'invite-error' : undefined}
-                    />
-                  </label>
-                  {errors.invite && (
-                    <p id="invite-error" role="alert" className="field-error">
-                      {t(errors.invite)}
-                    </p>
-                  )}
-                </div>
-              )}
               <button type="submit" disabled={busy}>
                 {busy ? t('auth.sending') : t('auth.requestCode')}
               </button>

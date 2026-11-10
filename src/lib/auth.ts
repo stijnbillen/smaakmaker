@@ -1,8 +1,9 @@
+import { getLanguage } from '../i18n/language';
 import type { TextKey } from '../i18n/t';
 import { isConnectionError } from './connection';
 import { supabase } from './supabase';
 
-export type AuthField = 'email' | 'invite' | 'code';
+export type AuthField = 'email' | 'code';
 
 export type AuthResult =
   | { ok: true }
@@ -35,27 +36,21 @@ function failure(field: AuthField, cause: unknown, status: number | undefined, m
 
 /**
  * Asks for the mail with login link and 6-digit code.
- * With an invite code a new account may be created; without one only existing users get a mail.
+ * The database decides first whether a mail may go out: members and open invitations only.
  */
-export async function requestCode(email: string, opts: { inviteCode?: string } = {}): Promise<AuthResult> {
-  // Codes are upper case; on a phone they are easily typed in lower case.
-  const inviteCode = opts.inviteCode?.trim().toUpperCase();
-  if (inviteCode) {
-    // Check first: GoTrue answers a refusal by the database trigger with a vague 500.
-    const check = await supabase.rpc('check_invite', { code: inviteCode });
-    if (check.error) return failure('invite', check.error, check.status, 'auth.error');
-    if (check.data !== true) return failure('invite', null, undefined, 'auth.codeInvalid');
-    // An unconfirmed address keeps the code of its first request. If that code is spent or expired,
-    // this removes the pending user so the request below creates a fresh one with the new code.
-    const refresh = await supabase.rpc('refresh_pending_invite', { p_email: email.trim(), p_code: inviteCode });
-    if (refresh.error) return failure('invite', refresh.error, refresh.status, 'auth.error');
-  }
+export async function requestCode(email: string): Promise<AuthResult> {
+  const address = email.trim().toLowerCase();
+
+  const check = await supabase.rpc('sign_in_status', { p_email: address });
+  if (check.error) return failure('email', check.error, check.status, 'auth.error');
+  if (check.data === 'unknown') return failure('email', null, undefined, 'auth.unknownAddress');
+  const invited = check.data === 'invited';
 
   const { error } = await supabase.auth.signInWithOtp({
-    email: email.trim(),
+    email: address,
     options: {
-      shouldCreateUser: Boolean(inviteCode),
-      ...(inviteCode ? { data: { invite_code: inviteCode } } : {}),
+      shouldCreateUser: invited,
+      ...(invited ? { data: { lang: getLanguage() } } : {}),
       // Opened from the mail: a plain link back to the app (implicit flow, works in any browser).
       emailRedirectTo: `${window.location.origin}/`,
     },
@@ -63,17 +58,21 @@ export async function requestCode(email: string, opts: { inviteCode?: string } =
   if (!error) return OK;
 
   const e = asLike(error);
-  if (!inviteCode && (e.code === 'otp_disabled' || /signups not allowed/i.test(e.message ?? ''))) {
+  // A 500 is the trigger refusing (invitation expired or revoked since the check), but only
+  // for an invited address. For a member a 500 is a mail failure (SMTP), so it stays a plain error.
+  if (e.code === 'otp_disabled' || (invited && e.status === 500) || /signups not allowed/i.test(e.message ?? '')) {
     return failure('email', error, e.status, 'auth.unknownAddress');
   }
-  // The trigger refused the invite (race or expiry between the check and the request).
-  if (inviteCode && e.status === 500) return failure('invite', error, e.status, 'auth.codeInvalid');
-  return failure(inviteCode ? 'invite' : 'email', error, e.status, 'auth.error');
+  return failure('email', error, e.status, 'auth.error');
 }
 
 /** Signs in with the 6-digit code from the mail. Wrong, used and expired codes all read the same. */
 export async function verifyCode(email: string, token: string): Promise<AuthResult> {
-  const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: token.trim(), type: 'email' });
+  const { error } = await supabase.auth.verifyOtp({
+    email: email.trim().toLowerCase(),
+    token: token.trim(),
+    type: 'email',
+  });
   if (!error) return OK;
   return failure('code', error, asLike(error).status, 'auth.codeInvalid');
 }

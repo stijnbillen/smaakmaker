@@ -372,13 +372,13 @@ test.describe('French interface has no Dutch left (crit. 5)', () => {
     await expectNoDutch(page, 'connection banner');
   });
 
-  test('field error: invalid invite code', async ({ page }) => {
+  // T-028: the invitation code is gone from the sign-in screen; the field error is now the invalid e-mail address.
+  test('field error: invalid e-mail address', async ({ page }) => {
     await seedLanguage(page, 'fr');
     await page.goto('/aanmelden');
-    await page.getByRole('textbox', { name: FR['auth.emailLabel'], exact: true }).fill('anke@example.com');
-    await page.getByRole('button', { name: FR['auth.haveInvite'], exact: true }).click();
+    await page.getByRole('textbox', { name: FR['auth.emailLabel'], exact: true }).fill('piet@');
     await page.getByRole('button', { name: FR['auth.requestCode'], exact: true }).click();
-    await expect(page.getByRole('alert')).toHaveText(FR['auth.codeInvalid']);
+    await expect(page.getByRole('alert')).toHaveText(FR['auth.emailInvalid']);
     await expectNoDutch(page, 'field error');
   });
 

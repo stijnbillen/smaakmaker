@@ -87,7 +87,6 @@ describe('administrator (R-017)', () => {
       const calls: [string, Record<string, string>][] = [
         ['create_invite', {}],
         ['list_invites', {}],
-        ['check_invite', { code: 'ABCDEFGHJK' }],
       ];
       for (const [fn, args] of calls) {
         const res = await boss.client.rpc(fn, args);

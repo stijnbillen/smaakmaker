@@ -172,6 +172,29 @@ export function requestInviteMail(email: string, lang: 'nl' | 'fr' = 'nl') {
   return anonClient().auth.signInWithOtp({ email, options: { shouldCreateUser: true, data: { lang } } });
 }
 
+/**
+ * T-028: the request the sign-in screen does (src/lib/auth.ts requestCode), with the public key only:
+ * ask `sign_in_status`, send no mail for 'unknown', otherwise ask GoTrue (a user is only created for 'invited').
+ * Returns the status the database gave, and the GoTrue error if there was one.
+ */
+export async function requestCode(
+  email: string,
+  lang: 'nl' | 'fr' = 'nl',
+): Promise<{ status: string; error: { message: string } | null }> {
+  const address = normalizeEmail(email);
+  const client = anonClient();
+  const check = await client.rpc('sign_in_status', { p_email: address });
+  if (check.error) throw check.error;
+  const status = String(check.data);
+  if (status === 'unknown') return { status, error: null };
+  const invited = status === 'invited';
+  const res = await client.auth.signInWithOtp({
+    email: address,
+    options: { shouldCreateUser: invited, ...(invited ? { data: { lang } } : {}) },
+  });
+  return { status, error: res.error };
+}
+
 /** Calls an invitation function as the given signed-in (or anonymous) client. Parameter names: p_email, p_lang. */
 export function inviteRpc(
   client: SupabaseClient,
