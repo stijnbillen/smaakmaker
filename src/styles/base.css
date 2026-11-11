@@ -602,7 +602,7 @@ textarea[aria-invalid='true'] {
   margin: 0;
 }
 
-/* Bottom navigation: four equal entries, fixed to the bottom edge. */
+/* Bottom navigation: five equal entries, fixed to the bottom edge. */
 .bottom-nav {
   position: fixed;
   left: 0;
@@ -617,7 +617,7 @@ textarea[aria-invalid='true'] {
 
 .bottom-nav ul {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   margin: 0;
   padding: 0;
   list-style: none;
@@ -631,7 +631,7 @@ textarea[aria-invalid='true'] {
   gap: var(--space-1);
   height: var(--nav-height);
   color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-nav);
   font-weight: 600;
   text-decoration: none;
   transition: color var(--duration-fast), background-color var(--duration-fast);
@@ -1392,4 +1392,90 @@ textarea[aria-invalid='true'] {
 
 .catalog-merge-bar button {
   margin: 0;
+}
+
+/* Week menu (R-030): button on the recipe page, tabs and cards on /weekmenu */
+.week-menu-action {
+  margin: var(--space-2) 0 var(--space-3);
+}
+
+.week-menu-button {
+  min-height: var(--tap-min);
+  padding: 0 var(--space-4);
+  color: var(--color-text-accent);
+  background: transparent;
+  border: 2px solid var(--color-accent);
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Filled when the recipe is in the menu; the text changes too, so colour is not the only signal. */
+.week-menu-button--on {
+  color: var(--color-bg-surface);
+  background: var(--color-accent);
+}
+
+.week-menu-error {
+  display: block;
+  margin-top: var(--space-2);
+}
+
+.week-menu-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: var(--space-3) 0 var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.week-menu-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-min);
+  color: var(--color-text-muted);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+}
+
+.week-menu-tab[aria-selected='true'] {
+  color: var(--color-text-accent);
+  border-bottom-color: var(--color-accent);
+}
+
+.week-menu-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.week-menu-card {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.week-menu-card .recipe-photo {
+  margin-bottom: 0;
+}
+
+.week-menu-title {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  color: inherit;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.week-menu-clear {
+  margin-top: var(--space-4);
 }

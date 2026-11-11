@@ -469,3 +469,12 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **Samenvoegen in het beheer:** B houdt zijn eigen soort en factor, die van A vervallen (de merge-functie is niet gewijzigd).
 - **Soortvraag en factorstap zijn nieuwe `PendingQuestion`-stappen** (`askMeasure`, `askFactor`) in `CatalogField`; niets wordt bewaard tot het einde, de vraag blijft `asking`. Enter in het factorveld bewaart de eenheid, niet het hele recept.
 - **"Zoek op Google" is een gewone `<a target="_blank" rel="noopener noreferrer">`;** de zoektekst komt uit de i18n-bestanden via `googleSearchUrl`.
+
+## T-033 — Weekmenu
+- **Eigen tabel `week_menu_items` per gebruiker en recept, zoals `favorites`:** de receprij en de 2 MB-limiet blijven onaangeroerd. Geen uitzondering voor de beheerder (policies alleen `user_id = auth.uid()`); verwijderde gebruiker of recept ruimt via cascade op.
+- **Limiet 50 en standaardporties in een `before insert`-trigger** met `pg_advisory_xact_lock(hashtext('week_menu:' || user_id))`, zodat parallelle inserts niet op 51 uitkomen. Eigen SQLSTATE `P0050` laat de client "vol" herkennen; porties komen uit `recipes.servings` (null → 1), niet van de client.
+- **Leegmaken via RPC `clear_week_menu()` (security invoker):** één transactie; R-032 voegt daar zijn tabellen aan toe.
+- **`WeekMenuButton` is een aparte component, geen gedeelde hook met `FavoriteButton`:** het hartje onthoudt de laatste wens, wat bij dubbel tikken op "toevoegen" het item weer zou verwijderen. De knop negeert tikken zolang een aanroep loopt, zodat een dubbele tik op "In weekmenu" eindigt.
+- **Tabbladen zijn routes** (`/weekmenu`, `/weekmenu/boodschappen`) als `Link role="tab"`; de navigatie-ingang is op beide actief.
+- **Nieuw token `--font-size-nav` (0.75rem):** vijf ingangen op 360 px, ook in het Frans.
+- **Nieuwste toevoeging bovenaan (`created_at desc`); Verwijderen zonder bevestiging,** alleen Leegmaken vraagt er een.

@@ -52,6 +52,8 @@ export const routes: AppRoute[] = [
     auth: 'full',
   },
   { name: 'favorieten', path: '/favorieten', auth: 'full' },
+  { name: 'weekmenu', path: '/weekmenu', auth: 'full' }, // T-033 / R-030
+  { name: 'weekmenu boodschappen', path: '/weekmenu/boodschappen', auth: 'full' },
   { name: 'profiel', path: '/profiel', auth: 'full' },
   { name: 'uitnodigingen', path: '/uitnodigingen', auth: 'admin' },
   { name: 'databank', path: '/databank', auth: 'admin' },

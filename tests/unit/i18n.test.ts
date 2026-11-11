@@ -63,6 +63,7 @@ describe('nl.json and fr.json are in line (R-026 crit. 1)', () => {
   it('no French value equals the Dutch one, except a short explicit list', () => {
     const SAME_ALLOWED = new Set([
       'app.name', 'app.title', 'language.nl', 'language.fr', 'time.minutes',
+      'weekMenu.tabMenu', // "Menu" is the same word in Dutch and French
     ]);
     const same = Object.keys(nlMap).filter((k) => k in frMap && nlMap[k] === frMap[k] && !SAME_ALLOWED.has(k));
     // Symbols without letters ("…", "·") and very short unit-like values are not translations either.

@@ -20,7 +20,7 @@ export interface CallResult {
 /** SQLSTATE for an id that is not a uuid. */
 const INVALID_TEXT_REPRESENTATION = '22P02';
 
-const SELECT = 'id,title,ingredients,steps,prep_minutes,total_minutes,servings,source,note,equipment,dish_tags,trait_tags,photos,author_id,created_at,variant_of,family_id,is_favorite,author:profiles!recipes_author_profile_fkey(display_name)';
+const SELECT = 'id,title,ingredients,steps,prep_minutes,total_minutes,servings,source,note,equipment,dish_tags,trait_tags,photos,author_id,created_at,variant_of,family_id,is_favorite,in_week_menu,author:profiles!recipes_author_profile_fkey(display_name)';
 
 interface FetchedRow {
   id: string;
@@ -41,6 +41,7 @@ interface FetchedRow {
   variant_of: string | null;
   family_id: string;
   is_favorite: boolean;
+  in_week_menu: boolean;
   author: { display_name: string | null } | null;
 }
 
@@ -87,6 +88,7 @@ export async function fetchRecipe(id: string): Promise<FetchResult> {
       variantOf: row.variant_of ?? null,
       familyId: row.family_id ?? row.id,
       isFavorite: row.is_favorite === true,
+      inWeekMenu: row.in_week_menu === true,
       sourceTitle,
     },
     notFound: false,

@@ -6,11 +6,12 @@ import { prepareRoutes, routesWithNav as routes } from './routes'; // sign-in an
 
 const nl = nlJson as Record<string, string>;
 
-// R-016 crit. 1: four entries, in this order, with the texts from nl.json.
+// R-016 crit. 1 + R-030 crit. 10 (T-033): five entries, in this order, with the texts from nl.json.
 const ENTRIES = [
   { text: 'Recepten', path: '/', h1: 'Recepten' },
   { text: 'Favorieten', path: '/favorieten', h1: 'Favorieten' },
   { text: 'Nieuw', path: '/nieuw', h1: 'Nieuw recept' },
+  { text: nl['nav.weekMenu'], path: '/weekmenu', h1: nl['weekMenu.title'] },
   { text: 'Profiel', path: '/profiel', h1: 'Profiel' },
 ];
 
@@ -51,14 +52,14 @@ for (const route of routes) {
       }
     });
 
-    test('exactly one nav with the accessible name from nl.json, four links in order (crit. 1)', async ({ page }) => {
+    test('exactly one nav with the accessible name from nl.json, five links in order (crit. 1)', async ({ page }) => {
       await page.goto(route.path);
       await expect(page.getByRole('navigation')).toHaveCount(1);
       expect(nl['nav.label']?.length ?? 0).toBeGreaterThan(0);
       const nav = navOf(page);
       await expect(nav).toHaveCount(1);
       const links = nav.getByRole('link');
-      await expect(links).toHaveCount(4);
+      await expect(links).toHaveCount(5);
       await expect(links).toHaveText(ENTRIES.map((e) => e.text));
     });
 
@@ -115,7 +116,7 @@ test('aria-current="page" is on the link of the current screen only (crit. 1)', 
   for (const entry of ENTRIES) {
     await page.goto(entry.path);
     const links = navOf(page).getByRole('link');
-    await expect(links).toHaveCount(4);
+    await expect(links).toHaveCount(5);
     for (const other of ENTRIES) {
       const link = links.filter({ hasText: other.text });
       if (other === entry) await expect(link, `${entry.path}: ${other.text}`).toHaveAttribute('aria-current', 'page');

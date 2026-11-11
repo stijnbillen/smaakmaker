@@ -14,6 +14,7 @@ import { ProfilePage } from './pages/ProfilePage';
 import { RecipeDetailPage } from './pages/RecipeDetailPage';
 import { RecipeListPage } from './pages/RecipeListPage';
 import { SignInPage } from './pages/SignInPage';
+import { WeekMenuPage } from './pages/WeekMenuPage';
 import { WelcomePage } from './pages/WelcomePage';
 
 // A data router (not BrowserRouter): useBlocker, which asks before a form with changes is left, needs one.
@@ -31,6 +32,8 @@ const router = createBrowserRouter(
           <Route path="/recept/:id" element={<RecipeDetailPage />} />
           <Route path="/recept/:id/bewerken" element={<EditRecipePage />} />
           <Route path="/recept/:id/variant" element={<NewVariantPage />} />
+          <Route path="/weekmenu" element={<WeekMenuPage tab="menu" />} />
+          <Route path="/weekmenu/boodschappen" element={<WeekMenuPage tab="shopping" />} />
           <Route path="/profiel" element={<ProfilePage />} />
           <Route element={<RequireAdmin />}>
             <Route path="/uitnodigingen" element={<InvitesPage />} />

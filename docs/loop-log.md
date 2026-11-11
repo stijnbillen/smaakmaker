@@ -577,3 +577,11 @@
 - 2026-11-11 12:26 T-032 build: worker-crash (geen testfout), opnieuw
 - 2026-11-11 12:27 T-032 build: mislukt
 - 2026-11-11 12:27 T-032 stop: eindcontrole faalt
+- 2026-11-11 12:30 T-033 analist: KLAAR
+- 2026-11-11 12:34 T-033 tester: KLAAR
+- 2026-11-11 12:38 T-033 ontwikkelaar: BLOKKADE: test i18n.test.ts mist `weekMenu.tabMenu` in SAME_ALLOWED, en weekMenu.spec.ts:313 wacht niet tot de lijst geladen is
+- 2026-11-11 12:38 T-033 tester: KLAAR
+- 2026-11-11 12:40 T-033 ontwikkelaar: KLAAR
+- 2026-11-11 12:50 T-033 build: geslaagd
+- 2026-11-11 12:52 T-033 reviewer: GOEDGEKEURD
+- 2026-11-11 13:03 T-033 build: geslaagd

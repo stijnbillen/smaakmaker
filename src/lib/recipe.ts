@@ -139,6 +139,7 @@ export interface RecipeRecord extends Omit<RecipeRow, 'prep_minutes' | 'total_mi
   familyId: string;
   /** Whether the signed-in user marked this recipe as a favourite, as the database said at load time. */
   isFavorite: boolean;
+  inWeekMenu: boolean;
   /** Title of the source, as it is now; null without a (remaining) source. */
   sourceTitle: string | null;
   /** The catalogue items the ingredient lines point to, by id (R-020). Missing when they could not be loaded. */

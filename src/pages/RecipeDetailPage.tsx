@@ -6,6 +6,7 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { FavoriteButton } from '../components/FavoriteButton';
 import { ReviewSection } from '../components/ReviewSection';
 import { ServingsStepper } from '../components/ServingsStepper';
+import { WeekMenuButton } from '../components/WeekMenuButton';
 import { useConnection } from '../components/ConnectionProvider';
 import { t, useLanguage } from '../i18n/t';
 import { canDelete, canEdit } from '../lib/permissions';
@@ -166,6 +167,9 @@ export function RecipeDetailPage() {
         <h1>{recipe.title}</h1>
         {/* Every signed-in user may mark a favourite, also on their own recipe. */}
         <FavoriteButton recipeId={recipe.id} initial={recipe.isFavorite} />
+      </div>
+      <div className="week-menu-action">
+        <WeekMenuButton recipeId={recipe.id} initial={recipe.inWeekMenu} />
       </div>
       {recipe.photos.length > 0 && (
         // The strip scrolls sideways by itself; the page never does. Order is the one the author chose.

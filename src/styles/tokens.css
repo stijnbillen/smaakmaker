@@ -39,6 +39,8 @@
 
   --font-size-sm: 0.875rem;
   --font-size-md: 1rem;
+  /* Navigation labels: five entries share 360 px, so the label is a size smaller than --font-size-sm. */
+  --font-size-nav: 0.75rem;
   --font-size-lg: 1.25rem;
   --font-size-xl: 1.75rem;
 
