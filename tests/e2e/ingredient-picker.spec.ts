@@ -266,8 +266,10 @@ test.describe('new item (crit. 4, 6, 11)', () => {
     await quantityFields(page).first().click();
     await expect(page.getByRole('group', { name: `Nieuwe eenheid '${unit}'. Opslaan in de databank zodat iedereen het kan kiezen?` })).toBeVisible();
     await page.getByRole('button', { name: 'Ja', exact: true }).click();
+    // T-032 / R-033: "Ja" is followed by the kind question; "Geen van beide" creates the unit.
+    await page.getByRole('button', { name: nl['form.measureNone'], exact: true }).click();
     await expect(catalogQuestion(page)).toHaveCount(0);
-    expect(await sql(`select 1 from public.units where name_nl = ${lit(unit)}`)).toHaveLength(1);
+    await expect.poll(async () => (await sql(`select 1 from public.units where name_nl = ${lit(unit)}`)).length).toBe(1);
     await sql(`delete from public.units where name_nl = ${lit(unit)}`);
   });
 

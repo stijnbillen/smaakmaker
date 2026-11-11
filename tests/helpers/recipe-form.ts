@@ -1,8 +1,17 @@
 // Test-only: drives the recipe form (T-005) through its accessible names, so the markup stays free.
 import { expect, type Locator, type Page } from '@playwright/test';
 import nlJson from '../../src/i18n/nl.json' with { type: 'json' };
+import frJson from '../../src/i18n/fr.json' with { type: 'json' };
 
 export const nl = nlJson as Record<string, string>;
+export const fr = frJson as Record<string, string>;
+
+/** Text of a key in the given language with {name}-style placeholders filled in (what the app's `format` shows). */
+export function text(key: string, lang: 'nl' | 'fr' = 'nl', params: Record<string, string> = {}): string {
+  const raw = (lang === 'fr' ? fr : nl)[key];
+  if (raw === undefined) throw new Error(`missing text key ${key} (${lang})`);
+  return raw.replace(/\{(\w+)\}/g, (_, k: string) => params[k] ?? '');
+}
 
 export interface IngredientInput {
   name: string;
@@ -102,6 +111,28 @@ export async function answerQuestionsNo(page: Page): Promise<void> {
     await expect(question).toBeHidden().catch(() => undefined);
   }
 }
+// T-032 / R-033: the questions that follow "Ja" on a new unit. Texts come from the key files (form.measure*, form.factor*).
+export const measureQuestion = (page: Page, unit: string, lang: 'nl' | 'fr' = 'nl'): Locator =>
+  page.getByRole('group', { name: text('form.measureQuestion', lang, { name: unit }), exact: true });
+export const measureChoice = (page: Page, key: 'Volume' | 'Weight' | 'None' | 'Unknown', lang: 'nl' | 'fr' = 'nl'): Locator =>
+  page.getByRole('button', { name: text(`form.measure${key}`, lang), exact: true });
+export const factorField = (page: Page, unit: string, base: 'Volume' | 'Weight', lang: 'nl' | 'fr' = 'nl'): Locator =>
+  page.getByRole('textbox', { name: text(`form.factorQuestion${base}`, lang, { name: unit }), exact: true });
+/** The "Opslaan" button of the factor step (the recipe form has its own, so it is scoped to the group around the field). */
+export const factorSave = (page: Page, field: Locator, lang: 'nl' | 'fr' = 'nl'): Locator =>
+  page.getByRole('group').filter({ has: field }).getByRole('button', { name: text('form.save', lang), exact: true });
+export const googleLink = (scope: Page | Locator, lang: 'nl' | 'fr' = 'nl'): Locator =>
+  scope.getByRole('link', { name: text('form.googleLink', lang), exact: true });
+
+/** Types a unit name on the first line, leaves the field and taps "Ja": the kind question is then open. */
+export async function startNewUnit(page: Page, unit: string, lang: 'nl' | 'fr' = 'nl'): Promise<void> {
+  await unitFields(page).first().fill(unit);
+  await quantityFields(page).first().click();
+  await expect(page.getByRole('group', { name: text('form.newUnitQuestion', lang, { name: unit }), exact: true })).toBeVisible();
+  await page.getByRole('button', { name: text('form.yes', lang), exact: true }).click();
+  await expect(measureQuestion(page, unit, lang)).toBeVisible();
+}
+
 export const stepFields = (page: Page): Locator => page.getByRole('textbox', { name: /^(Stap|Étape|Step)/ });
 export const saveButton = (page: Page): Locator => page.getByRole('button', { name: nl['form.save'], exact: true });
 export const addIngredientButton = (page: Page): Locator =>

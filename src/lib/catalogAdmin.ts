@@ -1,6 +1,7 @@
 import { displayName, type CatalogLang } from './catalog';
 import type { CatalogKind } from './catalogAdminLogic';
 import { supabase } from './supabase';
+import type { UnitMeasure } from './unitMeasure';
 
 export interface AdminCatalogRow {
   id: string;
@@ -11,6 +12,9 @@ export interface AdminCatalogRow {
   useCount: number;
   /** The name or synonym that matched the search term; null without a term. */
   matched: string | null;
+  /** Units only (R-033); null for ingredients. */
+  measure: UnitMeasure | null;
+  factor: number | null;
 }
 
 export interface AdminResult<T> {
@@ -26,6 +30,8 @@ interface RawRow {
   synonyms: string[];
   use_count: number;
   matched: string | null;
+  measure: UnitMeasure | null;
+  factor: number | string | null;
 }
 
 export async function listCatalog(kind: CatalogKind, term: string, lang: CatalogLang): Promise<AdminResult<AdminCatalogRow[]>> {
@@ -38,6 +44,8 @@ export async function listCatalog(kind: CatalogKind, term: string, lang: Catalog
     synonyms: r.synonyms,
     useCount: Number(r.use_count),
     matched: r.matched,
+    measure: r.measure ?? null,
+    factor: r.factor === null || r.factor === undefined ? null : Number(r.factor),
   }));
   return { data: rows, error: null, status };
 }
@@ -48,6 +56,8 @@ export async function updateCatalogItem(
   nameNl: string | null,
   nameFr: string | null,
   synonyms: string[],
+  /** Units only (R-033). Without it the kind and factor stay as they are. */
+  measure?: { measure: UnitMeasure; factor: number | null },
 ): Promise<AdminResult<null>> {
   const { error, status } = await supabase.rpc('admin_update_catalog', {
     p_kind: kind,
@@ -55,6 +65,7 @@ export async function updateCatalogItem(
     p_name_nl: nameNl,
     p_name_fr: nameFr,
     p_synonyms: synonyms,
+    ...(kind === 'unit' && measure ? { p_measure: measure.measure, p_factor: measure.factor } : {}),
   });
   return { data: null, error, status };
 }

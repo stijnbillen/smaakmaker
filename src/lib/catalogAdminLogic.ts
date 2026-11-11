@@ -1,6 +1,7 @@
 // Pure logic of the catalogue administration page (R-022). No Supabase import, so Vitest loads it without
 // environment variables.
 import { itemKey } from './catalog';
+import { isValidFactor, type UnitMeasure } from './unitMeasure';
 
 export type CatalogKind = 'ingredient' | 'unit';
 
@@ -8,9 +9,18 @@ export interface CatalogItemInput {
   nameNl: string | null;
   nameFr: string | null;
   synonyms: string[];
+  /** Units only (R-033). Absent = not edited. */
+  measure?: UnitMeasure | null;
+  factor?: number | null;
 }
 
-export type CatalogValidation = 'noName' | 'nameTooLong' | 'synonymTooLong' | 'tooManySynonyms' | 'duplicateKey';
+export type CatalogValidation =
+  | 'noName'
+  | 'nameTooLong'
+  | 'synonymTooLong'
+  | 'tooManySynonyms'
+  | 'duplicateKey'
+  | 'invalidFactor';
 
 /** Same limits as the database (R-018 crit. 1), counted in characters. */
 const MAX_LENGTH: Record<CatalogKind, number> = { ingredient: 80, unit: 20 };
@@ -33,6 +43,11 @@ export function validateCatalogItem(kind: CatalogKind, item: CatalogItemInput): 
     const key = itemKey(s);
     if (seen.has(key)) return 'duplicateKey';
     seen.add(key);
+  }
+  if (item.measure === 'volume' || item.measure === 'weight') {
+    if (!isValidFactor(item.factor)) return 'invalidFactor';
+  } else if (item.measure === 'none' && item.factor !== null && item.factor !== undefined) {
+    return 'invalidFactor';
   }
   return null;
 }

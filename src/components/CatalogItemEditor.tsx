@@ -4,6 +4,7 @@ import { getLanguage } from '../i18n/language';
 import { fetchItemName, updateCatalogItem, type AdminCatalogRow } from '../lib/catalogAdmin';
 import { mapCatalogError, validateCatalogItem, type CatalogKind, type CatalogValidation } from '../lib/catalogAdminLogic';
 import { itemKey } from '../lib/catalog';
+import { parseFactor, type UnitMeasure } from '../lib/unitMeasure';
 
 const VALIDATION_TEXT = {
   noName: 'catalogAdmin.error.noName',
@@ -11,6 +12,7 @@ const VALIDATION_TEXT = {
   synonymTooLong: 'catalogAdmin.error.synonymTooLong',
   tooManySynonyms: 'catalogAdmin.error.tooManySynonyms',
   duplicateKey: 'catalogAdmin.error.duplicateKey',
+  invalidFactor: 'catalogAdmin.error.factor',
 } as const satisfies Record<CatalogValidation, string>;
 
 interface CatalogItemEditorProps {
@@ -29,6 +31,9 @@ export function CatalogItemEditor({ kind, row, onSaved, onMerge, onDelete }: Cat
   const [nameNl, setNameNl] = useState(row.nameNl ?? '');
   const [nameFr, setNameFr] = useState(row.nameFr ?? '');
   const [synonyms, setSynonyms] = useState(row.synonyms);
+  const [measure, setMeasure] = useState<UnitMeasure>(row.measure ?? 'none');
+  const [factorText, setFactorText] = useState(row.factor === null ? '' : String(row.factor));
+  const [factorInvalid, setFactorInvalid] = useState(false);
   const [draft, setDraft] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -48,15 +53,30 @@ export function CatalogItemEditor({ kind, row, onSaved, onMerge, onDelete }: Cat
 
   async function save() {
     if (busy) return;
-    const input = { nameNl: nameNl.trim() || null, nameFr: nameFr.trim() || null, synonyms };
+    const withFactor = kind === 'unit' && measure !== 'none';
+    const factor = withFactor ? parseFactor(factorText) : null;
+    const input = {
+      nameNl: nameNl.trim() || null,
+      nameFr: nameFr.trim() || null,
+      synonyms,
+      ...(kind === 'unit' ? { measure, factor } : {}),
+    };
     const problem = validateCatalogItem(kind, input);
+    setFactorInvalid(problem === 'invalidFactor');
     if (problem) {
       setMessage(t(VALIDATION_TEXT[problem]));
       return;
     }
     setBusy(true);
     setMessage(null);
-    const { error } = await updateCatalogItem(kind, row.id, input.nameNl, input.nameFr, synonyms);
+    const { error } = await updateCatalogItem(
+      kind,
+      row.id,
+      input.nameNl,
+      input.nameFr,
+      synonyms,
+      kind === 'unit' ? { measure, factor } : undefined,
+    );
     if (!error) {
       setBusy(false);
       onSaved();
@@ -121,8 +141,50 @@ export function CatalogItemEditor({ kind, row, onSaved, onMerge, onDelete }: Cat
         </button>
       </div>
 
+      {kind === 'unit' && (
+        <>
+          <p className="catalog-editor-label" id={`${ids}-measure`}>
+            {t('catalogAdmin.measure')}
+          </p>
+          <div className="choice-list" role="group" aria-labelledby={`${ids}-measure`}>
+            {(['volume', 'weight', 'none'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                className="choice"
+                aria-pressed={measure === m}
+                onClick={() => {
+                  setMeasure(m);
+                  setFactorInvalid(false);
+                }}
+              >
+                {t(m === 'volume' ? 'catalogAdmin.measureVolume' : m === 'weight' ? 'catalogAdmin.measureWeight' : 'catalogAdmin.measureNone')}
+              </button>
+            ))}
+          </div>
+          {measure !== 'none' && (
+            <>
+              <label htmlFor={`${ids}-factor`}>{t('catalogAdmin.factor')}</label>
+              <input
+                id={`${ids}-factor`}
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
+                value={factorText}
+                onChange={(e) => {
+                  setFactorText(e.target.value);
+                  setFactorInvalid(false);
+                }}
+                aria-invalid={factorInvalid ? true : undefined}
+                aria-describedby={factorInvalid ? `${ids}-factor-error` : undefined}
+              />
+            </>
+          )}
+        </>
+      )}
+
       {message && (
-        <p role="alert" className="field-error">
+        <p role="alert" id={factorInvalid ? `${ids}-factor-error` : undefined} className="field-error">
           {message}
         </p>
       )}

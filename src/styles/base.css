@@ -509,6 +509,20 @@ textarea[aria-invalid='true'] {
   overflow-wrap: anywhere;
 }
 
+/* "Zoek op Google": a plain link with a tap target of at least 44 px */
+.catalog-question-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  color: var(--color-text-accent);
+  overflow-wrap: anywhere;
+}
+
+.catalog-question .field-error {
+  margin: var(--space-1) 0 var(--space-2);
+}
+
 .row-buttons {
   display: flex;
   justify-content: flex-end;

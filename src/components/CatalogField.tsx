@@ -4,7 +4,80 @@ import { MAX_OPTIONS, optionLabel, optionNames, resolveOnLeave, shouldFetch, typ
 import { addCatalogItem, fetchCatalogItems, fetchSuggestions } from '../lib/recipes';
 import { createSuggestionLoader, type SuggestKind, type Suggestion } from '../lib/suggest';
 import { format, t, useLanguage } from '../i18n/t';
+import { googleSearchUrl, parseFactor, type UnitMeasure } from '../lib/unitMeasure';
 import { useConnection } from './ConnectionProvider';
+
+/** Second step of a new unit (R-033): "How many ml (or g) is 1 <unit>?" with a message at the field. */
+function FactorStep({
+  label,
+  saving,
+  link,
+  onBack,
+  onSave,
+}: {
+  label: string;
+  saving: boolean;
+  link: ReactNode;
+  onBack: () => void;
+  onSave: (factor: number) => void;
+}) {
+  const ids = useId();
+  const [text, setText] = useState('');
+  const [invalid, setInvalid] = useState(false);
+  const errorId = `${ids}-error`;
+
+  function submit() {
+    const factor = parseFactor(text);
+    if (factor === null) {
+      setInvalid(true);
+      return;
+    }
+    setInvalid(false);
+    onSave(factor);
+  }
+
+  return (
+    <>
+      <label htmlFor={`${ids}-factor`} className="catalog-question-text">
+        {label}
+      </label>
+      <input
+        id={`${ids}-factor`}
+        type="text"
+        inputMode="decimal"
+        autoComplete="off"
+        value={text}
+        onChange={(e) => {
+          setText(e.target.value);
+          setInvalid(false);
+        }}
+        onKeyDown={(e) => {
+          // The recipe form around us is a form: Enter must not save the whole recipe.
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            submit();
+          }
+        }}
+        aria-invalid={invalid ? true : undefined}
+        aria-describedby={invalid ? errorId : undefined}
+      />
+      {invalid && (
+        <p id={errorId} className="field-error">
+          {t('form.factorInvalid')}
+        </p>
+      )}
+      <div className="catalog-question-buttons">
+        <button type="button" disabled={saving} onClick={submit}>
+          {t('form.save')}
+        </button>
+        <button type="button" className="button-quiet" onClick={onBack}>
+          {t('form.factorBack')}
+        </button>
+        {link}
+      </div>
+    </>
+  );
+}
 
 /** What the form needs from a field to decide about "Opslaan". */
 export interface FieldHandle {
@@ -201,11 +274,11 @@ export function CatalogField({
     }
   }
 
-  async function createItem(q: PendingQuestion) {
+  async function createItem(q: PendingQuestion, measure?: { measure: UnitMeasure; factor: number | null }) {
     if (saving) return;
     setSaving(true);
     const text = q.text.trim();
-    const res = await addCatalogItem(kind, text, langRef.current);
+    const res = await addCatalogItem(kind, text, langRef.current, measure);
     setSaving(false);
     if (res.error || !res.id) {
       report(`${reportKey}-add`, res.error, res.status, () => undefined);
@@ -235,12 +308,28 @@ export function CatalogField({
   // A tap on an option or a button must not blur the field first: the blur check would overwrite the choice.
   const keepFocus = (e: { preventDefault: () => void }) => e.preventDefault();
 
-  const questionText =
-    question?.kind === 'didYouMean'
+  const questionText = !question
+    ? ''
+    : question.kind === 'didYouMean'
       ? format('form.didYouMean', { name: optionNames(question.options, lang) })
-      : question
-        ? format(kind === 'ingredient' ? 'form.newIngredientQuestion' : 'form.newUnitQuestion', { name: question.text.trim() })
-        : '';
+      : question.kind === 'askMeasure'
+        ? format('form.measureQuestion', { name: question.text.trim() })
+        : question.kind === 'askFactor'
+          ? format(question.measure === 'volume' ? 'form.factorQuestionVolume' : 'form.factorQuestionWeight', {
+              name: question.text.trim(),
+            })
+          : format(kind === 'ingredient' ? 'form.newIngredientQuestion' : 'form.newUnitQuestion', { name: question.text.trim() });
+  const googleLink = (q: { text: string }, base: 'ml' | 'g') => (
+    // A plain link: the unit name only goes to Google when the user taps it.
+    <a
+      className="catalog-question-link"
+      href={googleSearchUrl(q.text, base, lang)}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {t('form.googleLink')}
+    </a>
+  );
 
   return (
     <>
@@ -285,11 +374,39 @@ export function CatalogField({
         {!showList && <span id={listId} hidden />}
         {children}
       </div>
-      {question && (
+      {question?.kind === 'askFactor' && (
+        <div ref={groupRef} role="group" aria-label={questionText} className="catalog-question">
+          <FactorStep
+            key={question.measure}
+            label={questionText}
+            saving={saving}
+            link={googleLink(question, question.measure === 'volume' ? 'ml' : 'g')}
+            onBack={() => setQuestion({ kind: 'askMeasure', text: question.text })}
+            onSave={(factor) => void createItem(question, { measure: question.measure, factor })}
+          />
+        </div>
+      )}
+      {question && question.kind !== 'askFactor' && (
         <div ref={groupRef} role="group" aria-label={questionText} className="catalog-question">
           <p className="catalog-question-text">{questionText}</p>
           <div className="catalog-question-buttons">
-            {question.kind === 'didYouMean' ? (
+            {question.kind === 'askMeasure' ? (
+              <>
+                <button type="button" disabled={saving} onClick={() => setQuestion({ kind: 'askFactor', text: question.text, measure: 'volume' })}>
+                  {t('form.measureVolume')}
+                </button>
+                <button type="button" disabled={saving} onClick={() => setQuestion({ kind: 'askFactor', text: question.text, measure: 'weight' })}>
+                  {t('form.measureWeight')}
+                </button>
+                <button type="button" disabled={saving} onClick={() => void createItem(question, { measure: 'none', factor: null })}>
+                  {t('form.measureNone')}
+                </button>
+                <button type="button" disabled={saving} onClick={() => void createItem(question, { measure: 'none', factor: null })}>
+                  {t('form.measureUnknown')}
+                </button>
+                {googleLink(question, 'ml')}
+              </>
+            ) : question.kind === 'didYouMean' ? (
               <>
                 {question.options.map((o) => (
                   <button key={o.id} type="button" className="button-quiet" onClick={() => link(o)}>
@@ -306,7 +423,11 @@ export function CatalogField({
               </>
             ) : (
               <>
-                <button type="button" disabled={saving} onClick={() => void createItem(question)}>
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => (kind === 'unit' ? setQuestion({ kind: 'askMeasure', text: question.text }) : void createItem(question))}
+                >
                   {t('form.yes')}
                 </button>
                 <button type="button" className="button-quiet" onClick={() => keepFree(question)}>

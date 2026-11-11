@@ -47,7 +47,10 @@ export function optionLabel(row: Suggestion, lang: CatalogLang, typed: string): 
 /** The open question of one field. */
 export type PendingQuestion =
   | { kind: 'didYouMean'; text: string; options: CatalogItem[] }
-  | { kind: 'askNew'; text: string };
+  | { kind: 'askNew'; text: string }
+  // Units only (R-033): after "Ja" the kind, then for volume or weight the factor. Nothing is stored until the end.
+  | { kind: 'askMeasure'; text: string }
+  | { kind: 'askFactor'; text: string; measure: 'volume' | 'weight' };
 
 /** Names of the options for the question text, in the interface language. */
 export const optionNames = (options: readonly CatalogItem[], lang: CatalogLang): string =>

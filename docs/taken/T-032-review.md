@@ -1,6 +1,6 @@
 # T-032 — review (R-033)
 
-Bekeken: werkkopie tegen `8d7b949` (migratie `20261111100000_unit_measure.sql`, `unitMeasure.ts`, `CatalogField.tsx`, `CatalogItemEditor.tsx`, `catalogAdmin*.ts`, `recipes.ts`, `ingredientPicker.ts`, i18n, css, nieuwe en aangepaste tests). `CLAUDE.md`, `REQUIREMENTS.md` en `VRAGEN.md` zijn niet gewijzigd; in `VRAGEN.md` staat geen blok voor T-032.
+Bekeken: werkkopie tegen `8d7b949` (migratie `20261111100001_unit_measure.sql`, `unitMeasure.ts`, `CatalogField.tsx`, `CatalogItemEditor.tsx`, `catalogAdmin*.ts`, `recipes.ts`, `ingredientPicker.ts`, i18n, css, nieuwe en aangepaste tests). `CLAUDE.md`, `REQUIREMENTS.md` en `VRAGEN.md` zijn niet gewijzigd; in `VRAGEN.md` staat geen blok voor T-032.
 
 Kernbeslissingen: geen schending.
 - De limiet staat in de databank (check `units_measure_valid`).

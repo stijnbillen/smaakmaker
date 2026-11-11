@@ -7,6 +7,7 @@ import type { NamedItem } from './namedItems';
 import { supabase } from './supabase';
 import type { MatchKind, SuggestKind, SuggestMode, Suggestion } from './suggest';
 import type { TagKind } from './tags';
+import type { UnitMeasure } from './unitMeasure';
 import type { FamilyMember } from './variant';
 
 // Database calls for recipes. Each returns the error and HTTP status so the caller can let
@@ -138,11 +139,13 @@ export async function addCatalogItem(
   kind: SuggestKind,
   name: string,
   lang: CatalogLang,
+  /** Units only: kind and factor (R-033). Without it the unit is made with kind `none`. */
+  measure?: { measure: UnitMeasure; factor: number | null },
 ): Promise<CallResult & { id: string | null; created: boolean }> {
-  const { data, error, status } = await supabase.rpc(kind === 'ingredient' ? 'add_ingredient' : 'add_unit', {
-    p_name: name,
-    p_lang: lang,
-  });
+  const { data, error, status } =
+    kind === 'unit' && measure
+      ? await supabase.rpc('add_unit', { p_name: name, p_lang: lang, p_measure: measure.measure, p_factor: measure.factor })
+      : await supabase.rpc(kind === 'ingredient' ? 'add_ingredient' : 'add_unit', { p_name: name, p_lang: lang });
   const row = ((data ?? []) as unknown as Array<{ id: string; created: boolean }>)[0];
   return { id: error || !row ? null : row.id, created: !error && row?.created === true, error, status };
 }
