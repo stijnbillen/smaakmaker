@@ -1,6 +1,10 @@
-// Maximum-time filters of the overview (R-007). Kept apart from the page so the favourites list can reuse it.
+// Maximum-time filters of the overview (R-007, R-029). Kept apart from the page so the favourites list can reuse it.
 
-export const TIME_FILTER_CHOICES = [15, 30, 60, 120] as const;
+/** Highest value that can be typed or stored in the URL (72 hours, same as the recipe form). */
+export const TIME_MAX_MINUTES = 4320;
+/** The range covers 0..240 in steps of 5; larger typed values park the thumb at the far end. */
+export const SLIDER_MAX = 240;
+export const SLIDER_STEP = 5;
 
 export interface TimeFilter {
   maxPrep: number | null;
@@ -11,14 +15,29 @@ export interface TimeFilter {
 const PREP_PARAM = 'prep';
 const TOTAL_PARAM = 'totaal';
 
-function parseChoice(value: string | null): number | null {
-  // Strict text match: "15.5", "1e2" or " 30" are no choice.
-  const found = TIME_FILTER_CHOICES.find((choice) => String(choice) === value);
-  return found ?? null;
+// Strict: no sign, no decimals, no leading zeros, so the URL and the text field accept exactly the same input.
+const MINUTES_PATTERN = /^(0|[1-9]\d*)$/;
+
+function parseMinutes(value: string | null): number | null {
+  if (value === null || !MINUTES_PATTERN.test(value)) return null;
+  const minutes = Number(value);
+  return minutes <= TIME_MAX_MINUTES ? minutes : null;
 }
 
+export type TypedMinutes = { kind: 'empty' } | { kind: 'value'; minutes: number } | { kind: 'invalid' };
+
+/** Reads what the user typed in the minutes field. Empty means "no limit"; invalid text is not applied. */
+export function parseTypedMinutes(text: string): TypedMinutes {
+  if (text === '') return { kind: 'empty' };
+  const minutes = parseMinutes(text);
+  return minutes === null ? { kind: 'invalid' } : { kind: 'value', minutes };
+}
+
+/** Position of the range thumb for a value; values above the range end sit at the end. */
+export const clampToSlider = (minutes: number): number => Math.min(Math.max(minutes, 0), SLIDER_MAX);
+
 export function parseTimeFilter(params: URLSearchParams): TimeFilter {
-  return { maxPrep: parseChoice(params.get(PREP_PARAM)), maxTotal: parseChoice(params.get(TOTAL_PARAM)) };
+  return { maxPrep: parseMinutes(params.get(PREP_PARAM)), maxTotal: parseMinutes(params.get(TOTAL_PARAM)) };
 }
 
 /** Writes the filter into a copy of the params; other parameters stay. */

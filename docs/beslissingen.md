@@ -445,3 +445,12 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 
 ## T-028 — vitest-pool
 - Vitest draait met `pool: 'threads'` in plaats van forks: een geforkt proces crashte willekeurig op Windows (exitcode 3221226505) en een herhaling op een vuile databank gaf dan valse fouten.
+
+## T-030 — Tijdfilter met schuifregelaar
+- **Einde van de schuifregelaar is 240, geen "uit":** het filter gaat alleen uit via "Geen limiet" of een leeg veld.
+- **Invulveld is `type="text"` met `inputMode="numeric"`:** een getalveld maakt ongeldige invoer en een leeg veld niet te onderscheiden.
+- **Eén strikte regel (`^(0|[1-9]\d*)$`, ≤ 4320)** voor URL en veld (`parseMinutes`), zodat ze nooit uit elkaar lopen. Ongeldige toetsaanslagen worden meteen geweigerd.
+- **Geen debounce:** elke geldige wijziging gaat met `replace` naar de URL; `requestId` gooit trage antwoorden weg.
+- **Waarden buiten de stap van 5 (bv. 37)** blijven in filter en URL; de duim staat op de dichtstbijzijnde stap.
+- **Stijl van de schuifregelaar:** het spoor is even hoog als de duim (44 px) en de zichtbare balk is een gecentreerde achtergrondstreep, zodat de duim zonder marges (die de stijlscanner afkeurt) gecentreerd staat.
+- **`filter.all` blijft staan in nl/fr:** de i18n-test (sleutels ongewijzigd sinds T-018) eist hem, ook al is hij ongebruikt.

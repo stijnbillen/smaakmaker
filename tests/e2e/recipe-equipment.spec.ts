@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { autoOpenFilters, openFilters } from '../helpers/overview';
+import { autoOpenFilters, openFilters, setTimeLimit } from '../helpers/overview';
 import {
   equipmentAddButton,
   equipmentChoice,
@@ -276,7 +276,7 @@ test.describe('crit. 4: overview filter "at least one of the chosen items"', () 
     await page.goto('/');
     await filterButton(page, oven).click();
     await filterButton(page, wok).click();
-    await page.getByLabel(nl['filter.maxPrep'], { exact: true }).selectOption({ label: '15 min' });
+    await setTimeLimit(page, 'prep', 15);
     await expect(item(page, a)).toHaveCount(1);
     await expect(item(page, b)).toHaveCount(0);
   });
@@ -287,7 +287,7 @@ test.describe('crit. 4: overview filter "at least one of the chosen items"', () 
     await page.goto('/');
     await filterButton(page, wok).click();
     await expect(item(page, b)).toHaveCount(1);
-    await page.getByLabel(nl['filter.maxPrep'], { exact: true }).selectOption({ label: '15 min' });
+    await setTimeLimit(page, 'prep', 15);
     await expect(page.getByText('Niets gevonden.')).toBeVisible();
   });
 

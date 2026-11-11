@@ -7,8 +7,11 @@ import {
   filtersButton,
   filtersLabel,
   filtersPanel,
+  noLimitButton,
   openFilters,
   sortSelect,
+  timeField,
+  timeRange,
   text,
   type Lang,
 } from '../helpers/overview';
@@ -64,8 +67,8 @@ const favorite = async (recipeId: string) => {
 const withField = (page: Page, lang: Lang = 'nl') => page.getByLabel(text(lang, 'search.with'), { exact: true });
 const withoutField = (page: Page, lang: Lang = 'nl') => page.getByLabel(text(lang, 'search.without'), { exact: true });
 const minField = (page: Page, lang: Lang = 'nl') => page.getByLabel(text(lang, 'search.min'), { exact: true });
-const prepField = (page: Page, lang: Lang = 'nl') => page.getByLabel(text(lang, 'filter.maxPrep'), { exact: true });
-const totalField = (page: Page, lang: Lang = 'nl') => page.getByLabel(text(lang, 'filter.maxTotal'), { exact: true });
+const prepField = (page: Page, lang: Lang = 'nl') => timeField(page, 'prep', lang);
+const totalField = (page: Page, lang: Lang = 'nl') => timeField(page, 'total', lang);
 const groupOf = (page: Page, lang: Lang, key: 'tags.dish' | 'tags.trait' | 'filter.equipment') =>
   page.getByRole('group', { name: text(lang, key), exact: true });
 const submitButton = (page: Page, lang: Lang = 'nl') => page.getByRole('button', { name: text(lang, 'search.submit'), exact: true });
@@ -202,13 +205,17 @@ test.describe('crit. 4: "Alles wissen"', () => {
     await make('Zeta', { ingredients: [ingredient(`tomaat${s}`)] });
     await make('Midden', { ingredients: [ingredient(`kaas${s}`)] });
     await make('Alfa', { ingredients: [ingredient(`tomaat${s}`)] });
-    await page.goto(`/?met=tomaat${s}&prep=15&sorteer=titel`);
+    await page.goto(`/?met=tomaat${s}&prep=15&totaal=90&sorteer=titel`);
     await expect.poll(() => ownTitles(page)).toEqual([`Alfa ${s}`, `Zeta ${s}`]);
     await openFilters(page);
     await clearAllButton(page).click();
     await expect(withField(page)).toHaveValue('');
-    await expect(prepField(page)).toHaveValue('');
-    await expect(prepField(page).locator('option:checked')).toHaveText(text('nl', 'filter.all'));
+    // T-030 / R-029 crit. 8: both time limits empty, ranges at the far end, no "Geen limiet" buttons.
+    for (const which of ['prep', 'total'] as const) {
+      await expect(timeField(page, which)).toHaveValue('');
+      await expect(timeRange(page, which)).toHaveValue('240');
+      await expect(noLimitButton(page, which)).toHaveCount(0);
+    }
     await expect(filtersPanel(page).getByRole('button', { pressed: true })).toHaveCount(0);
     await expect(page).toHaveURL((u) => u.search === '?sorteer=titel');
     await expect.poll(() => ownTitles(page)).toEqual([`Alfa ${s}`, `Midden ${s}`, `Zeta ${s}`]);

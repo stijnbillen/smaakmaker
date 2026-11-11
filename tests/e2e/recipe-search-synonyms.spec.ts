@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { autoOpenFilters, openFilters } from '../helpers/overview';
+import { autoOpenFilters, openFilters, setTimeLimit } from '../helpers/overview';
 import { nl } from '../helpers/recipe-form';
 import frJson from '../../src/i18n/fr.json' with { type: 'json' };
 import { signInViaStorage } from '../helpers/session';
@@ -193,7 +193,7 @@ test.describe('crit. 7: combines with filters', () => {
     await withField(page).fill('brocoli');
     await withField(page).press('Enter');
     await expect(item(page, slow.title)).toBeVisible();
-    await page.getByLabel(nl['filter.maxPrep'], { exact: true }).selectOption({ label: '15 min' });
+    await setTimeLimit(page, 'prep', 15);
     await expect(item(page, slow.title)).toHaveCount(0);
     await expect(item(page, fast.title)).toBeVisible();
   });

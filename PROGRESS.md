@@ -61,7 +61,7 @@ Nieuw project: er zijn geen requirements met status "Bestaand", dus er is geen f
 
 ## Fase 7 — Tijdfilter, temperatuur, weekmenu en boodschappenlijst
 
-- [ ] **T-030** — R-029: Tijdfilter met schuifregelaar en invulveld (afhankelijk van T-029)
+- [x] **T-030** — R-029: Tijdfilter met schuifregelaar en invulveld (afhankelijk van T-029)
 - [ ] **T-031** — R-031: Temperatuur in °C of °F (afhankelijk van T-008, T-018)
 - [ ] **T-032** — R-033: Eenheden omzetten, soort en factor (afhankelijk van T-021, T-025)
 - [ ] **T-033** — R-030: Weekmenu (afhankelijk van T-005, T-007, T-018)

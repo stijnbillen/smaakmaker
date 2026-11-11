@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { expect, test, type Locator, type Page, type Route } from '@playwright/test';
-import { autoOpenFilters } from '../helpers/overview';
+import { autoOpenFilters, noLimitButton, setTimeLimit, timeField } from '../helpers/overview';
 import { nl, tagButton } from '../helpers/recipe-form';
 import { signInViaStorage } from '../helpers/session';
 import {
@@ -367,7 +367,6 @@ test.describe('crit. 8: combines with filters, sorting and the URL', () => {
     const noFeta = await make('Zonder feta', [`tomaat${s}`], base);
     return { fits, slow, noPan, noSoup, noTrait, noFeta };
   }
-  const prepFilter = (page: Page) => page.getByLabel(nl['filter.maxPrep'], { exact: true });
   const panButton = (page: Page) => page.getByRole('group', { name: nl['filter.equipment'], exact: true }).getByRole('button', { name: 'Pan', exact: true });
 
   test('search + time, search + equipment, search + tags each give the right recipes', async ({ page }) => {
@@ -378,11 +377,11 @@ test.describe('crit. 8: combines with filters, sorting and the URL', () => {
     await expect(item(page, r.noFeta.title)).toHaveCount(0);
 
     // search + time
-    await prepFilter(page).selectOption({ label: '15 min' });
+    await setTimeLimit(page, 'prep', 15);
     await expect(item(page, r.slow.title)).toHaveCount(0);
     await expect(item(page, r.fits.title)).toBeVisible();
     await expect(item(page, r.noPan.title)).toBeVisible();
-    await prepFilter(page).selectOption({ label: nl['filter.all'] });
+    await noLimitButton(page, 'prep').click();
 
     // search + equipment
     await panButton(page).click();
@@ -406,7 +405,7 @@ test.describe('crit. 8: combines with filters, sorting and the URL', () => {
     const r = await seedFilters();
     await page.goto('/');
     await searchWith(page, `feta${s}`);
-    await prepFilter(page).selectOption({ label: '15 min' });
+    await setTimeLimit(page, 'prep', 15);
     await panButton(page).click();
     await tagButton(page, 'soep').click();
     await tagButton(page, 'snel', 'trait').click();
@@ -423,7 +422,7 @@ test.describe('crit. 8: combines with filters, sorting and the URL', () => {
 
     await page.reload();
     await expect(withField(page)).toHaveValue(`feta${s}`);
-    await expect(prepFilter(page)).toHaveValue('15');
+    await expect(timeField(page, 'prep')).toHaveValue('15');
     await expect(panButton(page)).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByLabel(nl['overview.sort'], { exact: true })).toHaveValue('rating');
     await expect.poll(() => ownTitles(page)).toEqual([r.fits.title]);
@@ -433,7 +432,7 @@ test.describe('crit. 8: combines with filters, sorting and the URL', () => {
     await seedFilters();
     await page.goto('/');
     await searchWith(page, `feta${s}`);
-    await prepFilter(page).selectOption({ label: '15 min' });
+    await setTimeLimit(page, 'prep', 15);
     await expect(page).toHaveURL(/prep=15/);
     expect(urlParams(page).getAll('met')).toEqual([`feta${s}`]);
     await expect(withField(page)).toHaveValue(`feta${s}`);
@@ -441,7 +440,7 @@ test.describe('crit. 8: combines with filters, sorting and the URL', () => {
     await searchWith(page, `feta${s}, tomaat${s}`);
     await expect(page).toHaveURL(/met=tomaat/);
     expect(urlParams(page).get('prep')).toBe('15');
-    await expect(prepFilter(page)).toHaveValue('15');
+    await expect(timeField(page, 'prep')).toHaveValue('15');
   });
 
   test('results show the main photo, the label "Variant" and the rating like the plain overview', async ({ page }) => {

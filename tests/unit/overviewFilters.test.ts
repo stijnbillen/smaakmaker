@@ -20,7 +20,10 @@ describe('activeFilterCount (crit. 3)', () => {
   it('counts everything together as six', () => {
     expect(count('met=a&zonder=c&prep=15&totaal=60&soort=soep&kenmerk=winter&gerief=oven')).toBe(6);
   });
-  it('ignores an invalid value, as the existing parsers do', () => expect(count('prep=7')).toBe(0));
+  // T-030 / R-029 crit. 8: any whole number 0-4320 is a filter now; 0 counts too.
+  it('counts any valid time, such as prep=7', () => expect(count('prep=7')).toBe(1));
+  it('counts 0 and 4320 as filters', () => expect(count('prep=0&totaal=4320')).toBe(2));
+  it('ignores an invalid value, as the existing parsers do', () => expect(count('prep=abc')).toBe(0));
   it('does not count the sort', () => expect(count('sorteer=titel&richting=af')).toBe(0));
 });
 
@@ -36,6 +39,11 @@ describe('clearFilters (crit. 4)', () => {
     expect(after.get('sorteer')).toBe('titel');
     expect(after.get('richting')).toBe('af');
     expect(after.get('utm')).toBe('x');
+  });
+
+  it('removes prep=7 (T-030 crit. 8)', () => {
+    expect(activeFilterCount(clearFilters(new URLSearchParams('prep=7')))).toBe(0);
+    expect(clearFilters(new URLSearchParams('prep=7')).has('prep')).toBe(false);
   });
 
   it('leaves a count of 0', () => {
@@ -55,6 +63,9 @@ describe('texts (crit. 16)', () => {
     'overview.sortAsc',
     'overview.sortDesc',
     'overview.sortRating',
+    'filter.noLimit', // T-030 / R-029 crit. 10
+    'filter.maxPrepSlider',
+    'filter.maxTotalSlider',
   ];
   const nlMap = nl as Record<string, string>;
   const frMap = fr as Record<string, string>;
