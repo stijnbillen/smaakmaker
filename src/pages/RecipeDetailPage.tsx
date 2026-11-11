@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AuthorLine } from '../components/AuthorLine';
 import { useAuth } from '../components/AuthProvider';
@@ -12,6 +12,8 @@ import { canDelete, canEdit } from '../lib/permissions';
 import { formatDuration } from '../lib/format';
 import { ingredientLine, sourceLink } from '../lib/recipe';
 import { signedUrls } from '../lib/photos';
+import { convertTemperatures } from '../lib/temperature';
+import { useTemperatureUnit } from '../lib/temperatureUnit';
 import { deleteRecipe, fetchFamily } from '../lib/recipes';
 import { useRecipe } from '../lib/useRecipe';
 import { useStoredNames } from '../lib/useStoredNames';
@@ -36,6 +38,19 @@ export function RecipeDetailPage() {
   const [deleteFailed, setDeleteFailed] = useState(false);
   const deletingRef = useRef(false);
   const mounted = useRef(true);
+
+  // Display-only conversion; the recipe itself (edit, variant, size limit) keeps the author's text.
+  const unit = useTemperatureUnit();
+  const shown = useMemo(
+    () =>
+      state.status === 'ready'
+        ? {
+            steps: state.recipe.steps.map((s) => convertTemperatures(s, unit)),
+            note: state.recipe.note ? convertTemperatures(state.recipe.note, unit) : state.recipe.note,
+          }
+        : null,
+    [state, unit],
+  );
 
   // Signed URLs for the photos (the bucket is private); the page itself does not wait for them.
   const [photoUrls, setPhotoUrls] = useState<Map<string, string>>(new Map());
@@ -256,7 +271,7 @@ export function RecipeDetailPage() {
         <section className="recipe-section">
           <h2>{t('recipe.steps')}</h2>
           <ol className="step-list">
-            {recipe.steps.map((step, i) => (
+            {(shown?.steps ?? recipe.steps).map((step, i) => (
               <li key={i}>{step}</li>
             ))}
           </ol>
@@ -267,7 +282,7 @@ export function RecipeDetailPage() {
           <h2>{t('recipe.note')}</h2>
           {/* Plain text only: React escapes it, line breaks come from CSS. */}
           <p className="recipe-note" data-testid="recipe-note">
-            {recipe.note}
+            {shown?.note ?? recipe.note}
           </p>
         </section>
       )}

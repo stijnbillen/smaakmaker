@@ -454,3 +454,9 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **Waarden buiten de stap van 5 (bv. 37)** blijven in filter en URL; de duim staat op de dichtstbijzijnde stap.
 - **Stijl van de schuifregelaar:** het spoor is even hoog als de duim (44 px) en de zichtbare balk is een gecentreerde achtergrondstreep, zodat de duim zonder marges (die de stijlscanner afkeurt) gecentreerd staat.
 - **`filter.all` blijft staan in nl/fr:** de i18n-test (sleutels ongewijzigd sinds T-018) eist hem, ook al is hij ongebruikt.
+
+## T-031 — Temperatuur in °C of °F
+- `convertTemperatures` is puur en werkt met één globale regex (`u`-vlag, lookbehind tegen start midden in een woord/getal): lineair, geen catastrofale backtracking. Omzetting gebeurt alleen in de weergave (`useMemo` in `RecipeDetailPage`); opgeslagen tekst, formulier en variant houden het origineel.
+- Een bereik is alleen getal-streepje-getal zonder spaties, zodat "Stap 2 - 200 °C" geen bereik wordt. Uitvoer: geheel getal, koppelteken-min, en-streepje bij bereik.
+- Afronden: eerst 9 decimalen (zwevendekommafouten), dan `Math.floor(x + 0.5)`; `-0` wordt `0`.
+- Keuze staat in `localStorage['smaakmaker.tempUnit']` (C/F, ongeldig = C), via een kleine externe store (`useSyncExternalStore`), niet in het account. `TemperatureSwitch` hergebruikt de `language-switch`-opmaak.

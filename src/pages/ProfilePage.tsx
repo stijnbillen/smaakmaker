@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../components/AuthProvider';
 import { LanguageSwitch } from '../components/LanguageSwitch';
+import { TemperatureSwitch } from '../components/TemperatureSwitch';
 import { t, useLanguage } from '../i18n/t';
 import { signOut } from '../lib/auth';
 
@@ -22,6 +23,7 @@ export function ProfilePage() {
         </Link>
       )}
       <LanguageSwitch />
+      <TemperatureSwitch />
       {/* The auth state change then sends the user to the sign-in screen. */}
       <button type="button" onClick={() => void signOut()}>
         {t('profile.signOut')}
