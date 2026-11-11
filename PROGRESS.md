@@ -59,6 +59,14 @@ Nieuw project: er zijn geen requirements met status "Bestaand", dus er is geen f
 - [x] **T-028** — R-002: Aanmelden met e-mailadres, zonder uitnodigingscode (afhankelijk van T-027). Haalt veld, knop en code-logica uit het aanmeldscherm en uit `auth.ts`; een onbekend adres krijgt geen mail.
 - [x] **T-029** — R-028: Overzicht met verborgen filters en uitgebreid sorteren (afhankelijk van T-015, T-017, T-018)
 
+## Fase 7 — Tijdfilter, temperatuur, weekmenu en boodschappenlijst
+
+- [ ] **T-030** — R-029: Tijdfilter met schuifregelaar en invulveld (afhankelijk van T-029)
+- [ ] **T-031** — R-031: Temperatuur in °C of °F (afhankelijk van T-008, T-018)
+- [ ] **T-032** — R-033: Eenheden omzetten, soort en factor (afhankelijk van T-021, T-025)
+- [ ] **T-033** — R-030: Weekmenu (afhankelijk van T-005, T-007, T-018)
+- [ ] **T-034** — R-032: Boodschappenlijst (afhankelijk van T-032, T-033)
+
 ---
 
 ## Buiten deze lijst

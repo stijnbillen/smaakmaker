@@ -130,7 +130,7 @@ Afspraken die voor alle requirements gelden:
   - [ ] Beide tijden zijn verplicht, hele minuten van 0 tot en met 4320 (3 dagen); 4321 of een negatief of niet-numeriek getal wordt geweigerd.
   - [ ] Totale tijd ≥ preptijd; totale tijd gelijk aan preptijd is geldig, 1 minuut minder wordt geweigerd met "Totale tijd kan niet korter zijn dan de preptijd.".
   - [ ] Weergave: 0 → "0 min", 45 → "45 min", 60 → "1 u", 90 → "1 u 30 min", 4320 → "72 u".
-  - [ ] In het overzicht kan op maximale preptijd en op maximale totale tijd gefilterd worden (keuzes: 15, 30, 60, 120 min); een recept met exact de gekozen waarde telt mee, 1 minuut erboven niet.
+  - [ ] In het overzicht kan op maximale preptijd en op maximale totale tijd gefilterd worden; een recept met exact de gekozen waarde telt mee, 1 minuut erboven niet. Wijziging 2026-11-11: de keuzes (15, 30, 60, 120 min) vervallen; het filter is een schuifregelaar met invulveld, zie R-029.
 - **Buiten scope:** Timers tijdens het koken.
 
 ### R-013 — Porties en omrekenen
@@ -245,7 +245,8 @@ Een gedeelde databank van ingrediënten en eenheden, zodat "broccoli", "brocoli"
   - [ ] Aangemelde gebruikers kunnen alle items lezen; niet-aangemelde bezoekers niet.
   - [ ] Een aangemelde gebruiker kan een nieuw item toevoegen met één naam (in zijn interfacetaal); de andere taal blijft leeg en het item is meteen voor iedereen zichtbaar. Een gewone gebruiker kan een bestaand item via de databank-API niet wijzigen of verwijderen; die aanroep wordt geweigerd.
   - [ ] Bestaande recepten blijven ongewijzigd na de migratie: een ingrediëntregel waarvan de sleutel gelijk is aan een naam of synoniem van een item wordt gekoppeld aan dat item (idem voor eenheden); alle andere regels blijven vrije tekst. Geen recept, hoeveelheid of tekst gaat verloren.
-- **Buiten scope:** Categorieën (groente, vlees), voedingswaarden, eenheden omzetten (g ↔ kg), automatische meervoudsherkenning (meervoud komt alleen via synoniemen).
+- **Wijziging (2026-11-11):** eenheden omzetten is nu wel toegelaten voor de boodschappenlijst, via een omzettingstabel bij de eenheden (R-033). In recepten blijven de eenheden staan zoals de auteur ze schreef.
+- **Buiten scope:** Categorieën (groente, vlees), voedingswaarden, omzetten van eenheden in recepten, automatische meervoudsherkenning (meervoud komt alleen via synoniemen).
 
 ### R-019 — Woordnabijheid en suggesties
 - **Status:** Goedgekeurd
@@ -337,7 +338,7 @@ Een gedeelde databank van ingrediënten en eenheden, zodat "broccoli", "brocoli"
   - [ ] Zijn er filters actief, dan toont de knop het aantal ("Filters (2)"); zonder actieve filters alleen "Filters". Het zoeken op ingrediënten telt als één filter, elke tijdgrens, elke gekozen tag-groep en het kookgerief tellen elk als één filter.
   - [ ] In de open filters staat een knop "Alles wissen", alleen zichtbaar als er een filter of zoekopdracht actief is; ze wist zoeken en alle filters, niet het sorteren.
   - [ ] Zoeken en alle filters werken ongewijzigd (R-007 t/m R-011, R-009, R-014), ook binnen de favorieten.
-  - [ ] Elk filterveld heeft zijn label boven het veld en neemt de volle breedte; de twee tijdvelden staan onder elkaar. In het Nederlands en het Frans beginnen alle velden op dezelfde lijn en hebben ze dezelfde breedte, ongeacht de lengte van het label (Playwright, 360 px, beide talen).
+  - [ ] Elk filterveld heeft zijn label boven het veld en neemt de volle breedte; de twee tijdfilters (schuifregelaar met invulveld, R-029) staan onder elkaar. In het Nederlands en het Frans beginnen alle velden op dezelfde lijn en hebben ze dezelfde breedte, ongeacht de lengte van het label (Playwright, 360 px, beide talen).
   - [ ] Tags en kookgerief staan als chips die doorlopen naar de volgende regel; op 360 px is er geen horizontaal scrollen, in beide talen.
   - [ ] Het sorteren staat altijd zichtbaar boven de lijst, naast de knop "Filters". Velden: aanmaakdatum (standaard), aantal sterren, alfabetisch, totale tijd, preptijd.
   - [ ] Een richtingsknop naast het sorteerveld wisselt tussen oplopend en aflopend. Standaardrichting: aflopend bij aanmaakdatum en aantal sterren, oplopend bij alfabetisch, totale tijd en preptijd; bij een ander veld kiezen wordt die standaard gezet. Het overzicht toont zonder keuze: aanmaakdatum aflopend (nieuwste eerst).
@@ -349,6 +350,23 @@ Een gedeelde databank van ingrediënten en eenheden, zodat "broccoli", "brocoli"
   - [ ] Bij een zoekopdracht op ingrediënten staan de treffers nog altijd eerst (R-009), daarna geldt het gekozen sorteren.
   - [ ] Alle nieuwe teksten staan in `nl.json` en `fr.json` met dezelfde sleutels.
 - **Buiten scope:** Filters of sorteerkeuze onthouden tussen sessies, opgeslagen filters, sorteren op aantal reviews of auteur.
+
+### R-029 — Tijdfilter met schuifregelaar en invulveld
+- **Status:** Goedgekeurd
+- **Wijziging:** vervangt het meerkeuzefilter van R-007 (15, 30, 60, 120 min) en past R-028 aan.
+- **Beschrijving:** Het filter op maximale preptijd en op maximale totale tijd is een schuifregelaar met een invulveld. De gebruiker schuift of typt het maximale aantal minuten.
+- **Acceptatiecriteria:**
+  - [ ] Preptijd maximaal en Totale tijd maximaal zijn elk een schuifregelaar met een invulveld voor minuten; beide staan altijd op dezelfde waarde (schuiven werkt het veld bij, typen de schuifregelaar).
+  - [ ] De schuifregelaar loopt van 0 tot en met 240 minuten in stappen van 5; in het invulveld kan elk geheel getal van 0 tot en met 4320 getypt worden (4321 wordt teruggezet op de laatste geldige waarde). Een getypte waarde boven 240 zet de schuifregelaar op het uiterste einde.
+  - [ ] Standaard staat het filter uit, met de tekst "Geen limiet" (geen waarde in het veld en de regelaar op het uiterste einde). Een knop "Geen limiet" zet het filter weer uit.
+  - [ ] Een recept met precies de gekozen waarde telt mee, 1 minuut erboven niet; 0 toont alleen recepten van 0 minuten.
+  - [ ] Ongeldige invoer (letters, negatief getal, decimalen) wordt niet toegepast: het veld toont de laatste geldige waarde. Een leeg veld zet het filter uit.
+  - [ ] Recepten zonder tijd (oude voorbeelden) vallen buiten het filter zodra het aan staat.
+  - [ ] De waarde staat in de URL zoals nu; bestaande links met 15, 30, 60 of 120 werken en tonen die waarde; een ongeldige waarde in de URL zet het filter uit.
+  - [ ] Het filter werkt samen met alle andere filters en met zoeken, ook binnen de favorieten, en telt als één filter per tijdgrens in de teller van de knop "Filters" (R-028).
+  - [ ] Schuifregelaar en veld hebben een zichtbaar label boven het veld, zijn bedienbaar met toetsenbord (pijltjes, getal typen) en hebben tikdoelen van minstens 44 px; op 360 px is er geen horizontaal scrollen, in beide talen.
+  - [ ] Alle nieuwe teksten staan in `nl.json` en `fr.json` met dezelfde sleutels.
+- **Buiten scope:** Een ondergrens (minimale tijd), filteren op bereik, onthouden tussen sessies.
 
 ---
 
@@ -379,6 +397,81 @@ Een gedeelde databank van ingrediënten en eenheden, zodat "broccoli", "brocoli"
   - [ ] Een verwijderd recept verdwijnt uit alle favorietenlijsten.
   - [ ] Een gebruiker kan een recept maar één keer als favoriet markeren.
 - **Buiten scope:** Favorieten delen, mappen of lijsten.
+
+---
+
+## Weekmenu en omzetten
+
+### R-033 — Eenheden omzetten (soort en factor)
+- **Status:** Goedgekeurd
+- **Wijziging:** werkt R-018 en R-020 bij (omzetten was buiten scope).
+- **Beschrijving:** Elke eenheid heeft een soort (volume, gewicht of geen) en een factor naar ml of g. De omzettingstabel dient de boodschappenlijst (R-032); in recepten verandert niets. Bij een nieuwe eenheid vraagt de app om soort en factor.
+- **Acceptatiecriteria:**
+  - [ ] Een eenheid heeft een soort (`volume`, `gewicht` of `geen`) en bij volume of gewicht een factor groter dan 0 naar ml of g, hoogstens 100.000, met hoogstens 3 decimalen; de databank weigert een factor zonder soort, een soort volume of gewicht zonder factor en een factor buiten dat bereik.
+  - [ ] De startlijst bevat: g = 1 g, kg = 1000 g, ml = 1 ml, cl = 10 ml, dl = 100 ml, l = 1000 ml, el = 15 ml, tl = 5 ml. Alle andere eenheden van de startlijst (stuk, snuf, teentje, takje, blik, bosje, …) hebben de soort `geen`.
+  - [ ] Bestaande eenheden van gebruikers krijgen na de migratie de soort `geen`; geen recept, hoeveelheid of tekst gaat verloren.
+  - [ ] Kiest de gebruiker in het receptformulier "Ja" bij "Nieuwe eenheid '<invoer>'. Opslaan in de databank zodat iedereen het kan kiezen?" (R-020), dan vraagt de app daarna: "Is <eenheid> een volume (zoals ml), een gewicht (zoals g) of geen van beide?" met de keuzes Volume, Gewicht, Geen van beide en Ik weet het niet.
+  - [ ] Bij Volume of Gewicht vraagt de app "Hoeveel ml (of g) is 1 <eenheid>?"; een ongeldige waarde (leeg, 0, negatief, meer dan 3 decimalen, boven 100.000, geen getal) geeft een melding bij het veld en bewaart niets; een geldige waarde slaat de eenheid met soort en factor op.
+  - [ ] Bij Geen van beide of Ik weet het niet wordt de eenheid opgeslagen met soort `geen`.
+  - [ ] Bij Ik weet het niet en bij het veld voor de factor staat een link "Zoek op Google" die in een nieuw tabblad een zoekopdracht "1 <eenheid> in ml" (bij gewicht "in g") opent; de link heeft `rel="noopener noreferrer"`. De app stuurt zelf niets naar Google; de eenheidsnaam gaat alleen mee bij een tik op de link.
+  - [ ] Antwoordt de gebruiker "Nee" op de vraag om op te slaan, dan blijft de eenheid vrije tekst zonder soort, zoals nu.
+  - [ ] Een beheerder kan soort en factor van een eenheid wijzigen in het beheer van de databank (R-022), met dezelfde validatie; een gewone gebruiker krijgt via de databank-API een weigering.
+  - [ ] Een recept toont zijn eenheden ongewijzigd; omrekenen van porties (R-013) en de groottelimiet (R-004) blijven werken.
+  - [ ] Alle nieuwe teksten staan in `nl.json` en `fr.json` met dezelfde sleutels.
+- **Buiten scope:** Dichtheid (gewicht ↔ volume), omzetten in recepten, Amerikaanse eenheden (cup, ounce), automatisch de soort raden.
+
+### R-030 — Weekmenu
+- **Status:** Goedgekeurd
+- **Beschrijving:** Elke gebruiker heeft één persoonlijk weekmenu: een lijst gerechten voor de komende week, met een aantal porties per gerecht. Daaruit komt de boodschappenlijst (R-032).
+- **Acceptatiecriteria:**
+  - [ ] Het weekmenu is persoonlijk: een andere gebruiker, ook een beheerder, leest of wijzigt het niet, ook niet via de databank-API; zonder aanmelding is het niet toegankelijk.
+  - [ ] Het menu is een lijst gerechten zonder dagen en blijft bewaard tot de gebruiker het leegmaakt, ook na afmelden en weer aanmelden.
+  - [ ] De receptpagina heeft een knop "Aan weekmenu toevoegen"; staat het recept al in het menu, dan toont de knop "In weekmenu" met de mogelijkheid het te verwijderen.
+  - [ ] Een recept staat hoogstens één keer in het menu; een tweede toevoeging via de databank-API wordt geweigerd, en bij dubbel tikken ontstaat er geen tweede regel.
+  - [ ] Bij het toevoegen staat het aantal porties op de porties van het recept; de gebruiker past het per gerecht aan (hele getallen 1 tot en met 99, stappen van 1); 0 of 100 wordt geweigerd. Het recept zelf verandert niet.
+  - [ ] Het menu bevat hoogstens 50 gerechten; het 51e wordt in de databank geweigerd met een duidelijke melding.
+  - [ ] Elk gerecht in het menu toont titel, hoofdfoto (of de vervangafbeelding), de porties en een knop Verwijderen; een tik op de titel opent het recept.
+  - [ ] "Leegmaken" wist alle gerechten én alle gegevens van de boodschappenlijst (R-032), na een bevestiging; annuleren verandert niets. Een menu zonder gerechten toont "Je weekmenu is leeg." en geen boodschappenlijst.
+  - [ ] Wordt een recept verwijderd, dan verdwijnt het uit alle menu's.
+  - [ ] De navigatie heeft een vijfde ingang "Weekmenu" met twee tabbladen, Menu en Boodschappen; alle ingangen blijven tikdoelen van minstens 44 × 44 px en passen op 360 px zonder horizontaal scrollen, in beide talen.
+  - [ ] Is de databank onbereikbaar, dan toont de app "Geen verbinding. Probeer opnieuw." (R-001).
+  - [ ] Alle nieuwe teksten staan in `nl.json` en `fr.json` met dezelfde sleutels.
+- **Buiten scope:** Delen met anderen, dagen of maaltijden, meerdere menu's, het menu automatisch laten verlopen, een toevoegknop in het overzicht.
+
+### R-032 — Boodschappenlijst
+- **Status:** Goedgekeurd
+- **Beschrijving:** Uit het weekmenu (R-030) maakt de app een lijst ingrediënten om te kopen. De gebruiker vinkt af, laat over wat hij al heeft, voegt eigen items toe en kopieert de lijst.
+- **Acceptatiecriteria:**
+  - [ ] De lijst wordt berekend uit de gerechten van het menu met hun porties; hoeveelheden worden omgerekend als `hoeveelheid × gekozen porties / porties van het recept` (R-013), zonder afronding vóór het optellen.
+  - [ ] Regels van hetzelfde ingrediënt (uit de databank) met soort gewicht worden samen opgeteld, ongeacht g of kg; regels met soort volume (ml, cl, dl, l, el, tl) worden samen opgeteld, zonder rekening te houden met het soort ingrediënt. Voorbeeld: 200 g + 1 kg meel geeft "1,2 kg meel"; 2 el + 1 dl olie geeft "130 ml olie".
+  - [ ] Gewicht en volume van hetzelfde ingrediënt blijven twee regels (200 g meel en 30 ml meel), want er is geen dichtheid. Eenheden met soort `geen` (stuk, teentje, blik, …) worden alleen opgeteld bij dezelfde eenheid.
+  - [ ] Weergave van gewicht en volume: de grootste eenheid waarvoor het getal minstens 1 is (1200 g wordt "1,2 kg", 500 g blijft "500 g", 1000 ml wordt "1 l", 130 ml blijft "130 ml"), hoogstens 2 decimalen zonder overbodige nullen.
+  - [ ] Het formaat (klein, middelgroot, groot) telt mee: 2 grote en 1 kleine aardappel blijven twee regels. Regels zonder hoeveelheid (zout, peper) staan één keer in de lijst, ook als ze in meerdere gerechten staan; zo'n regel wordt niet opgeteld bij een regel mét hoeveelheid van hetzelfde ingrediënt.
+  - [ ] Vrije-tekstregels met dezelfde naam en eenheid (hoofdletter- en accentongevoelig) worden samengevoegd; andere blijven een eigen regel. Een regel van een ingrediënt uit de databank en een vrije-tekstregel met dezelfde naam blijven apart.
+  - [ ] De lijst staat gesorteerd op naam in de taal van de lezer (zonder verschil in hoofdletters of accenten) en toont de namen in de interfacetaal (R-024).
+  - [ ] Afvinken: een tik op een regel markeert die als "gekocht" (doorgestreept, onderaan); nog een tik haalt het vinkje weg. De vinkjes blijven bewaard na sluiten en heropenen en zijn per regel (ingrediënt, soort, eenheid, formaat).
+  - [ ] "Heb ik al": een regel kan als "al in huis" gemarkeerd worden; die regel staat dan in een apart, ingeklapt deel "Heb ik al" en niet meer in de te-kopen-lijst, en kan daar teruggezet worden. "Gekocht" en "Heb ik al" zijn twee aparte toestanden en sluiten elkaar uit.
+  - [ ] Verandert het menu (gerecht erbij, eruit, ander aantal porties), dan blijven vinkjes en "Heb ik al" van regels die nog bestaan staan; die van verdwenen regels vervallen. Verandert een hoeveelheid, dan blijft het vinkje staan.
+  - [ ] Eigen items: de gebruiker voegt een item toe met vrije tekst van 1 tot en met 80 tekens (spaties rond de tekst genegeerd, lege tekst of 81 tekens wordt geweigerd met een melding bij het veld); het item staat in de lijst, is af te vinken en te verwijderen en verdwijnt bij "Leegmaken" (R-030). Hoogstens 100 eigen items.
+  - [ ] Een knop "Kopieer lijst" zet de te-kopen-regels (zonder gekochte en zonder "Heb ik al") als tekst op het klembord, één regel per item ("1,2 kg meel"), in dezelfde volgorde als op het scherm, en toont een korte bevestiging "Gekopieerd"; lukt kopiëren niet, dan toont de app "Kopiëren is niet gelukt." en de tekst om handmatig te kopiëren.
+  - [ ] De vinkjes, "Heb ik al" en eigen items zijn persoonlijk (rij-niveau-regels): een andere gebruiker leest of wijzigt ze niet, ook niet via de databank-API.
+  - [ ] Een lijst met 50 gerechten en 100 eigen items blijft bruikbaar op 360 px zonder horizontaal scrollen, in beide talen; tikdoelen minstens 44 px.
+  - [ ] Alle nieuwe teksten staan in `nl.json` en `fr.json` met dezelfde sleutels.
+- **Buiten scope:** Delen met andere gebruikers, prijzen en winkels, indeling per winkelafdeling, voorraadbeheer, omzetten tussen gewicht en volume, hoeveelheden afronden naar verpakkingen.
+
+### R-031 — Temperatuur in °C of °F
+- **Status:** Goedgekeurd
+- **Beschrijving:** De gebruiker kiest of temperaturen in recepten in graden Celsius of Fahrenheit getoond worden. De app zet ze om in de weergave; de tekst van de auteur verandert niet.
+- **Acceptatiecriteria:**
+  - [ ] Het Profiel heeft de keuze "Temperatuur: °C of °F"; standaard is °C. De keuze wordt op het toestel bewaard, zoals de taalkeuze (R-023), niet in het account, en geldt na heropenen van de app.
+  - [ ] In de bereidingsstappen en in de opmerking (R-015) wordt elke temperatuur in de gekozen eenheid getoond. Herkend wordt een getal (geheel, of decimaal met komma of punt, ook negatief) gevolgd door °C of °F, met of zonder spatie ("180 °C", "180°C", "350 ° F"), en een bereik met streepje ("180–200 °C", "180-200 °C").
+  - [ ] Omzetten gebeurt met F = C × 9/5 + 32 en C = (F − 32) × 5/9, afgerond op een geheel getal (halven omhoog). Voorbeelden: 180 °C wordt 356 °F, 350 °F wordt 177 °C, 0 °C wordt 32 °F, 100 °C wordt 212 °F, −18 °C wordt 0 °F (nooit "−0"), "180–200 °C" wordt "356–392 °F".
+  - [ ] Een temperatuur die al in de gekozen eenheid staat, blijft precies zoals de auteur ze schreef.
+  - [ ] Tekst zonder °C of °F blijft ongewijzigd, ook een los getal ("180", "20 minuten") en getallen in andere eenheden ("200 g").
+  - [ ] Alleen de weergave verandert: de opgeslagen tekst blijft zoals de auteur ze schreef, en het bewerkformulier toont de originele tekst. Een variant (R-006) kopieert de originele tekst.
+  - [ ] Een recept met veel temperaturen (bv. 50 in één stap) blijft vlot en gaat niet fout bij tekens als "<" of "&" in de tekst.
+  - [ ] Alle nieuwe teksten staan in `nl.json` en `fr.json` met dezelfde sleutels.
+- **Buiten scope:** Gasstanden, correctie voor heteluchtoven, omzetten in titels of ingrediëntnamen, automatisch kiezen op basis van taal of regio, een keuze in het account.
 
 ---
 
@@ -470,6 +563,14 @@ Door de eigenaar gekozen (2026-11-08, derde ronde):
 - **Uitnodigen (R-027, R-002, R-017):** uitnodigingscodes vervallen; een beheerder nodigt uit met een e-mailadres en de uitgenodigde krijgt meteen een mail met logincode. Alleen beheerders mogen uitnodigen (niet alle gebruikers). Uitnodiging 7 dagen geldig; lijst met intrekken en opnieuw mailen. Limiet 20 uitnodigingen per beheerder per 24 uur (voorstel van de assistent, door de eigenaar goedgekeurd).
 - **Overzicht (R-028):** filters (ook het zoeken op ingrediënten) achter een knop "Filters" die onder de knop openklapt; sorteren altijd zichtbaar met vijf velden (aanmaakdatum, aantal sterren, alfabetisch, totale tijd, preptijd) en een richting; tijdvelden onder elkaar zodat Franse labels de uitlijning niet breken; bij een zoekopdracht blijven treffers eerst, "Alles wissen" wist ook het zoeken.
 
+Door de eigenaar gekozen (2026-11-11, vierde ronde):
+- **Tijdfilter (R-029):** schuifregelaar met invulveld in plaats van meerkeuze (15, 30, 60, 120).
+- **Weekmenu (R-030):** een lijst gerechten zonder dagen; persoonlijk (delen komt later, staat onder Toekomst); porties per gerecht instelbaar; één lopend menu met "Leegmaken"; vijfde ingang in de navigatie en een knop op het recept.
+- **Boodschappenlijst (R-032):** afvinken, "Heb ik al", eigen items toevoegen en lijst kopiëren als tekst; ook omzetten tussen eenheden.
+- **Eenheden omzetten (R-033):** omzettingstabel bij de eenheden (soort volume, gewicht of geen, plus een factor naar ml of g), ook voor el en tl (1 el = 15 ml, 1 tl = 5 ml); bij een nieuwe eenheid vraagt de app soort en factor, met een Google-link als de gebruiker het niet weet. Geen dichtheid: gewicht en volume van hetzelfde ingrediënt blijven twee regels.
+- **Temperatuur (R-031):** keuze °C of °F in het profiel, bewaard op het toestel; de app zet temperaturen in de stappen en de opmerking om in de weergave.
+- **Opsplitsing:** het voorstel was R-029, R-030 en R-031; de assistent heeft het weekmenu in R-030, R-032 en R-033 gesplitst omdat één requirement te groot werd.
+
 Standaardkeuzes die ik zelf invulde (niet apart besproken; pas aan als ze niet kloppen):
 - Aanmelden zonder wachtwoord via inloglink; code eenmalig, 7 dagen geldig; weergavenaam 2–40 tekens (R-002).
 - Tijd maximaal 4320 min; titel 1–100 tekens; foto's max 1280 px en 500 KB, JPEG-omzetting op het toestel (R-003, R-005, R-007).
@@ -482,6 +583,7 @@ Standaardkeuzes die ik zelf invulde (niet apart besproken; pas aan als ze niet k
 - Eerste taal volgt de browser (fr → Frans, anders Nederlands); de keuze wordt op het toestel bewaard, niet in het account (R-023).
 - Tags en kookgerief van gebruikers hebben één naam die in beide talen getoond wordt (R-024).
 - Een nieuw item heeft één naam (in de taal van de gebruiker); de beheerder vult de andere taal later aan (R-018, R-022).
+- Slider 0–240 minuten in stappen van 5, typen tot 4320 (R-029); weekmenu hoogstens 50 gerechten, boodschappenlijst hoogstens 100 eigen items (R-030, R-032); een recept hoogstens één keer in het menu (R-030); "gekocht" en "Heb ik al" zijn aparte toestanden en blijven bewaard (R-032); Belgische maat voor el en tl (R-033); temperatuur afgerond op een geheel getal (R-031).
 - Icoon: crème muts op tomaatrood, zelf getekend als SVG, zonder snor en zonder tekst (R-025).
 - Een formaat telt als eigenschap van de regel, niet als eigen ingrediënt; het blijft bij omrekenen gelijk (R-020).
 
@@ -496,4 +598,5 @@ Standaardkeuzes die ik zelf invulde (niet apart besproken; pas aan als ze niet k
 - Boodschappenlijst op basis van een recept.
 - Delen van een recept met iemand zonder account.
 - Meer talen dan Nederlands en Frans (bv. Engels); automatisch vertalen van recepttekst.
-- Eenheden omzetten (g ↔ kg, el ↔ ml) nu de eenheden in een databank staan.
+- Het weekmenu delen met een gezinslid (R-030 is persoonlijk).
+- Omzetten tussen gewicht en volume met een dichtheid per ingrediënt (R-033 doet dat niet).
