@@ -460,3 +460,12 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - Een bereik is alleen getal-streepje-getal zonder spaties, zodat "Stap 2 - 200 °C" geen bereik wordt. Uitvoer: geheel getal, koppelteken-min, en-streepje bij bereik.
 - Afronden: eerst 9 decimalen (zwevendekommafouten), dan `Math.floor(x + 0.5)`; `-0` wordt `0`.
 - Keuze staat in `localStorage['smaakmaker.tempUnit']` (C/F, ongeldig = C), via een kleine externe store (`useSyncExternalStore`), niet in het account. `TemperatureSwitch` hergebruikt de `language-switch`-opmaak.
+
+## T-032 — Eenheden omzetten, soort en factor
+- **`factor numeric` zonder schaal + check `factor = round(factor, 3)`:** `numeric(9,3)` zou 1,2345 stil afronden. De check heeft `factor is not null` bij volume/gewicht, omdat een check bij null slaagt.
+- **Waarden in de databank Engels (`volume`, `weight`, `none`);** de woorden voor de gebruiker staan in nl.json/fr.json.
+- **`add_unit` heeft een tweede overload zonder standaardwaarden** (4 parameters); de oude met 2 blijft en maakt `none`. Bij een bestaande sleutel blijft de soort ongemoeid.
+- **`admin_update_catalog` met `p_measure`/`p_factor` (default null):** null = soort en factor niet wijzigen; bij ingrediënt met soort `22023`. Grants na drop/create opnieuw gezet.
+- **Samenvoegen in het beheer:** B houdt zijn eigen soort en factor, die van A vervallen (de merge-functie is niet gewijzigd).
+- **Soortvraag en factorstap zijn nieuwe `PendingQuestion`-stappen** (`askMeasure`, `askFactor`) in `CatalogField`; niets wordt bewaard tot het einde, de vraag blijft `asking`. Enter in het factorveld bewaart de eenheid, niet het hele recept.
+- **"Zoek op Google" is een gewone `<a target="_blank" rel="noopener noreferrer">`;** de zoektekst komt uit de i18n-bestanden via `googleSearchUrl`.

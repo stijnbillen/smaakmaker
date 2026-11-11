@@ -566,3 +566,14 @@
 - 2026-11-11 11:35 T-031 build: geslaagd
 - 2026-11-11 11:36 T-031 reviewer: GOEDGEKEURD
 - 2026-11-11 11:46 T-031 build: geslaagd
+- 2026-11-11 11:46 T-031 savepoint: gecommit
+- 2026-11-11 11:49 T-032 analist: KLAAR
+- 2026-11-11 11:53 T-032 tester: KLAAR
+- 2026-11-11 11:59 T-032 ontwikkelaar: BLOKKADE: test tests/e2e/unit-measure.spec.ts:321 verwacht "4 el" na omrekenen van 2 naar 8 porties (├ù4), maar dat is "8 el"; de tester moet de verwachting of het aantal klikken herstellen
+- 2026-11-11 11:59 T-032 tester: KLAAR
+- 2026-11-11 12:03 T-032 ontwikkelaar: KLAAR
+- 2026-11-11 12:14 T-032 build: geslaagd
+- 2026-11-11 12:15 T-032 reviewer: GOEDGEKEURD
+- 2026-11-11 12:26 T-032 build: worker-crash (geen testfout), opnieuw
+- 2026-11-11 12:27 T-032 build: mislukt
+- 2026-11-11 12:27 T-032 stop: eindcontrole faalt
