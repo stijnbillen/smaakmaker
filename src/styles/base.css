@@ -1493,3 +1493,92 @@ textarea[aria-invalid='true'] {
 .week-menu-clear {
   margin-top: var(--space-4);
 }
+
+/* Shopping list (R-032): one row per line; the line itself is the wide tap target, the side button is secondary. */
+.shopping-add-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.shopping-add-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.shopping-add-row button {
+  flex: none;
+  margin: var(--space-1) 0 0;
+}
+
+.shopping-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shopping-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.shopping-line {
+  flex: 1 1 10rem;
+  justify-content: flex-start;
+  margin: 0;
+  padding: var(--space-2);
+  color: var(--color-text-body);
+  font-weight: 500;
+  text-align: left;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  overflow-wrap: anywhere;
+}
+
+/* Bought: struck through and quieter, so colour is not the only signal. */
+.shopping-line[aria-pressed='true'] {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.shopping-line--plain {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-min);
+}
+
+.shopping-side {
+  flex: none;
+  margin: 0;
+}
+
+.shopping-have {
+  margin-top: var(--space-4);
+}
+
+.shopping-have summary {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.shopping-copy {
+  margin-top: var(--space-4);
+}
+
+.shopping-status {
+  min-height: 1.5em;
+  margin: var(--space-1) 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}

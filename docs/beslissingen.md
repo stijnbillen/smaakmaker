@@ -478,3 +478,13 @@ Keuzes die tijdens de bouw vallen en geen kernbeslissing zijn. Kernbeslissingen 
 - **Tabbladen zijn routes** (`/weekmenu`, `/weekmenu/boodschappen`) als `Link role="tab"`; de navigatie-ingang is op beide actief.
 - **Nieuw token `--font-size-nav` (0.75rem):** vijf ingangen op 360 px, ook in het Frans.
 - **Nieuwste toevoeging bovenaan (`created_at desc`); Verwijderen zonder bevestiging,** alleen Leegmaken vraagt er een.
+
+## T-034 — Boodschappenlijst
+- **Lijst wordt in de client berekend (`src/lib/shoppingList.ts`, puur); alleen marks en eigen items staan in de databank.** De lijst volgt zo altijd menu en recepten, zonder synchronisatie.
+- **Sleutel van een regel** is taal- en hoeveelheidsonafhankelijk (`i:<id>|m:<soort>[|u:<eenheid>]|s:<formaat>|q:<0|1>`), zodat een vinkje blijft bij een andere hoeveelheid of taal. Regels zonder hoeveelheid negeren hun eenheid.
+- **Optellen via de factor alleen voor ingrediënten uit de databank met een databank-eenheid van soort gewicht/volume;** vrije tekst telt alleen op bij dezelfde naam én eenheid.
+- **`setMark` is update-dan-insert, geen upsert:** de conflicttak van een upsert schrijft ook `line_key`, waarvoor gebruikers geen kolomrecht hebben (alleen `state`, `updated_at`).
+- **Vervallen marks:** na een volledige, foutloze lading wist `prune_shopping_marks` de marks van verdwenen sleutels; bij een mislukte lading gebeurt niets.
+- **Limieten in triggers met advisory lock** (100 eigen items `P0100`, 3000 marks `P0101`); `clear_week_menu()` wist nu ook beide tabellen in één transactie.
+- **Weergave-eenheden alleen g/kg en ml/l** uit i18n (`shopping.unit*`); de eenheid wordt gekozen ná afronden op 2 decimalen.
+- **Marks en eigen items worden gepagineerd/gesplitst opgehaald** (1000 per pagina, 100 id's per `in`-aanroep) wegens de rijlimiet van PostgREST en de URL-lengte.

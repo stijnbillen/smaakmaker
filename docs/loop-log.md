@@ -587,3 +587,12 @@
 - 2026-11-11 13:03 T-033 build: geslaagd
 - 2026-11-11 13:03 T-033 savepoint: gecommit
 - 2026-11-11 13:03 - loop: geen taak meer
+- 2026-11-11 13:24 T-034 analist: KLAAR
+- 2026-11-11 13:28 T-034 tester: KLAAR
+- 2026-11-11 13:39 T-034 ontwikkelaar: BLOKKADE: test `tests/e2e/shoppingList.spec.ts`: crit. 14 (regel 386) kiest het eerste lijstitem, maar dat is een eigen item zonder "Heb ik al"-knop; crit. 12 (regel 327) splitst het klembord op `\n` terwijl Windows `\r\n` teruggeeft.
+- 2026-11-11 13:39 T-034 tester: KLAAR
+- 2026-11-11 13:41 T-034 ontwikkelaar: KLAAR
+- 2026-11-11 13:52 T-034 build: worker-crash (geen testfout), opnieuw
+- 2026-11-11 14:04 T-034 build: geslaagd
+- 2026-11-11 14:07 T-034 reviewer: GOEDGEKEURD
+- 2026-11-11 14:18 T-034 build: geslaagd

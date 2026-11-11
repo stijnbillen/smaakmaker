@@ -5,6 +5,7 @@ import { useConnection } from '../components/ConnectionProvider';
 import { ListState } from '../components/ListState';
 import { RecipePhotoPlaceholder } from '../components/RecipePhotoPlaceholder';
 import { ServingsStepper } from '../components/ServingsStepper';
+import { ShoppingList } from '../components/ShoppingList';
 import { t, useLanguage } from '../i18n/t';
 import { signedUrls } from '../lib/photos';
 import {
@@ -194,10 +195,7 @@ export function WeekMenuPage({ tab }: { tab: 'menu' | 'shopping' }) {
           )}
         </>
       ) : items && items.length > 0 ? (
-        // R-032 fills this section; for now it only has its heading.
-        <section className="recipe-section">
-          <h2>{t('shopping.title')}</h2>
-        </section>
+        <ShoppingList />
       ) : (
         <ListState items={items} loadingText={t('weekMenu.loading')} emptyText={empty}>
           {null}

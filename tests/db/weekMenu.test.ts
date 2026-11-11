@@ -250,9 +250,16 @@ describe('week menu (R-030)', () => {
         await add(u, x);
         await add(u, y);
         await add(b, x);
+        // T-034 / R-032: "Leegmaken" also wipes the shopping list data (marks and own items) of the caller.
+        await u.client.from('shopping_marks').insert({ line_key: 'wm-clear', state: 'bought' });
+        await u.client.from('shopping_items').insert({ text: 'wm-clear' });
         const res = await u.client.rpc('clear_week_menu');
         expect(res.error).toBeNull();
         expect(await rowsOf(u.id)).toEqual([]);
+        for (const table of ['shopping_marks', 'shopping_items']) {
+          const left = await sql<{ n: string }>(`select count(*) n from public.${table} where user_id = '${u.id}'`);
+          expect(Number(left[0].n), table).toBe(0);
+        }
         expect((await rowsOf(b.id)).map((r) => r.recipe_id)).toContain(x);
       } finally {
         await deleteTestUser(u);
