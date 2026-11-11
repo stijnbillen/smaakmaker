@@ -585,3 +585,5 @@
 - 2026-11-11 12:50 T-033 build: geslaagd
 - 2026-11-11 12:52 T-033 reviewer: GOEDGEKEURD
 - 2026-11-11 13:03 T-033 build: geslaagd
+- 2026-11-11 13:03 T-033 savepoint: gecommit
+- 2026-11-11 13:03 - loop: geen taak meer
